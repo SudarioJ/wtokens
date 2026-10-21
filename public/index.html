@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="es" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WTOKENS | Plataforma Competitiva de Fortnite · Torneos & Apuestas Seguras</title>
+  <meta name="description" content="Desafía a otros jugadores de Fortnite en 1v1, 2v2 Box Fight, Zone Wars y Build Fight con mediación 100% segura y retiros instantáneos.">
+  
+  <!-- Favicon & Fonts -->
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['Space Grotesk', 'monospace'],
+          },
+          colors: {
+            obsidian: {
+              950: '#06070B',
+              900: '#0A0C14',
+              850: '#0F121E',
+              800: '#151928',
+              700: '#1E2438',
+              600: '#2A334E'
+            },
+            wpurple: {
+              400: '#A78BFA',
+              500: '#8B5CF6',
+              600: '#7C3AED',
+              700: '#6D28D9'
+            },
+            wcyan: {
+              400: '#22D3EE',
+              500: '#06B6D4',
+              600: '#0891B2'
+            },
+            wgreen: {
+              400: '#34D399',
+              500: '#10B981',
+              600: '#059669'
+            },
+            wgold: {
+              400: '#FBBF24',
+              500: '#F59E0B',
+              600: '#D97706'
+            }
+          },
+          animation: {
+            'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+            'float': 'float 4s ease-in-out infinite',
+            'marquee': 'marquee 25s linear infinite',
+          },
+          keyframes: {
+            glowPulse: {
+              '0%, 100%': { opacity: 0.4, transform: 'scale(1)' },
+              '50%': { opacity: 0.7, transform: 'scale(1.05)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            marquee: {
+              '0%': { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-50%)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-obsidian-950 text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-wpurple-600 selection:text-white">
+
+  <!-- Ambient Glowing Background Blobs -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-wpurple-600/15 rounded-full blur-[140px] animate-glow-pulse"></div>
+    <div class="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-wcyan-500/10 rounded-full blur-[160px] animate-glow-pulse" style="animation-delay: 1.5s;"></div>
+    <div class="absolute bottom-10 left-1/4 w-80 h-80 bg-wpurple-500/10 rounded-full blur-[150px]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(#1e2438_1px,transparent_1px)] [background-size:32px_32px] opacity-25"></div>
+  </div>
+
+
+  <!-- Main Navigation Header -->
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-obsidian-950/80 border-b border-white/5 transition-all duration-300" id="mainHeader">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <img src="assets/logo.png" alt="WTOKENS" class="w-12 h-12 rounded-xl object-cover shadow-[0_0_20px_rgba(6,182,212,0.4)] group-hover:scale-105 transition-transform border border-wcyan-500/30">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-xl tracking-tight text-white group-hover:text-wcyan-400 transition-colors">WTOKENS</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-wcyan-500/20 text-wcyan-300 border border-wcyan-500/30">LATAM</span>
+          </div>
+          <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono">Fortnite Arena</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden lg:flex items-center gap-1">
+        <a href="#modalidades" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">Modalidades</a>
+        <a href="#como-funciona" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">Cómo Funciona</a>
+        <a href="#discord-arena" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">Arena Discord</a>
+        <a href="#faq" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">FAQ</a>
+      </nav>
+
+      <!-- Action Area: Discord OAuth & User Panel Pill -->
+      <div class="flex items-center gap-3">
+        <!-- Auth Area: Logged Out vs Logged In -->
+        <div id="userAuthContainer">
+          <!-- Logged Out Button -->
+          <button id="btnOpenDiscordLogin" class="relative group overflow-hidden rounded-xl bg-gradient-to-r from-wpurple-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(124,58,237,0.35)] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+            <i class="fa-brands fa-discord text-base"></i>
+            <span id="btnLoginText">Entrar con Discord</span>
+            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          </button>
+
+          <!-- Logged In Profile Pill (Hidden initially) -->
+          <div id="userProfilePill" class="hidden items-center gap-2">
+            <button id="btnGoToDashboard" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-obsidian-900 hover:bg-obsidian-850 border border-wpurple-500/40 shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:border-wcyan-400/50 transition-all group">
+              <img id="userNavAvatar" src="assets/logo.png" alt="Avatar" class="w-8 h-8 rounded-lg object-cover border border-wpurple-500/40">
+              <div class="flex flex-col text-left">
+                <span id="userNavName" class="text-xs font-bold text-white max-w-[100px] truncate">@usuario</span>
+                <span class="text-[10px] text-wcyan-400 font-mono font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">Mi Panel <i class="fa-solid fa-arrow-right text-[8px]"></i></span>
+              </div>
+            </button>
+            <button id="btnUserLogout" class="text-slate-400 hover:text-rose-400 p-2 rounded-lg hover:bg-white/5 transition-colors" title="Cerrar sesión">
+              <i class="fa-solid fa-right-from-bracket text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="lg:hidden p-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Drawer Navigation -->
+    <div id="mobileMenu" class="hidden lg:hidden border-t border-white/5 bg-obsidian-950/95 backdrop-blur-2xl px-6 py-6 space-y-3">
+      <a href="#modalidades" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Modalidades de Fortnite</a>
+      <a href="#como-funciona" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Cómo Funciona</a>
+      <a href="#discord-arena" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Arena en Discord</a>
+      <a href="#faq" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Preguntas Frecuentes</a>
+      <div class="pt-4 border-t border-white/10 space-y-3">
+        <button id="mobileDiscordBtn" class="w-full justify-center rounded-xl bg-wpurple-600 py-3 text-sm font-bold text-white flex items-center gap-2 shadow-lg">
+          <i class="fa-brands fa-discord"></i> <span id="mobileLoginBtnText">Entrar con Discord</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LANDING PAGE VIEW (Página Pública de Presentación) -->
+  <div id="landingView">
+
+
+  <!-- Hero Section -->
+  <section class="relative z-10 pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        
+        <!-- Left Column: Copy & CTAs -->
+        <div class="lg:col-span-7 text-center lg:text-left space-y-8">
+          
+          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-obsidian-850/80 border border-wpurple-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-wcyan-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-wcyan-500"></span>
+            </span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">
+              Fortnite Arena & Wagers · 100% Mediado
+            </span>
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.08]">
+            JUEGA <span class="bg-gradient-to-r from-wpurple-400 via-indigo-300 to-wcyan-400 bg-clip-text text-transparent">VALIENDO.</span><br>
+            WTOKENS <span class="text-white relative inline-block">
+              MEDIA.
+              <span class="absolute bottom-1 left-0 w-full h-2 bg-gradient-to-r from-wpurple-500 to-wcyan-400 opacity-40 rounded-full"></span>
+            </span>
+          </h1>
+
+          <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+            La primera arena competitiva de Fortnite para <strong>Argentina, Chile, Uruguay, Perú, Paraguay y Bolivia</strong>. Apuesta entradas retenidas en bóveda segura con tus métodos de pago locales y retira al instante sin fraudes.
+          </p>
+
+          <!-- CTAs -->
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-wpurple-600 via-wpurple-500 to-indigo-600 text-white font-bold text-base shadow-[0_0_25px_rgba(139,92,246,0.4)] hover:shadow-[0_0_35px_rgba(139,92,246,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+              <i class="fa-brands fa-discord text-xl"></i>
+              <span>Entrar con Discord</span>
+            </button>
+            <a href="#modalidades" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 border border-white/10 hover:border-wpurple-500/40 text-slate-200 hover:text-white font-semibold text-base transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-gamepad text-wpurple-400"></i>
+              <span>Ver Modalidades</span>
+            </a>
+          </div>
+
+          <!-- Trust Badges -->
+          <div class="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/5 text-left">
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5 text-wpurple-400 text-sm font-semibold">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Bóveda Segura</span>
+              </div>
+              <p class="text-xs text-slate-400">Entrada retenida hasta el resultado</p>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5 text-wcyan-400 text-sm font-semibold">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Retiros Rápidos</span>
+              </div>
+              <p class="text-xs text-slate-400">Cobros directos a tu billetera</p>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5 text-emerald-400 text-sm font-semibold">
+                <i class="fa-solid fa-headset"></i>
+                <span>Soporte 24/7</span>
+              </div>
+              <p class="text-xs text-slate-400">Mediadores en vivo en Discord</p>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5 text-wgold-400 text-sm font-semibold">
+                <i class="fa-solid fa-gamepad"></i>
+                <span>Puro Fortnite</span>
+              </div>
+              <p class="text-xs text-slate-400">Build, Box, Zone & Realistics</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Interactive Discord Bot Match Card Simulation -->
+        <div class="lg:col-span-5 relative">
+          
+          <div class="relative mx-auto max-w-md rounded-2xl bg-gradient-to-b from-obsidian-800/90 to-obsidian-900/95 border border-white/10 p-5 shadow-2xl backdrop-blur-2xl">
+            
+            <!-- Card Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-white/5">
+              <div class="flex items-center gap-2.5">
+                <img src="assets/logo.png" alt="WTOKENS" class="w-9 h-9 rounded-xl object-cover border border-amber-500/30 shadow-md">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-sm text-white">SISTEMA | WTOKENS</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">APP</span>
+                  </div>
+                  <span class="text-[11px] text-slate-400 font-mono">Bóveda de Mediación Oficial</span>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                🟢 PARTIDA ACTIVA
+              </span>
+            </div>
+
+            <!-- Discord Bot Message Body -->
+            <div class="py-4 space-y-4">
+              
+              <div class="p-3.5 rounded-xl bg-obsidian-950/70 border border-white/5 space-y-2">
+                <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+                  <span>ID: #FN-89214</span>
+                  <span class="text-wpurple-400 font-semibold">Fortnite · Box Fight 1v1</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-y border-white/5">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs">🎮</div>
+                    <div>
+                      <div class="text-xs font-bold text-white">K1ng_Fortnite</div>
+                      <div class="text-[10px] text-slate-400">Epic: K1ngFnatic</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-black font-mono text-slate-400">VS</span>
+                  <div class="flex items-center gap-2 text-right">
+                    <div>
+                      <div class="text-xs font-bold text-white">Vortex_BR</div>
+                      <div class="text-[10px] text-slate-400">Epic: VortexPlays</div>
+                    </div>
+                    <div class="w-7 h-7 rounded-full bg-wpurple-900/60 border border-wpurple-500/40 flex items-center justify-center text-xs">⚡</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                  <span class="text-xs text-slate-400">Pozo Retenido en Bóveda:</span>
+                  <span id="heroPotDisplay" class="font-mono font-black text-emerald-400 text-sm" data-usd="40">$40.00 USD</span>
+                </div>
+              </div>
+
+              <!-- Status Steps -->
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center gap-2 text-slate-300">
+                  <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                  <span>Entradas de <strong data-usd="20">$20.00 USD</strong> bloqueadas en bóveda</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-300">
+                  <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                  <span>Cuentas de Epic Games verificadas en sala</span>
+                </div>
+                <div class="flex items-center gap-2 text-wcyan-400">
+                  <i class="fa-solid fa-spinner animate-spin text-wcyan-400"></i>
+                  <span>Jugando mejor de 5 (BO5) en isla competitiva...</span>
+                </div>
+              </div>
+
+              <!-- Mediación oficial en Discord -->
+              <div class="p-3 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center gap-2.5 text-xs text-slate-300">
+                <i class="fa-brands fa-discord text-[#5865F2] text-lg shrink-0"></i>
+                <div class="text-[11px] leading-tight">
+                  <span class="text-white font-semibold">Mediación Oficial en Discord</span>
+                  <p class="text-slate-400">Subida de clips, verificación de victoria y mediadores en vivo vía bot.</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer indicator -->
+            <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-cat text-amber-500"></i> Anti-Scam Shield Activo
+              </span>
+              <span>Delay: 0.04s</span>
+            </div>
+
+          </div>
+
+          <!-- Floating Accent Cards -->
+          <div class="hidden sm:flex absolute -bottom-6 -left-8 p-3.5 rounded-xl bg-obsidian-900/90 border border-white/10 backdrop-blur-xl shadow-xl items-center gap-3 animate-float">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
+              <i class="fa-solid fa-shield-halved text-lg"></i>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase font-mono text-slate-400">Bóveda de Apuesta</div>
+              <div class="text-xs font-bold text-white">Fondos Protegidos <span class="text-emerald-400 font-mono text-[10px] ml-1">100% Escrow</span></div>
+            </div>
+          </div>
+
+          <div class="hidden sm:flex absolute -top-6 -right-6 p-3.5 rounded-xl bg-obsidian-900/90 border border-white/10 backdrop-blur-xl shadow-xl items-center gap-3 animate-float" style="animation-delay: 2s;">
+            <div class="w-10 h-10 rounded-lg bg-[#5865F2]/20 border border-[#5865F2]/30 flex items-center justify-center text-[#5865F2]">
+              <i class="fa-brands fa-discord text-lg"></i>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase font-mono text-slate-400">Discord Bot</div>
+              <div class="text-xs font-bold text-emerald-400">Sincronizado en Vivo</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Guarantees & Platform Pillars -->
+  <section class="relative z-10 py-10 border-y border-white/5 bg-obsidian-900/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        
+        <div class="p-5 rounded-2xl bg-obsidian-850/50 border border-white/5 hover:border-amber-500/30 transition-all space-y-2">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 text-base">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Bóveda Escrow</div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+            100% Segura
+          </div>
+          <p class="text-[11px] text-slate-400">Entradas retenidas hasta validar al ganador</p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-obsidian-850/50 border border-white/5 hover:border-emerald-500/30 transition-all space-y-2">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-base">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Pagos Locales</div>
+          <div class="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
+            Sin Comisiones
+          </div>
+          <p class="text-[11px] text-slate-400">Mercado Pago, Yape, CuentaRUT y Cripto</p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-obsidian-850/50 border border-white/5 hover:border-blue-500/30 transition-all space-y-2">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-base">
+            <i class="fa-brands fa-epic-games"></i>
+          </div>
+          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Anti-Smurf</div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+            Epic Games
+          </div>
+          <p class="text-[11px] text-slate-400">Cuentas oficiales verificadas por OAuth</p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-obsidian-850/50 border border-white/5 hover:border-[#5865F2]/30 transition-all space-y-2">
+          <div class="w-10 h-10 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] text-base">
+            <i class="fa-brands fa-discord"></i>
+          </div>
+          <div class="text-xs uppercase font-mono tracking-wider text-slate-400">Arbitraje 24/7</div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+            Discord Bot
+          </div>
+          <p class="text-[11px] text-slate-400">Mediadores en vivo y subida de clips</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Countries & Local Payments (Sudamérica) -->
+  <section class="relative z-10 py-16 bg-obsidian-950/60 border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <span class="text-xs font-mono font-bold tracking-widest uppercase text-wcyan-400 bg-wcyan-500/10 border border-wcyan-500/20 px-3 py-1 rounded-full">
+          COBERTURA REGIONAL
+        </span>
+        <h3 class="text-2xl sm:text-3xl font-extrabold text-white">
+          Métodos de Pago Locales en <span class="bg-gradient-to-r from-wcyan-400 to-wpurple-400 bg-clip-text text-transparent">Sudamérica</span>
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Recarga y retira tus ganancias directamente en tu moneda local o vía Binance Pay / Cripto sin intermediarios costosos.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Argentina -->
+        <div class="p-4 rounded-xl bg-obsidian-900/60 border border-white/5 hover:border-wcyan-500/40 transition-all text-center space-y-2">
+          <div class="text-3xl">🇦🇷</div>
+          <div class="font-bold text-white text-sm">Argentina</div>
+          <p class="text-[11px] text-slate-400 leading-tight">Mercado Pago · Alias / CBU · Lemon Cash</p>
+        </div>
+
+        <!-- Chile -->
+        <div class="p-4 rounded-xl bg-obsidian-900/60 border border-white/5 hover:border-wpurple-500/40 transition-all text-center space-y-2">
+          <div class="text-3xl">🇨🇱</div>
+          <div class="font-bold text-white text-sm">Chile</div>
+          <p class="text-[11px] text-slate-400 leading-tight">CuentaRUT · MACH · BancoEstado</p>
+        </div>
+
+        <!-- Uruguay -->
+        <div class="p-4 rounded-xl bg-obsidian-900/60 border border-white/5 hover:border-blue-500/40 transition-all text-center space-y-2">
+          <div class="text-3xl">🇺🇾</div>
+          <div class="font-bold text-white text-sm">Uruguay</div>
+          <p class="text-[11px] text-slate-400 leading-tight">Prex UY · Midinero · BROU</p>
+        </div>
+
+        <!-- Perú -->
+        <div class="p-4 rounded-xl bg-obsidian-900/60 border border-white/5 hover:border-rose-500/40 transition-all text-center space-y-2">
+          <div class="text-3xl">🇵🇪</div>
+          <div class="font-bold text-white text-sm">Perú</div>
+          <p class="text-[11px] text-slate-400 leading-tight">Yape · Plin · BCP / Interbank</p>
+        </div>
+
+        <!-- Paraguay -->
+        <div class="p-4 rounded-xl bg-obsidian-900/60 border border-white/5 hover:border-amber-500/40 transition-all text-center space-y-2">
+          <div class="text-3xl">🇵🇾</div>
+          <div class="font-bold text-white text-sm">Paraguay</div>
+          <p class="text-[11px] text-slate-400 leading-tight">Giros Tigo · Ueno · SIPAP</p>
+        </div>
+
+        <!-- Bolivia -->
+        <div class="p-4 rounded-xl bg-obsidian-900/60 border border-white/5 hover:border-emerald-500/40 transition-all text-center space-y-2">
+          <div class="text-3xl">🇧🇴</div>
+          <div class="font-bold text-white text-sm">Bolivia</div>
+          <p class="text-[11px] text-slate-400 leading-tight">QR Simple · Banco Unión · BCP / BNB</p>
+        </div>
+      </div>
+
+      <div class="text-center pt-2">
+        <span class="text-xs text-slate-400 font-mono">
+          🌐 <strong>Método Universal:</strong> Binance Pay y USDT/LTC disponible para todos los países con acreditación en segundos.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fortnite Game Modes Section (EXCLUSIVO FORTNITE) -->
+  <section id="modalidades" class="relative z-10 py-24 sm:py-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      
+      <!-- Section Header -->
+      <div class="text-center max-w-3xl mx-auto space-y-4">
+        <span class="text-xs font-mono font-bold tracking-widest uppercase text-wpurple-400 bg-wpurple-500/10 border border-wpurple-500/20 px-3 py-1 rounded-full">
+          MODALIDADES COMPETITIVAS
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+          Elige tu especialidad en <span class="bg-gradient-to-r from-wpurple-400 to-wcyan-400 bg-clip-text text-transparent">Fortnite</span>
+        </h2>
+        <p class="text-slate-400 text-base sm:text-lg">
+          Sin otros juegos distractores. Nos enfocamos al 100% en el competitivo de Fortnite con mapas oficiales, emparejamiento por rangos y reglas estrictas anti-cheat.
+        </p>
+      </div>
+
+      <!-- Modes Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Mode 1: Box Fight -->
+        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-wpurple-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.15)] flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-xl bg-wpurple-600/20 border border-wpurple-500/30 flex items-center justify-center text-wpurple-400 text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-box-open"></i>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                1v1 · 2v2 · 3v3 · 4v4
+              </span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white group-hover:text-wpurple-400 transition-colors">Box Fight Clásico</h3>
+              <p class="text-slate-400 text-sm mt-1">El formato rey de Fortnite. Escopeta pump, fusil y espacio cerrado para probar reflejos puros, edición y control de cajas.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">BO5 / BO7 / BO9</span>
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Sin Delay</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Alta Actividad</span>
+            </div>
+          </div>
+          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
+              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+            </div>
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-wpurple-600 hover:bg-wpurple-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Desafiar</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode 2: Zone Wars -->
+        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-wcyan-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(6,182,212,0.15)] flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-xl bg-wcyan-500/20 border border-wcyan-500/30 flex items-center justify-center text-wcyan-400 text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-volcano"></i>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                1v1 · 2v2 · 3v3 · 4v4
+              </span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white group-hover:text-wcyan-400 transition-colors">Zone Wars Endgame</h3>
+              <p class="text-slate-400 text-sm mt-1">Simulación exacta de finales de torneo (FNCS) con tormenta móvil, rotaciones forzadas y gestión de materiales.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Tormenta Dinámica</span>
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Loot Competitivo</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Alta Actividad</span>
+            </div>
+          </div>
+          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
+              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+            </div>
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-wcyan-600 hover:bg-wcyan-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Desafiar</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode 3: Build Fight -->
+        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-wgold-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(245,158,11,0.15)] flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-xl bg-wgold-500/20 border border-wgold-500/30 flex items-center justify-center text-wgold-400 text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-crosshairs"></i>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                1v1 Duelo Puro
+              </span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white group-hover:text-wgold-400 transition-colors">Build Fight 1v1</h3>
+              <p class="text-slate-400 text-sm mt-1">Conquista de altura libre. Duelos mecánicos intensos sin límite de construcción con reinicio automático de mapa.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Altura Ilimitada</span>
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Auto-Reset</span>
+              <span class="px-2 py-0.5 rounded bg-wpurple-500/10 text-wpurple-400">Favorito Pros</span>
+            </div>
+          </div>
+          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
+              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+            </div>
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-wgold-600 hover:bg-wgold-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Desafiar</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode 4: Realistics / Mid Fight -->
+        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-indigo-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(99,102,241,0.15)] flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bullseye"></i>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                1v1 · 2v2 · 3v3 · 4v4
+              </span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">Realistics & Mid Fight</h3>
+              <p class="text-slate-400 text-sm mt-1">Situaciones reales de partida con loot variado, materiales limitados y terreno irregular para medir tu toma de decisiones.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Mats Limitados</span>
+              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Salud Realista</span>
+            </div>
+          </div>
+          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
+              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+            </div>
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Desafiar</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- How It Works (4 Steps) -->
+  <section id="como-funciona" class="relative z-10 py-24 bg-obsidian-900/50 border-y border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      
+      <div class="text-center max-w-3xl mx-auto space-y-4">
+        <span class="text-xs font-mono font-bold tracking-widest uppercase text-wcyan-400 bg-wcyan-500/10 border border-wcyan-500/20 px-3 py-1 rounded-full">
+          FLUJO DE JUEGO 100% TRANSPARENTE
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+          Comienza a competir en <span class="bg-gradient-to-r from-wcyan-400 to-wpurple-400 bg-clip-text text-transparent">4 sencillos pasos</span>
+        </h2>
+        <p class="text-slate-400 text-base sm:text-lg">
+          Desde tu primera partida hasta retirar tus ganancias a tu banco o cripto. Todo el proceso está asegurado por nuestro sistema de bóveda.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Step 1 -->
+        <div class="p-6 rounded-2xl bg-obsidian-850/60 border border-white/5 relative overflow-hidden group hover:border-wpurple-500/40 transition-all">
+          <div class="text-5xl font-black font-mono text-white/10 group-hover:text-wpurple-500/20 transition-colors">01</div>
+          <div class="mt-4 space-y-2">
+            <div class="w-10 h-10 rounded-lg bg-wpurple-600/20 border border-wpurple-500/30 flex items-center justify-center text-wpurple-400 text-lg">
+              <i class="fa-brands fa-discord"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Inicia con Discord</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Un clic y estás dentro. Sin formularios largos ni contraseñas adicionales. Tu cuenta se sincroniza al instante.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="p-6 rounded-2xl bg-obsidian-850/60 border border-white/5 relative overflow-hidden group hover:border-wcyan-500/40 transition-all">
+          <div class="text-5xl font-black font-mono text-white/10 group-hover:text-wcyan-500/20 transition-colors">02</div>
+          <div class="mt-4 space-y-2">
+            <div class="w-10 h-10 rounded-lg bg-wcyan-500/20 border border-wcyan-500/30 flex items-center justify-center text-wcyan-400 text-lg">
+              <i class="fa-brands fa-epic-games"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Vincula tu Epic Games</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Confirma tu nombre de usuario de Fortnite para evitar suplantaciones y permitir el seguimiento automatizado de salas.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="p-6 rounded-2xl bg-obsidian-850/60 border border-white/5 relative overflow-hidden group hover:border-wgold-500/40 transition-all">
+          <div class="text-5xl font-black font-mono text-white/10 group-hover:text-wgold-500/20 transition-colors">03</div>
+          <div class="mt-4 space-y-2">
+            <div class="w-10 h-10 rounded-lg bg-wgold-500/20 border border-wgold-500/30 flex items-center justify-center text-wgold-400 text-lg">
+              <i class="fa-solid fa-vault"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Saldo en Bóveda & Juega</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              El bot retiene la apuesta de ambos participantes antes de que empiece la partida. Nadie puede escaparse sin pagar.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="p-6 rounded-2xl bg-obsidian-850/60 border border-white/5 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+          <div class="text-5xl font-black font-mono text-white/10 group-hover:text-emerald-500/20 transition-colors">04</div>
+          <div class="mt-4 space-y-2">
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Cobra al Instante</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              El ganador sube la captura o el bot confirma la victoria. Tu saldo se acredita en segundos con retiro mínimo accesible.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Discord Arena Section (Spotlight) -->
+  <section id="discord-arena" class="relative z-10 py-24 sm:py-32 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="rounded-3xl bg-gradient-to-br from-obsidian-900 via-obsidian-850 to-obsidian-900 border border-wpurple-500/30 p-8 sm:p-12 lg:p-16 relative overflow-hidden shadow-[0_0_50px_rgba(124,58,237,0.15)]">
+        
+        <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-wpurple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div class="lg:col-span-7 space-y-6">
+            <span class="inline-flex items-center gap-2 text-xs font-mono font-bold tracking-widest uppercase text-wpurple-400 bg-wpurple-500/10 border border-wpurple-500/20 px-3 py-1 rounded-full">
+              <i class="fa-brands fa-discord"></i> LA ARENA ESTÁ EN DISCORD
+            </span>
+
+            <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              Toda la acción ocurre directamente en nuestro servidor de <span class="bg-gradient-to-r from-wpurple-400 to-indigo-300 bg-clip-text text-transparent">Discord</span>
+            </h2>
+
+            <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+              Ahí es donde se generan las colas automáticas de Fortnite, se crean las salas de juego privadas con bots, se organizan los torneos semanales y nuestro equipo de mediadores resuelve cualquier duda en segundos.
+            </p>
+
+            <div class="space-y-3 pt-2">
+              <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <span class="text-sm text-slate-200"><strong>Colas dedicadas:</strong> Canales exclusivos para 1v1, 2v2, 3v3 y 4v4.</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <span class="text-sm text-slate-200"><strong>Salas de voz dinámicas:</strong> Con límites automáticos de 2, 3 y 4 personas para comunicarse con tu dúo o escuadrón.</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <span class="text-sm text-slate-200"><strong>Sistema de tickets anti-trampas:</strong> Si tu rival no paga o desconecta, un mediador humano revisa el clip en menos de 5 minutos.</span>
+              </div>
+            </div>
+
+            <div class="pt-4 flex flex-wrap items-center gap-4">
+              <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-8 py-4 rounded-xl bg-gradient-to-r from-wpurple-600 to-indigo-600 text-white font-bold text-sm shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:scale-105 transition-all flex items-center gap-2">
+                <i class="fa-brands fa-discord text-lg"></i>
+                <span>Unirse al Servidor Discord</span>
+              </button>
+              <span class="text-xs text-slate-400 font-mono">Más de 5,000 miembros activos</span>
+            </div>
+
+          </div>
+
+          <!-- Right: Visual Discord Layout Preview -->
+          <div class="lg:col-span-5">
+            <div class="rounded-2xl bg-obsidian-950 border border-white/10 p-4 font-mono text-xs space-y-2.5 shadow-2xl">
+              <div class="flex items-center justify-between pb-3 border-b border-white/5">
+                <div class="flex items-center gap-2 text-white font-bold">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span>WTOKENS | Discord Server</span>
+                </div>
+                <span class="text-[10px] text-slate-500">v3.8 FN</span>
+              </div>
+
+              <!-- Channels Tree -->
+              <div class="space-y-1.5 text-slate-400">
+                <div class="text-white/60 font-bold uppercase text-[10px] tracking-wider pt-1">「 00 」VERIFICACIÓN</div>
+                <div class="pl-3 text-wcyan-400 flex items-center gap-2 bg-wcyan-500/10 py-1 px-2 rounded border border-wcyan-500/20">
+                  <span>📌</span> <span class="font-bold">verificación-epic</span>
+                </div>
+
+                <div class="text-white/60 font-bold uppercase text-[10px] tracking-wider pt-2">「 04 」COLAS FORTNITE</div>
+                <div class="pl-3 flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 text-slate-300">
+                  <span>⚔️ 1v1-buildfight</span> <span class="text-[10px] text-emerald-400">14 en cola</span>
+                </div>
+                <div class="pl-3 flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 text-slate-300">
+                  <span>🥊 1v1-boxfight</span> <span class="text-[10px] text-emerald-400">22 en cola</span>
+                </div>
+                <div class="pl-3 flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 text-slate-300">
+                  <span>🌋 2v2-zonewars</span> <span class="text-[10px] text-emerald-400">8 en cola</span>
+                </div>
+                <div class="pl-3 flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 text-slate-300">
+                  <span>🎯 1v1-mid-realistic</span> <span class="text-[10px] text-emerald-400">11 en cola</span>
+                </div>
+                <div class="pl-3 flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 text-slate-300">
+                  <span>🛡️ 1v1-cero-construccion</span> <span class="text-[10px] text-emerald-400">6 en cola</span>
+                </div>
+
+                <div class="text-white/60 font-bold uppercase text-[10px] tracking-wider pt-2">「 05 」SOPORTE</div>
+                <div class="pl-3 flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 text-wpurple-400">
+                  <span>🎫 abrir-ticket</span> <span class="text-[10px] text-wpurple-400">Online</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive Live Leaderboard / Ranking Section (Oculto temporalmente) -->
+  <section id="ranking" class="hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <span class="text-xs font-mono font-bold tracking-widest uppercase text-wgold-400 bg-wgold-500/10 border border-wgold-500/20 px-3 py-1 rounded-full">
+            TABLA DE LÍDERES
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mt-3">
+            Top Jugadores de <span class="bg-gradient-to-r from-wgold-400 to-amber-300 bg-clip-text text-transparent">WTOKENS</span>
+          </h2>
+          <p class="text-slate-400 text-sm sm:text-base mt-1">
+            Los competidores con mayores ganancias y porcentaje de victoria verificados en Fortnite.
+          </p>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-obsidian-850 border border-white/5 font-mono text-xs">
+          <button class="rank-tab active px-3.5 py-1.5 rounded-lg bg-wpurple-600 text-white font-bold" data-mode="all">General</button>
+          <button class="rank-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white" data-mode="box">Box Fight</button>
+          <button class="rank-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white" data-mode="zone">Zone Wars</button>
+          <button class="rank-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white" data-mode="build">Build Fight</button>
+        </div>
+      </div>
+
+      <!-- Leaderboard Table Card -->
+      <div class="rounded-2xl bg-obsidian-850/60 border border-white/5 overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-obsidian-950/80 text-[11px] uppercase font-mono text-slate-400 border-b border-white/5">
+              <tr>
+                <th class="py-4 px-6">Posición</th>
+                <th class="py-4 px-6">Jugador (Epic / Discord)</th>
+                <th class="py-4 px-6 text-center">Partidas</th>
+                <th class="py-4 px-6 text-center">Winrate</th>
+                <th class="py-4 px-6 text-center">Racha</th>
+                <th class="py-4 px-6 text-right">Ganancias Totales</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody" class="divide-y divide-white/5 font-sans">
+              <!-- Dynamically populated or rendered -->
+              <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-4 px-6 font-mono font-bold text-wgold-400 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-wgold-500/20 text-wgold-400 flex items-center justify-center text-xs">1</span>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-wpurple-600 to-wcyan-400 flex items-center justify-center font-bold text-white text-xs">
+                      SK
+                    </div>
+                    <div>
+                      <div class="font-bold text-white flex items-center gap-1.5">
+                        <span>SlayerKing.fn</span>
+                        <i class="fa-solid fa-circle-check text-wcyan-400 text-xs"></i>
+                      </div>
+                      <div class="text-xs text-slate-400 font-mono">Epic: SlayerFN_7</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-center font-mono text-slate-300">284</td>
+                <td class="py-4 px-6 text-center font-mono font-bold text-emerald-400">79.2%</td>
+                <td class="py-4 px-6 text-center font-mono text-wgold-400 font-bold">🔥 8 W</td>
+                <td class="py-4 px-6 text-right font-mono font-black text-emerald-400 text-base">$4,920.00 USD</td>
+              </tr>
+
+              <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-4 px-6 font-mono font-bold text-slate-300 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-slate-400/20 text-slate-300 flex items-center justify-center text-xs">2</span>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-pink-500 flex items-center justify-center font-bold text-white text-xs">
+                      VF
+                    </div>
+                    <div>
+                      <div class="font-bold text-white flex items-center gap-1.5">
+                        <span>Vitor_AimGod</span>
+                        <i class="fa-solid fa-circle-check text-wcyan-400 text-xs"></i>
+                      </div>
+                      <div class="text-xs text-slate-400 font-mono">Epic: VitorBR_99</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-center font-mono text-slate-300">241</td>
+                <td class="py-4 px-6 text-center font-mono font-bold text-emerald-400">74.5%</td>
+                <td class="py-4 px-6 text-center font-mono text-wgold-400 font-bold">🔥 5 W</td>
+                <td class="py-4 px-6 text-right font-mono font-black text-emerald-400 text-base">$3,840.00 USD</td>
+              </tr>
+
+              <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-4 px-6 font-mono font-bold text-amber-600 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-amber-600/20 text-amber-500 flex items-center justify-center text-xs">3</span>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center font-bold text-white text-xs">
+                      NX
+                    </div>
+                    <div>
+                      <div class="font-bold text-white flex items-center gap-1.5">
+                        <span>Nexuz_Piece</span>
+                        <i class="fa-solid fa-circle-check text-wcyan-400 text-xs"></i>
+                      </div>
+                      <div class="text-xs text-slate-400 font-mono">Epic: NexuzFNCS</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-center font-mono text-slate-300">198</td>
+                <td class="py-4 px-6 text-center font-mono font-bold text-emerald-400">71.0%</td>
+                <td class="py-4 px-6 text-center font-mono text-slate-400">3 W</td>
+                <td class="py-4 px-6 text-right font-mono font-black text-emerald-400 text-base">$3,110.00 USD</td>
+              </tr>
+
+              <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-4 px-6 font-mono text-slate-400">4</td>
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-obsidian-800 border border-white/10 flex items-center justify-center font-bold text-slate-300 text-xs">
+                      KZ
+                    </div>
+                    <div>
+                      <div class="font-bold text-white">K4zuto_Zero</div>
+                      <div class="text-xs text-slate-400 font-mono">Epic: KazutoPlays</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-center font-mono text-slate-300">165</td>
+                <td class="py-4 px-6 text-center font-mono font-bold text-emerald-400">68.4%</td>
+                <td class="py-4 px-6 text-center font-mono text-slate-400">2 W</td>
+                <td class="py-4 px-6 text-right font-mono font-black text-emerald-400 text-base">$2,450.00 USD</td>
+              </tr>
+
+              <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-4 px-6 font-mono text-slate-400">5</td>
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-obsidian-800 border border-white/10 flex items-center justify-center font-bold text-slate-300 text-xs">
+                      BL
+                    </div>
+                    <div>
+                      <div class="font-bold text-white">BlackOut_Build</div>
+                      <div class="text-xs text-slate-400 font-mono">Epic: Blackout_7</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-center font-mono text-slate-300">142</td>
+                <td class="py-4 px-6 text-center font-mono font-bold text-emerald-400">67.1%</td>
+                <td class="py-4 px-6 text-center font-mono text-slate-400">4 W</td>
+                <td class="py-4 px-6 text-right font-mono font-black text-emerald-400 text-base">$1,980.00 USD</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="p-4 bg-obsidian-950/40 border-t border-white/5 text-center">
+          <span class="text-xs text-slate-400 font-mono">Actualizado en vivo tras cada partida mediada en Discord · Temporada Activa</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+
+  <!-- Creator Program Section (Oculto temporalmente) -->
+  <section id="creadores" class="hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-6 space-y-6">
+          <span class="text-xs font-mono font-bold tracking-widest uppercase text-wgold-400 bg-wgold-500/10 border border-wgold-500/20 px-3 py-1 rounded-full">
+            PROGRAMA DE CREADORES & STREAMERS
+          </span>
+          <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+            Monetiza tu comunidad de <span class="bg-gradient-to-r from-wgold-400 to-amber-300 bg-clip-text text-transparent">Fortnite</span>
+          </h2>
+          <p class="text-slate-300 text-base leading-relaxed">
+            ¿Haces streams en Twitch, TikTok o YouTube? Consigue tu código de creador personalizado de WTOKENS. Cada vez que tus seguidores jueguen una partida, tú recibes una comisión garantizada de forma pasiva.
+          </p>
+
+          <div class="space-y-4 pt-2">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-wgold-500/20 text-wgold-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-percent"></i>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-white">Comisiones en tiempo real</h4>
+                <p class="text-xs text-slate-400">Porcentaje directo de la tasa de mediación en cada duelo de tus referidos.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-wpurple-500/20 text-wpurple-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-gift"></i>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-white">Beneficio para tu audiencia</h4>
+                <p class="text-xs text-slate-400">Tus miembros reciben partidas sin comisión (0% fee) en su registro.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-wcyan-500/20 text-wcyan-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-white">Panel de estadísticas</h4>
+                <p class="text-xs text-slate-400">Monitorea clics, partidas jugadas y solicita retiros cuando quieras.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4">
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-6 py-3.5 rounded-xl bg-wgold-600 hover:bg-wgold-500 text-obsidian-950 font-bold text-sm transition-all flex items-center gap-2">
+              <i class="fa-solid fa-star"></i>
+              <span>Solicitar Código de Creador en Discord</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6">
+          <div class="rounded-2xl bg-obsidian-850 border border-white/10 p-6 space-y-6 shadow-xl">
+            <div class="flex items-center justify-between pb-4 border-b border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-wgold-500 to-amber-300 flex items-center justify-center text-obsidian-950 font-black">
+                  ★
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-white">PANEL DEL CREADOR</div>
+                  <div class="text-xs text-slate-400 font-mono">Código: WTOKENS.NET/CREADOR</div>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold font-mono">
+                ACTIVO
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl bg-obsidian-950 border border-white/5">
+                <span class="text-[11px] uppercase font-mono text-slate-400 block">Jugadores Registrados</span>
+                <span class="text-2xl font-black text-white font-mono">618</span>
+              </div>
+              <div class="p-4 rounded-xl bg-obsidian-950 border border-white/5">
+                <span class="text-[11px] uppercase font-mono text-slate-400 block">Comisiones Acumuladas</span>
+                <span class="text-2xl font-black text-emerald-400 font-mono">$1,450.80</span>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-obsidian-950/60 border border-white/5 space-y-2">
+              <div class="flex items-center justify-between text-xs text-slate-300 font-semibold">
+                <span>Tu enlace de afiliado rápido:</span>
+                <span class="text-wcyan-400 cursor-pointer hover:underline text-[11px]" onclick="navigator.clipboard.writeText('https://wtokens.net/ref/tu-codigo'); alert('¡Enlace copiado!')">Copiar Enlace</span>
+              </div>
+              <input type="text" readonly value="https://wtokens.net/ref/tu-codigo" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-300">
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ Accordion -->
+  <section id="faq" class="relative z-10 py-24 sm:py-32">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3">
+        <span class="text-xs font-mono font-bold tracking-widest uppercase text-wpurple-400 bg-wpurple-500/10 border border-wpurple-500/20 px-3 py-1 rounded-full">
+          DUDAS FRECUENTES
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white">
+          Preguntas <span class="bg-gradient-to-r from-wpurple-400 to-wcyan-400 bg-clip-text text-transparent">Frecuentes</span>
+        </h2>
+        <p class="text-slate-400 text-base">
+          Todo lo que necesitas saber antes de jugar tu primera partida en WTOKENS.
+        </p>
+      </div>
+
+      <div class="space-y-4" id="faqAccordion">
+        
+        <!-- Question 1 -->
+        <div class="rounded-2xl bg-obsidian-900/60 border border-white/5 overflow-hidden transition-all">
+          <button class="faq-btn w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none">
+            <span class="font-bold text-white text-base">¿Cómo funciona la mediación y retención de apuestas?</span>
+            <i class="fa-solid fa-chevron-down text-wpurple-400 transition-transform duration-200"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-6 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            Cuando desafías a otro jugador o aceptas una cola en Discord, el bot de WTOKENS descuenta y retiene temporalmente la entrada de ambos competidores en una bóveda criptográfica segura. Nadie puede retirar ese dinero hasta que la partida finalice y se confirme el ganador con capturas o clips.
+          </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="rounded-2xl bg-obsidian-900/60 border border-white/5 overflow-hidden transition-all">
+          <button class="faq-btn w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none">
+            <span class="font-bold text-white text-base">¿Qué pasa si mi oponente se desconecta o miente con el resultado?</span>
+            <i class="fa-solid fa-chevron-down text-wpurple-400 transition-transform duration-200"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-6 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            Contamos con un sistema de resolución de disputas 24/7. Siempre se recomienda grabar tus rondas (usando GeForce Experience, OBS, Medal o repeticiones del modo creativo de Fortnite). Si hay discrepancia, abres un ticket en <code class="text-wpurple-400">#abrir-ticket</code> y un mediador del staff revisa la prueba en menos de 5 minutos para adjudicar el pozo.
+          </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="rounded-2xl bg-obsidian-900/60 border border-white/5 overflow-hidden transition-all">
+          <button class="faq-btn w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none">
+            <span class="font-bold text-white text-base">¿Cuánto es el retiro mínimo y qué métodos de pago aceptan?</span>
+            <i class="fa-solid fa-chevron-down text-wpurple-400 transition-transform duration-200"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-6 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            El retiro mínimo es de solo $10.00 USD (o equivalente en tu moneda local). Soportamos transferencias bancarias locales (PIX, MercadoPago, etc.), PayPal, Binance Pay y USDT/LTC para retiros ultrarrápidos con comisiones mínimas.
+          </div>
+        </div>
+
+        <!-- Question 4 -->
+        <div class="rounded-2xl bg-obsidian-900/60 border border-white/5 overflow-hidden transition-all">
+          <button class="faq-btn w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none">
+            <span class="font-bold text-white text-base">¿Por qué solo Fortnite y no otros juegos?</span>
+            <i class="fa-solid fa-chevron-down text-wpurple-400 transition-transform duration-200"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-6 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            En WTOKENS nos especializamos exclusivamente en el competitivo de Fortnite. Esto nos permite garantizar la mejor experiencia con servidores optimizados, mapas 100% calibrados para competitivo (Box Fight, Zone Wars, Realistics, Build Fight) y mediadores que entienden a fondo las reglas del juego.
+          </div>
+        </div>
+
+        <!-- Question 5 -->
+        <div class="rounded-2xl bg-obsidian-900/60 border border-white/5 overflow-hidden transition-all">
+          <button class="faq-btn w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none">
+            <span class="font-bold text-white text-base">¿Es necesario tener micrófono o entrar a salas de voz?</span>
+            <i class="fa-solid fa-chevron-down text-wpurple-400 transition-transform duration-200"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-6 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            No es obligatorio para 1v1, pero para modalidades de equipo (2v2, 3v3 y 4v4) nuestro Discord cuenta con salas de voz privadas con límite de usuarios para que coordines con tu escuadrón cómodamente.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Final CTA Banner -->
+  <section class="relative z-10 py-20 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="rounded-3xl bg-gradient-to-r from-wpurple-900/80 via-obsidian-900 to-wcyan-950/80 border border-wpurple-500/30 p-10 sm:p-16 text-center space-y-8 relative overflow-hidden shadow-2xl">
+        
+        <div class="max-w-2xl mx-auto space-y-4">
+          <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+            Tu próxima partida de <span class="bg-gradient-to-r from-wpurple-400 to-wcyan-400 bg-clip-text text-transparent">Fortnite</span> comienza aquí.
+          </h2>
+          <p class="text-slate-300 text-base sm:text-lg">
+            Únete a miles de jugadores que ya están compitiendo por dinero real en un entorno justo, transparente y mediado.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-gradient-to-r from-wpurple-600 to-indigo-600 text-white font-bold text-base shadow-[0_0_30px_rgba(139,92,246,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-3">
+            <i class="fa-brands fa-discord text-xl"></i>
+            <span>Entrar al Servidor Oficial</span>
+          </button>
+          <a href="#modalidades" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-obsidian-950/80 hover:bg-obsidian-900 border border-white/10 text-white font-semibold text-base transition-all">
+            Explorar Modos de Juego
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-white/5 bg-obsidian-950 py-16 text-sm text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/5">
+        
+        <!-- Brand Info -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-wpurple-600 flex items-center justify-center font-mono font-bold text-white text-lg">
+              W
+            </div>
+            <span class="font-extrabold text-xl tracking-tight text-white">WTOKENS</span>
+          </div>
+          <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
+            La plataforma competitiva de mediación segura para la comunidad de Fortnite. Duelos 1v1, 2v2, 3v3 y 4v4 con retención de entradas y pagos automáticos.
+          </p>
+          <div class="flex items-center gap-3 pt-2">
+            <a href="https://discord.gg" target="_blank" class="w-8 h-8 rounded-lg bg-obsidian-900 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-wpurple-500/50 transition-all">
+              <i class="fa-brands fa-discord text-sm"></i>
+            </a>
+            <a href="https://twitter.com" target="_blank" class="w-8 h-8 rounded-lg bg-obsidian-900 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-wcyan-500/50 transition-all">
+              <i class="fa-brands fa-x-twitter text-sm"></i>
+            </a>
+            <a href="https://tiktok.com" target="_blank" class="w-8 h-8 rounded-lg bg-obsidian-900 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-pink-500/50 transition-all">
+              <i class="fa-brands fa-tiktok text-sm"></i>
+            </a>
+            <a href="https://instagram.com" target="_blank" class="w-8 h-8 rounded-lg bg-obsidian-900 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-wgold-500/50 transition-all">
+              <i class="fa-brands fa-instagram text-sm"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Links Column 1 -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-white">Fortnite</h4>
+          <ul class="space-y-2 text-xs">
+            <li><a href="#modalidades" class="hover:text-white transition-colors">Box Fight 1v1 / 2v2</a></li>
+            <li><a href="#modalidades" class="hover:text-white transition-colors">Zone Wars Endgames</a></li>
+            <li><a href="#modalidades" class="hover:text-white transition-colors">Build Fight Puro</a></li>
+            <li><a href="#modalidades" class="hover:text-white transition-colors">Realistics & Mid</a></li>
+          </ul>
+        </div>
+
+        <!-- Links Column 2 -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-white">Plataforma</h4>
+          <ul class="space-y-2 text-xs">
+            <li><a href="#como-funciona" class="hover:text-white transition-colors">Cómo Funciona</a></li>
+            <li><a href="#calculadora" class="hover:text-white transition-colors">Calculadora</a></li>
+            <li><a href="#discord-arena" class="hover:text-white transition-colors">Arena en Discord</a></li>
+            <li><a href="#faq" class="hover:text-white transition-colors">Preguntas Frecuentes</a></li>
+          </ul>
+        </div>
+
+        <!-- Links Column 3 -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-white">Legal & Seguridad</h4>
+          <ul class="space-y-2 text-xs">
+            <li><a href="terms.html#reglas" class="hover:text-white transition-colors">Reglamento Competitivo</a></li>
+            <li><a href="terms.html#terminos" class="hover:text-white transition-colors">Términos de Servicio</a></li>
+            <li><a href="privacy.html" class="hover:text-white transition-colors">Política de Privacidad</a></li>
+            <li><a href="terms.html#reglas" class="hover:text-white transition-colors">Protocolo Anti-Cheat</a></li>
+            <li><a href="terms.html#reglas" class="hover:text-white transition-colors">Sistema de Mediación</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Disclaimer & Copyright -->
+      <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center md:text-left">
+        <div>
+          &copy; 2026 WTOKENS. Todos los derechos reservados.
+        </div>
+        <div class="max-w-xl text-[11px] leading-relaxed">
+          WTOKENS es una plataforma de mediación independiente. Fortnite y Epic Games son marcas registradas de Epic Games, Inc. WTOKENS no está afiliado ni patrocinado por Epic Games.
+        </div>
+      </div>
+
+    </div>
+  </footer>
+  </div> <!-- /landingView -->
+
+  <!-- ========================================================================= -->
+  <!-- DASHBOARD / PANEL DE JUGADOR (Inspirado 1:1 en la interfaz de BR Tokens) -->
+  <!-- ========================================================================= -->
+  <div id="dashboardView" class="hidden min-h-screen bg-[#07080e] text-slate-100 flex flex-col md:flex-row relative z-20">
+    
+    <!-- Mobile Dashboard Topbar -->
+    <div class="md:hidden flex items-center justify-between p-4 bg-[#0b0d14] border-b border-white/5 sticky top-0 z-30">
+      <div class="flex items-center gap-3">
+        <button id="btnDashMobileToggle" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <span class="font-bold text-white text-sm" id="dashMobileCurrentTab">Perfil</span>
+      </div>
+      <button id="btnDashMobileBack" class="text-xs text-wcyan-400 hover:text-wcyan-300 font-medium flex items-center gap-1">
+        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+        <span>Volver al sitio</span>
+      </button>
+    </div>
+
+    <!-- Backdrop for mobile drawer -->
+    <div id="dashSidebarBackdrop" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30 md:hidden"></div>
+
+    <!-- Left Sidebar -->
+    <aside id="dashSidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#0b0d14] border-r border-white/5 p-5 flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 -translate-x-full md:min-h-screen shrink-0 select-none">
+      <div class="space-y-6">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3 px-1">
+          <img src="assets/logo.png" alt="WTOKENS" class="w-10 h-10 rounded-xl object-cover border border-wcyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-black text-lg tracking-tight text-white">WTOKENS</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-wcyan-500/20 text-wcyan-300">LATAM</span>
+            </div>
+            <span class="text-[9px] uppercase tracking-widest text-slate-400 font-mono">Fortnite Arena</span>
+          </div>
+        </div>
+
+        <!-- Navigation Menus -->
+        <div class="space-y-5">
+          <!-- COMPETITIVO -->
+          <div class="space-y-1">
+            <div class="px-3 text-[10px] uppercase font-mono tracking-wider text-slate-400 font-bold">COMPETITIVO</div>
+            <button data-dash-tab="lobby" class="dash-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.04] transition-all">
+              <i class="fa-solid fa-gamepad text-sm w-4 text-center"></i>
+              <span>Lobby de Partidas</span>
+            </button>
+          </div>
+
+          <!-- BILLETERA -->
+          <div class="space-y-1">
+            <div class="px-3 text-[10px] uppercase font-mono tracking-wider text-slate-400 font-bold">BILLETERA</div>
+            <button data-dash-tab="finanzas" class="dash-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.04] transition-all">
+              <i class="fa-solid fa-wallet text-sm w-4 text-center"></i>
+              <span>Finanzas & Retiros</span>
+            </button>
+          </div>
+
+          <!-- MI CUENTA -->
+          <div class="space-y-1">
+            <div class="px-3 text-[10px] uppercase font-mono tracking-wider text-slate-400 font-bold">MI CUENTA</div>
+            <button data-dash-tab="perfil" class="dash-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-white bg-white/[0.08] transition-all">
+              <i class="fa-regular fa-user text-sm w-4 text-center"></i>
+              <span>Mi Perfil</span>
+            </button>
+            <button data-dash-tab="verificacion" class="dash-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.04] transition-all">
+              <i class="fa-solid fa-shield-halved text-sm w-4 text-center"></i>
+              <span>Verificación Epic</span>
+            </button>
+            <button data-dash-tab="ajustes" class="dash-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.04] transition-all">
+              <i class="fa-solid fa-gear text-sm w-4 text-center"></i>
+              <span>Ajustes</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="pt-6 border-t border-white/5 space-y-3">
+        <button id="btnBackToLanding" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Volver al sitio</span>
+        </button>
+        <div class="flex items-center justify-between px-3 text-xs text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="text-sm">🇪🇸</span> Español</span>
+          <button id="btnDashLogout" class="hover:text-rose-400 font-mono text-[11px] font-bold uppercase transition-colors">
+            SALIR
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Dashboard Workspace -->
+    <main id="dashMainContainer" class="flex-1 min-w-0 p-4 sm:p-8 lg:p-10 max-w-6xl mx-auto space-y-8 overflow-y-auto">
+
+      <!-- ========================================== -->
+      <!-- TAB 1: PERFIL (Image 1)                   -->
+      <!-- ========================================== -->
+      <section id="dashTabPerfil" class="dash-tab-content space-y-8">
+        <!-- User Profile Card -->
+        <div class="rounded-3xl bg-[#0e1017] border border-white/5 p-6 sm:p-8 space-y-6">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div class="flex items-center gap-5">
+              <img id="dashUserAvatar" src="assets/logo.png" alt="Avatar" class="w-20 h-20 rounded-2xl object-cover border border-white/10 shadow-lg shrink-0">
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <h2 id="dashUsername" class="text-2xl font-black text-white">nadador</h2>
+                  <span class="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono font-bold text-slate-300">NV. 1 · NOVATO</span>
+                </div>
+                <p id="dashUserDiscordTag" class="text-xs text-slate-400 font-mono">nadador@discord</p>
+                <div class="space-y-1 pt-1">
+                  <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                    <span>Progreso de nivel</span>
+                    <span>0 / 100 XP</span>
+                  </div>
+                  <div class="w-48 sm:w-64 h-1.5 bg-obsidian-950 rounded-full overflow-hidden border border-white/5">
+                    <div class="h-full bg-gradient-to-r from-wpurple-500 to-wcyan-400 w-0"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Saldo Disponible & Botones -->
+          <div class="pt-6 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400">SALDO DISPONIBLE</div>
+              <div class="flex items-baseline gap-2 flex-wrap">
+                <span id="dashBalanceTokens" class="text-3xl font-black font-mono text-white">S/ 93.75 PEN</span>
+                <span id="dashBalanceLocal" class="text-xs font-mono text-emerald-400 font-bold">(25.00 WT)</span>
+                <button id="btnOpenChangeCountry" class="ml-2 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-slate-300 hover:text-white transition-all flex items-center gap-1.5" title="Cambiar país y métodos de pago">
+                  <span id="dashCountryFlag">🇵🇪</span>
+                  <span id="dashCountryName">Perú</span>
+                  <i class="fa-solid fa-pen-to-square text-[9px] text-amber-400"></i>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button id="dashBtnVerFinanzas" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-obsidian-950 font-bold text-xs uppercase tracking-wider shadow-lg transition-all flex items-center gap-2">
+                <i class="fa-solid fa-wallet"></i>
+                <span>VER FINANZAS</span>
+              </button>
+              <button id="dashBtnVerPublico" class="px-4 py-2.5 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 border border-white/10 text-slate-300 font-semibold text-xs transition-all">
+                VER PERFIL PÚBLICO
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen del Período -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 class="text-xs font-mono font-bold tracking-wider uppercase text-slate-400">RESUMEN DEL PERÍODO</h3>
+            <div class="flex items-center gap-1 p-1 rounded-xl bg-[#0e1017] border border-white/5 text-xs font-mono overflow-x-auto">
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">7 días</button>
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">15 días</button>
+              <button class="dash-period-btn active px-3 py-1 rounded-lg bg-white/10 text-white font-bold transition-all">30 días</button>
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">60 días</button>
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">Todo el historial</button>
+            </div>
+          </div>
+
+          <!-- 4 Métricas Clave -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+              <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">TASA DE VICTORIA</div>
+              <div id="metricWinRate" class="text-2xl font-black font-mono text-white">73.4%</div>
+            </div>
+            <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+              <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">RESULTADO</div>
+              <div id="metricProfit" class="text-2xl font-black font-mono text-emerald-400">+$192,50</div>
+            </div>
+            <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+              <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">VOLUMEN DE ENTRADAS</div>
+              <div id="metricVolume" class="text-2xl font-black font-mono text-white">$650,00</div>
+            </div>
+            <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+              <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">PARTIDAS</div>
+              <div id="metricMatches" class="text-2xl font-black font-mono text-white">64</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historial de Partidas -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Historial de partidas</h3>
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="font-mono">Resultado:</span>
+              <select class="bg-[#0e1017] border border-white/10 rounded-lg px-2.5 py-1 text-white text-xs">
+                <option>Todas</option>
+                <option>Victorias</option>
+                <option>Derrotas</option>
+              </select>
+              <span class="font-mono">0 partidas</span>
+            </div>
+          </div>
+          <div class="p-12 rounded-2xl bg-[#0e1017] border border-white/5 text-center space-y-3">
+            <i class="fa-solid fa-gamepad text-3xl text-slate-600"></i>
+            <p class="text-xs text-slate-400">No encontramos partidas en el período seleccionado.</p>
+            <a href="https://discord.gg" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-wpurple-600 hover:bg-wpurple-500 text-white font-bold text-xs transition-all shadow-md">
+              <i class="fa-brands fa-discord"></i>
+              <span>Crear duelo en Discord</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: VERIFICACIÓN (Image 2)             -->
+      <!-- ========================================== -->
+      <section id="dashTabVerificacion" class="dash-tab-content space-y-8 hidden">
+        <div>
+          <h2 class="text-3xl font-extrabold text-white">Verificación de la <span class="text-amber-500">cuenta</span></h2>
+          <p class="text-xs sm:text-sm text-slate-400 pt-1">
+            Tu cuenta está lista para jugar. La verificación de cada juego es independiente — verifica solo los que quieras jugar.
+          </p>
+        </div>
+
+        <!-- Status Cards & Support Code -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Left: Verified Summary Badges -->
+          <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Discord -->
+            <div class="p-4 rounded-2xl bg-[#0e1017] border border-white/5 flex items-center gap-3">
+              <img id="dashVerifDiscordAvatar" src="assets/logo.png" class="w-10 h-10 rounded-xl object-cover shrink-0">
+              <div class="min-w-0">
+                <div id="dashVerifDiscordName" class="text-xs font-bold text-white truncate">nadador</div>
+                <span class="inline-block px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-mono font-bold">VINCULADO</span>
+              </div>
+            </div>
+
+            <!-- Epic Games -->
+            <div class="p-4 rounded-2xl bg-[#0e1017] border border-white/5 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+                <i class="fa-brands fa-epic-games text-lg"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-white">Epic Games</div>
+                <div id="dashVerifEpicStatus" class="flex items-center gap-1">
+                  <span class="inline-block px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-mono font-bold">VINCULADO</span>
+                  <span id="dashVerifEpicNickDisplay" class="text-[10px] text-slate-400 font-mono truncate">NICK...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Juegos Verificados -->
+            <div class="p-4 rounded-2xl bg-[#0e1017] border border-white/5 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-wpurple-500/20 text-wpurple-400 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-gamepad text-lg"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white">Juegos verificados</div>
+                <span class="text-xs font-mono font-bold text-emerald-400">1 / 1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Creator / Referral Code Box -->
+          <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-3">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-gift text-amber-500 text-xs"></i>
+              <span class="text-[10px] font-mono uppercase font-bold text-amber-400">CÓDIGO DE APOYO</span>
+              <span class="text-[9px] text-slate-500 font-mono">OPCIONAL</span>
+            </div>
+            <p class="text-xs text-slate-400">¿Tienes el código de un creador? Regístralo y gana beneficios en tus partidas.</p>
+            <div class="space-y-2">
+              <input type="text" id="inputDashCreatorCode" placeholder="EJ: WT-K1NG" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase placeholder-slate-600 focus:outline-none focus:border-amber-500">
+              <button id="btnDashRegisterCode" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-obsidian-950 font-bold text-xs uppercase transition-all">
+                REGISTRAR CÓDIGO
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Del Discord al Rol (3 Pasos) -->
+        <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-5">
+          <h3 class="text-base font-bold text-white">Del Discord al rol</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+              <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-xs">1</div>
+              <h4 class="text-xs font-bold text-white">Libera tu cuenta en Discord</h4>
+              <p class="text-[11px] text-slate-400 leading-relaxed">Abre el servidor oficial de WTOKENS y autoriza tu bot para vincular roles de competidor.</p>
+            </div>
+            <div class="space-y-2">
+              <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-xs">2</div>
+              <h4 class="text-xs font-bold text-white">Verifica Fortnite</h4>
+              <p class="text-[11px] text-slate-400 leading-relaxed">Confirma tu apodo exacto de Epic Games para que los rivales puedan invitarte a la partida.</p>
+            </div>
+            <div class="space-y-2">
+              <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-xs">3</div>
+              <h4 class="text-xs font-bold text-white">Roles activos en Discord</h4>
+              <p class="text-[11px] text-slate-400 leading-relaxed">Cada verificación libera automáticamente tu rol de país y de jugador verificado en Discord.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verificación de Juegos (Especialidad Fortnite) -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Verificación de juegos</h3>
+            <span class="text-xs font-mono text-slate-400">1 DE 1 VERIFICADOS</span>
+          </div>
+
+        <!-- Verificación de Juegos (Inspirado 1:1 en BR Tokens) -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <h3 class="text-xl font-bold text-white">Verificación de juegos</h3>
+            <span class="text-xs text-slate-400">Cada juego es independiente: rellena solo los que juegas.</span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold" id="labelPendingGames">AÚN FALTAN</div>
+            
+            <!-- Epic Games Verification Card (Matches Image 1 100%) -->
+            <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4 max-w-3xl">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div class="flex items-center gap-4">
+                  <!-- Chain Link Icon Container (Matches Image 1) -->
+                  <div class="w-12 h-12 rounded-2xl bg-[#141722] border border-white/5 flex items-center justify-center text-amber-500 text-xl shadow shrink-0">
+                    <i class="fa-solid fa-link"></i>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2.5">
+                      <span class="font-bold text-white text-base">Epic Games</span>
+                      <span id="badgeEpicVerifCard" class="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-400 text-[10px] font-mono font-bold">PENDIENTE</span>
+                    </div>
+                    <p id="subtextEpicVerifCard" class="text-xs text-slate-400">Libera validación de partidas y torneos de Fortnite.</p>
+                  </div>
+                </div>
+
+                <!-- Solid Amber Button: VINCULAR EPIC GAMES -->
+                <button id="btnDirectEpicLogin" class="px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 flex items-center justify-center gap-2">
+                  <i class="fa-brands fa-epic-games text-sm"></i>
+                  <span id="btnEpicCardText">VINCULAR EPIC GAMES</span>
+                </button>
+              </div>
+
+              <!-- Footnote (From Image 1) -->
+              <p class="text-[11px] text-slate-400 font-sans pt-3 border-t border-white/5 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-info text-amber-500/70 text-xs"></i>
+                <span>La autenticación ocurre automáticamente tras hacer clic en el botón.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: AJUSTES (Images 3 & 4)             -->
+      <!-- ========================================== -->
+      <section id="dashTabAjustes" class="dash-tab-content space-y-8 hidden">
+        <div>
+          <h2 class="text-3xl font-extrabold text-white">Tus <span class="text-amber-500">ajustes</span></h2>
+          <p class="text-xs sm:text-sm text-slate-400 pt-1">
+            Idioma, lo que muestra el perfil público e invitaciones.
+          </p>
+        </div>
+
+        <!-- Section: Cuenta -->
+        <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider text-slate-300">Cuenta</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-mono uppercase text-slate-400 mb-1.5">IDIOMA</label>
+              <select id="dashSelectLang" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                <option value="es">Español</option>
+                <option value="pt">Português</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-mono uppercase text-slate-400 mb-1.5">PAÍS / MONEDA DE SALDO</label>
+              <select id="dashSelectCurrency" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                <option value="ARS">🇦🇷 Argentina (ARS · Mercado Pago / Alias)</option>
+                <option value="CLP">🇨🇱 Chile (CLP · CuentaRUT / MACH)</option>
+                <option value="PEN">🇵🇪 Perú (PEN · Yape / Plin / BCP)</option>
+                <option value="UYU">🇺🇾 Uruguay (UYU · Prex / Midinero)</option>
+                <option value="PYG">🇵🇾 Paraguay (PYG · Giros Tigo / SIPAP)</option>
+                <option value="BOB">🇧🇴 Bolivia (BOB · QR Simple)</option>
+                <option value="USD">🌐 Internacional (USD · Binance Pay)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Visibilidad -->
+        <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider text-slate-300">Visibilidad</h3>
+          <div class="flex items-center justify-between py-2 border-b border-white/5">
+            <div>
+              <div class="text-xs font-bold text-white">Perfil público</div>
+              <p class="text-[11px] text-slate-400">Otros jugadores pueden abrir tu perfil desde el ranking o el enlace.</p>
+            </div>
+            <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+              <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="publicProfile" data-val="no">No</button>
+              <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="publicProfile" data-val="si">Sí</button>
+            </div>
+          </div>
+          <button class="px-4 py-2 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/10 text-xs text-slate-300 font-semibold transition-all">
+            VER PERFIL PÚBLICO
+          </button>
+        </div>
+
+        <!-- Section: Qué aparece -->
+        <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider text-slate-300">Qué aparece</h3>
+          
+          <div class="space-y-3">
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-xs font-bold text-white">Mostrar saldo</div>
+                <p class="text-[11px] text-slate-400">Muestra tu saldo en reales / moneda en el perfil público.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="showBalance" data-val="no">No</button>
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="showBalance" data-val="si">Sí</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-xs font-bold text-white">Mostrar valor de entrada</div>
+                <p class="text-[11px] text-slate-400">Muestra el total y las entradas en partidas recientes.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="showStake" data-val="no">No</button>
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="showStake" data-val="si">Sí</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-xs font-bold text-white">Mostrar tags</div>
+                <p class="text-[11px] text-slate-400">Muestra las tags oficiales asignadas por el equipo.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="showTags" data-val="no">No</button>
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="showTags" data-val="si">Sí</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-2">
+              <div>
+                <div class="text-xs font-bold text-white">Mostrar logros</div>
+                <p class="text-[11px] text-slate-400">Muestra tus logros en el perfil público.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="showAchievements" data-val="no">No</button>
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="showAchievements" data-val="si">Sí</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Invitaciones -->
+        <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider text-slate-300">Invitaciones</h3>
+
+          <div class="space-y-3">
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-xs font-bold text-white">Bloquear invitaciones por MD de Discord</div>
+                <p class="text-[11px] text-slate-400">Impide que otros jugadores te inviten por mensaje directo.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="blockDiscordDM" data-val="no">No</button>
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="blockDiscordDM" data-val="si">Sí</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-xs font-bold text-white">Bloquear invitaciones del sitio</div>
+                <p class="text-[11px] text-slate-400">Bloquea invitaciones de partida, lobby, clan y evento en el sitio.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="blockSiteInvites" data-val="no">No</button>
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="blockSiteInvites" data-val="si">Sí</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between py-2">
+              <div>
+                <div class="text-xs font-bold text-white">Bloquear solicitudes de amistad</div>
+                <p class="text-[11px] text-slate-400">Impide que otros jugadores te envíen solicitudes de amistad. Todo permanece solo en el sitio, sin avisos en Discord.</p>
+              </div>
+              <div class="flex items-center p-1 rounded-xl bg-obsidian-950 border border-white/10 text-xs font-mono">
+                <button class="switch-toggle active px-3 py-1 rounded-lg bg-amber-500 text-obsidian-950 font-bold" data-switch="blockFriendReqs" data-val="no">No</button>
+                <button class="switch-toggle px-3 py-1 rounded-lg text-slate-400 hover:text-white" data-switch="blockFriendReqs" data-val="si">Sí</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button id="btnSaveDashAjustes" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold text-xs uppercase tracking-wider transition-all shadow-lg">
+          GUARDAR AJUSTES
+        </button>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 4: FINANZAS (Image 5)                 -->
+      <!-- ========================================== -->
+      <section id="dashTabFinanzas" class="dash-tab-content space-y-8 hidden">
+        <div>
+          <h2 class="text-3xl font-extrabold text-white">Área <span class="text-amber-500">financiera</span></h2>
+          <p class="text-xs sm:text-sm text-slate-400 pt-1">
+            Extracto, transferencias entre jugadores y pagos.
+          </p>
+        </div>
+
+        <!-- Subtabs: Extracto / Transferir / Recargar / Retirar -->
+        <div class="flex items-center gap-2 border-b border-white/5 pb-2 text-xs font-mono overflow-x-auto">
+          <button data-fin-subtab="extracto" class="dash-fin-tab active px-4 py-2 rounded-xl bg-white/10 text-white font-bold transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Extracto</span>
+          </button>
+          <button data-fin-subtab="transferir" class="dash-fin-tab px-4 py-2 rounded-xl text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            <span>Transferir</span>
+          </button>
+          <button data-fin-subtab="recargar" class="dash-fin-tab px-4 py-2 rounded-xl text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-down"></i>
+            <span>Recargar / Depositar</span>
+          </button>
+          <button data-fin-subtab="retirar" class="dash-fin-tab px-4 py-2 rounded-xl text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-up"></i>
+            <span>Retirar Ganancias</span>
+          </button>
+        </div>
+
+        <!-- Balance Metrics Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">SALDO ACTUAL</div>
+            <div id="dashFinMainBalance" class="text-2xl font-black font-mono text-amber-500">S/ 93.75 PEN</div>
+            <div id="dashFinMainBalanceLocal" class="text-xs font-mono text-slate-400">(25.00 WT)</div>
+          </div>
+          <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">ENTRADAS EN ESTA LISTA</div>
+            <div class="text-2xl font-black font-mono text-emerald-400">+$0,00</div>
+          </div>
+          <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">SALIDAS EN ESTA LISTA</div>
+            <div class="text-2xl font-black font-mono text-rose-500">-$0,00</div>
+          </div>
+        </div>
+
+        <!-- SUBTAB 1: EXTRACTO -->
+        <div id="subtabContentExtracto" class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-1 p-1 rounded-xl bg-[#0e1017] border border-white/5 text-xs font-mono overflow-x-auto">
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white">7 días</button>
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white">15 días</button>
+              <button class="dash-period-btn active px-3 py-1 rounded-lg bg-white/10 text-white font-bold">30 días</button>
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white">60 días</button>
+              <button class="dash-period-btn px-3 py-1 rounded-lg text-slate-400 hover:text-white">Todo el historial</button>
+            </div>
+            <div>
+              <select class="bg-[#0e1017] border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                <option>Todos los tipos</option>
+                <option>Recargas</option>
+                <option>Retiros</option>
+                <option>Premios de Duelo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="p-16 rounded-2xl bg-[#0e1017] border border-white/5 text-center space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center text-xl">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <h4 class="text-sm font-bold text-white">Ningún movimiento encontrado</h4>
+            <p class="text-xs text-slate-400">No encontramos movimientos en el período seleccionado.</p>
+          </div>
+        </div>
+
+        <!-- SUBTAB 2: RECARGAR -->
+        <div id="subtabContentRecargar" class="space-y-6 hidden">
+          <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-5">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-semibold text-slate-300">Método de recarga:</label>
+                <button type="button" class="btn-change-country-link text-[11px] font-mono text-amber-400 hover:text-amber-300 underline flex items-center gap-1 cursor-pointer" title="Cambiar país">
+                  <span id="dashRecargarCountryName">🇵🇪 Perú</span> · <span>Cambiar país</span>
+                </button>
+              </div>
+              <select id="dashDepositCountrySelect" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                <!-- Se llena dinámicamente con solo los métodos del país del jugador -->
+              </select>
+            </div>
+
+            <!-- Dynamic Payment Box -->
+            <div id="dashPaymentBoxDetails" class="p-5 rounded-2xl bg-obsidian-950 border border-white/5 space-y-4">
+              <!-- Populated by JS -->
+            </div>
+
+            <button id="btnDashConfirmDeposit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-wcyan-600 text-white font-bold text-sm shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Confirmar Recarga</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SUBTAB 3: RETIRAR -->
+        <div id="subtabContentRetirar" class="space-y-6 hidden">
+          <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-5">
+            <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2.5">
+              <i class="fa-solid fa-circle-info text-base"></i>
+              <span>Retiro mínimo: <strong>$5.00 USD</strong>. Los retiros se procesan todos los días de 13:00 a 22:00 hs.</span>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Monto a retirar (USD Tokens):</label>
+                <input type="number" id="dashWithdrawAmount" min="5" max="500" value="10" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                <span id="dashWithdrawLocalEquivalent" class="text-[11px] text-emerald-400 font-mono mt-1 block">Recibirás: ~$12.250 ARS</span>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-semibold text-slate-300">Método de cobro:</label>
+                  <button type="button" class="btn-change-country-link text-[11px] font-mono text-amber-400 hover:text-amber-300 underline flex items-center gap-1 cursor-pointer" title="Cambiar país">
+                    <span id="dashRetirarCountryName">🇵🇪 Perú</span> · <span>Cambiar país</span>
+                  </button>
+                </div>
+                <select id="dashWithdrawMethodSelect" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                  <!-- Se llena dinámicamente con solo los métodos del país del jugador -->
+                </select>
+              </div>
+
+              <div>
+                <label id="dashWithdrawDestinationLabel" class="block text-xs font-semibold text-slate-300 mb-1">Dato de Destino (Celular, Alias, RUT o Pay ID):</label>
+                <input type="text" id="dashWithdrawDestination" placeholder="Ej: 928 374 819" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              </div>
+
+              <button id="btnDashConfirmWithdraw" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-600 to-indigo-600 text-white font-bold text-sm shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <span>Solicitar Retiro de Fondos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBTAB 4: TRANSFERIR -->
+        <div id="subtabContentTransferir" class="space-y-6 hidden">
+          <div class="p-6 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4">
+            <h3 class="text-sm font-bold text-white">Transferir Tokens entre Jugadores</h3>
+            <p class="text-xs text-slate-400">Envía saldo al instante a otro usuario verificado de WTOKENS sin comisión.</p>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Usuario de Discord destinatario:</label>
+                <input type="text" id="inputTransferRecipient" placeholder="Ej: @vitor.fn o ID de Discord" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Monto a transferir (WT):</label>
+                <input type="number" id="inputTransferAmount" min="1" max="100" value="5" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Mensaje (opcional):</label>
+                <input type="text" id="inputTransferNote" placeholder="Premio por torneo o pago de apuesta" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              </div>
+              <button id="btnDashConfirmTransfer" class="w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-obsidian-950 font-bold text-sm transition-all shadow-md">
+                Transferir Saldo Ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: LOBBY (Image 6)                     -->
+      <!-- ========================================== -->
+      <section id="dashTabLobby" class="dash-tab-content space-y-8 hidden">
+        <div>
+          <h2 class="text-3xl font-extrabold text-white">Tu <span class="text-amber-500">lobby</span></h2>
+          <p class="text-xs sm:text-sm text-slate-400 pt-1">
+            Invita jugadores a la cola y forma tu equipo.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Main Lobby Slots -->
+          <div class="lg:col-span-8 space-y-6">
+            <!-- Invite bar -->
+            <div class="p-3.5 rounded-2xl bg-[#0e1017] border border-white/5 flex items-center gap-3">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-obsidian-950 text-xs font-mono text-slate-300 font-bold">
+                <i class="fa-solid fa-users text-amber-500"></i>
+                <span id="lobbyCounterBadge">Lobby 1/4</span>
+              </div>
+              <input type="text" id="inputLobbyInvite" placeholder="Nombre o ID de Discord" class="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none px-2">
+              <button id="btnLobbySendInvite" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-obsidian-950 font-bold text-xs uppercase transition-all">
+                + INVITAR
+              </button>
+            </div>
+
+            <!-- 4 Slots Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <!-- Slot 1: Empty -->
+              <div id="lobbySlot1" class="lobby-slot-card h-64 rounded-2xl bg-[#0e1017] border border-dashed border-white/10 hover:border-amber-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group">
+                <div class="w-10 h-10 rounded-full bg-white/5 group-hover:bg-amber-500/20 text-slate-500 group-hover:text-amber-400 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 group-hover:text-white">INVITAR</span>
+              </div>
+
+              <!-- Slot 2: Empty -->
+              <div id="lobbySlot2" class="lobby-slot-card h-64 rounded-2xl bg-[#0e1017] border border-dashed border-white/10 hover:border-amber-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group">
+                <div class="w-10 h-10 rounded-full bg-white/5 group-hover:bg-amber-500/20 text-slate-500 group-hover:text-amber-400 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 group-hover:text-white">INVITAR</span>
+              </div>
+
+              <!-- Slot 3: User Active (LÍDER) -->
+              <div class="h-64 rounded-2xl bg-gradient-to-t from-obsidian-950 via-[#0e1017] to-amber-950/30 border-2 border-amber-500/40 p-4 flex flex-col justify-between relative overflow-hidden shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                <span class="self-center px-2.5 py-0.5 rounded-full bg-amber-500 text-obsidian-950 font-mono font-bold text-[9px] uppercase tracking-wider">
+                  👑 LÍDER
+                </span>
+                <img id="dashLobbyLeaderAvatar" src="assets/logo.png" class="w-24 h-24 rounded-2xl object-cover mx-auto border border-amber-500/30 shadow-md">
+                <div class="text-center">
+                  <div id="dashLobbyLeaderName" class="text-xs font-black uppercase text-white tracking-wider">NADADOR</div>
+                  <span class="text-[9px] text-emerald-400 font-mono">EN LÍNEA</span>
+                </div>
+              </div>
+
+              <!-- Slot 4: Empty -->
+              <div id="lobbySlot4" class="lobby-slot-card h-64 rounded-2xl bg-[#0e1017] border border-dashed border-white/10 hover:border-amber-500/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group">
+                <div class="w-10 h-10 rounded-full bg-white/5 group-hover:bg-amber-500/20 text-slate-500 group-hover:text-amber-400 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 group-hover:text-white">INVITAR</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Amigos Panel -->
+          <div class="lg:col-span-4 p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-4">
+            <div class="space-y-1">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-user-group text-slate-400"></i>
+                <span>Amigos</span>
+              </h3>
+              <p class="text-[11px] text-slate-400">Gestiona amigos, ve sugerencias e invita al lobby.</p>
+            </div>
+
+            <!-- Subtabs -->
+            <div class="flex items-center gap-1 p-1 rounded-xl bg-obsidian-950 border border-white/5 text-xs font-mono">
+              <button id="tabLobbyFriends" class="lobby-side-tab active px-3 py-1 rounded-lg bg-white/10 text-white font-bold transition-all">Amigos</button>
+              <button id="tabLobbySuggestions" class="lobby-side-tab px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">Sugerencias</button>
+              <button id="tabLobbySearch" class="lobby-side-tab px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">Buscar</button>
+            </div>
+
+            <div id="lobbyFriendsContent" class="p-6 text-center space-y-3">
+              <p id="lobbyFriendsText" class="text-xs text-slate-400 leading-relaxed">Aún no tienes amigos agregados. Usa sugerencias o busca jugadores para agregar.</p>
+              <button id="btnLobbySuggestions" class="px-4 py-2 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/10 text-xs font-mono font-bold text-amber-400 uppercase transition-all">
+                SUGERENCIAS
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 6: EVENTOS (Image 7)                  -->
+      <!-- ========================================== -->
+      <section id="dashTabEvento" class="dash-tab-content space-y-8 hidden">
+        <div>
+          <h2 class="text-3xl font-extrabold text-white">Calendario de <span class="text-amber-500">Eventos</span></h2>
+          <p class="text-xs sm:text-sm text-slate-400 pt-1">
+            Mira lo que está en curso, lo que viene y entra al equipo del evento que elijas.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-mono border-b border-white/5 pb-2">
+          <button class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white">FINALIZADOS</button>
+          <button class="px-3.5 py-1.5 rounded-lg bg-amber-500 text-obsidian-950 font-bold">EN CURSO</button>
+          <button class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white">PRÓXIMOS</button>
+        </div>
+
+        <!-- Events Grid (Poster Cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Event 1 -->
+          <div class="rounded-3xl bg-[#0e1017] border border-white/5 overflow-hidden group hover:border-amber-500/40 transition-all flex flex-col justify-between shadow-xl">
+            <div class="relative h-64 bg-gradient-to-t from-[#0e1017] via-obsidian-950 to-amber-950/40 p-6 flex flex-col justify-between">
+              <span class="self-start px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">EN VIVO HOY</span>
+              <div class="space-y-1">
+                <div class="text-xs font-mono font-bold text-amber-400">DUPLA · DOMINGO</div>
+                <div class="text-3xl font-black text-white font-mono tracking-tight">PREMIO $150</div>
+              </div>
+            </div>
+            <div class="p-5 space-y-4 border-t border-white/5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-white">#WTOKENS_DUOS</span>
+                <span class="text-[11px] font-mono text-slate-400">Box Fight 2v2</span>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">
+                Domingo · 21:00 hs BR / ARS
+              </div>
+              <button onclick="window.open('https://discord.gg', '_blank')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold text-xs uppercase tracking-wider transition-all">
+                INSCRIBIR DUPLA
+              </button>
+            </div>
+          </div>
+
+          <!-- Event 2 -->
+          <div class="rounded-3xl bg-[#0e1017] border border-white/5 overflow-hidden group hover:border-amber-500/40 transition-all flex flex-col justify-between shadow-xl">
+            <div class="relative h-64 bg-gradient-to-t from-[#0e1017] via-obsidian-950 to-indigo-950/40 p-6 flex flex-col justify-between">
+              <span class="self-start px-2.5 py-0.5 rounded-md bg-wpurple-500/20 text-wpurple-300 text-[10px] font-mono font-bold">PRÓXIMO SÁBADO</span>
+              <div class="space-y-1">
+                <div class="text-xs font-mono font-bold text-amber-400">TRIO · SÁBADO</div>
+                <div class="text-3xl font-black text-white font-mono tracking-tight">PREMIO $200</div>
+              </div>
+            </div>
+            <div class="p-5 space-y-4 border-t border-white/5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-white">#LATAM_TRIOS</span>
+                <span class="text-[11px] font-mono text-slate-400">Zone Wars 3v3</span>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">
+                Sábado · 22:00 hs BR / ARS
+              </div>
+              <button onclick="window.open('https://discord.gg', '_blank')" class="w-full py-2.5 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/10 text-white font-bold text-xs uppercase tracking-wider transition-all">
+                VER REGLAS Y REGISTRO
+              </button>
+            </div>
+          </div>
+
+          <!-- Event 3 -->
+          <div class="rounded-3xl bg-[#0e1017] border border-white/5 overflow-hidden group hover:border-amber-500/40 transition-all flex flex-col justify-between shadow-xl">
+            <div class="relative h-64 bg-gradient-to-t from-[#0e1017] via-obsidian-950 to-cyan-950/40 p-6 flex flex-col justify-between">
+              <span class="self-start px-2.5 py-0.5 rounded-md bg-wcyan-500/20 text-wcyan-300 text-[10px] font-mono font-bold">LUNES DE DUELOS</span>
+              <div class="space-y-1">
+                <div class="text-xs font-mono font-bold text-amber-400">SOLO · LUNES</div>
+                <div class="text-3xl font-black text-white font-mono tracking-tight">PREMIO $75</div>
+              </div>
+            </div>
+            <div class="p-5 space-y-4 border-t border-white/5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-white">#SOLO_MASTERS</span>
+                <span class="text-[11px] font-mono text-slate-400">Build Fight 1v1</span>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">
+                Lunes · 19:00 hs BR / ARS
+              </div>
+              <button onclick="window.open('https://discord.gg', '_blank')" class="w-full py-2.5 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/10 text-white font-bold text-xs uppercase tracking-wider transition-all">
+                VER REGLAS Y REGISTRO
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 7: CLAN                                -->
+      <!-- ========================================== -->
+      <section id="dashTabClan" class="dash-tab-content space-y-8 hidden">
+        <div>
+          <h2 class="text-3xl font-extrabold text-white">Sistema de <span class="text-amber-500">Clanes</span></h2>
+          <p class="text-xs sm:text-sm text-slate-400 pt-1">
+            Forma un clan competitivo con tus compañeros de Fortnite y compitan por premios mensuales en Sudamérica.
+          </p>
+        </div>
+
+        <div class="p-12 rounded-3xl bg-[#0e1017] border border-white/5 text-center space-y-4 max-w-xl mx-auto">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 mx-auto flex items-center justify-center text-3xl shadow-lg">
+            <i class="fa-solid fa-shield-cat"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white">No perteneces a ningún clan todavía</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Puedes fundar tu propio clan por 10 WT o unirte a un clan existente mediante una invitación de su líder en Discord.
+          </p>
+          <div class="flex items-center justify-center gap-3 pt-2">
+            <button class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold text-xs uppercase transition-all">
+              CREAR CLAN (10 WT)
+            </button>
+            <button class="px-5 py-2.5 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/10 text-slate-300 font-semibold text-xs transition-all">
+              BUSCAR CLANES
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal: Selección de País / Filtrado de Método de Pago (Tras verificar Discord) -->
+  <div id="countrySelectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden transition-opacity">
+    <div class="relative w-full max-w-lg rounded-3xl bg-obsidian-900 border border-white/10 p-6 sm:p-8 shadow-2xl space-y-6">
+      
+      <button id="closeCountryModalBtn" class="absolute top-5 right-5 text-slate-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-600 mx-auto flex items-center justify-center text-obsidian-950 text-2xl shadow-lg">
+          <i class="fa-solid fa-earth-americas"></i>
+        </div>
+        <h3 class="text-2xl font-black text-white">¿En qué país juegas?</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">
+          Selecciona tu país para configurar tus métodos de pago locales (depósitos y retiros) y tu moneda de saldo.
+        </p>
+      </div>
+
+      <!-- Country Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+        
+        <!-- Perú -->
+        <button class="country-pick-btn p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-amber-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="PER" data-currency="PEN">
+          <div class="text-3xl shrink-0">🇵🇪</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">Perú</div>
+            <div class="text-[11px] text-slate-400 truncate">Yape · Plin · BCP / Interbank</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400">PEN (S/.)</span>
+          </div>
+        </button>
+
+        <!-- Argentina -->
+        <button class="country-pick-btn p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-amber-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="ARG" data-currency="ARS">
+          <div class="text-3xl shrink-0">🇦🇷</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">Argentina</div>
+            <div class="text-[11px] text-slate-400 truncate">Mercado Pago · CVU · Lemon</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400">ARS ($)</span>
+          </div>
+        </button>
+
+        <!-- Chile -->
+        <button class="country-pick-btn p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-amber-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="CHI" data-currency="CLP">
+          <div class="text-3xl shrink-0">🇨🇱</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">Chile</div>
+            <div class="text-[11px] text-slate-400 truncate">CuentaRUT · MACH · BancoEstado</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400">CLP ($)</span>
+          </div>
+        </button>
+
+        <!-- Uruguay -->
+        <button class="country-pick-btn p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-amber-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="URU" data-currency="UYU">
+          <div class="text-3xl shrink-0">🇺🇾</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">Uruguay</div>
+            <div class="text-[11px] text-slate-400 truncate">Prex UY · Midinero · BROU</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400">UYU ($)</span>
+          </div>
+        </button>
+
+        <!-- Paraguay -->
+        <button class="country-pick-btn p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-amber-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="PAR" data-currency="PYG">
+          <div class="text-3xl shrink-0">🇵🇾</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">Paraguay</div>
+            <div class="text-[11px] text-slate-400 truncate">Giros Tigo · Ueno · SIPAP</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400">PYG (₲)</span>
+          </div>
+        </button>
+
+        <!-- Bolivia -->
+        <button class="country-pick-btn p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-amber-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="BOL" data-currency="BOB">
+          <div class="text-3xl shrink-0">🇧🇴</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">Bolivia</div>
+            <div class="text-[11px] text-slate-400 truncate">QR Simple · Banco Unión · BCP</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400">BOB (Bs)</span>
+          </div>
+        </button>
+
+        <!-- Binance / Cripto -->
+        <button class="country-pick-btn sm:col-span-2 p-3.5 rounded-2xl bg-obsidian-950 border border-white/5 hover:border-emerald-500/50 hover:bg-white/[0.03] transition-all flex items-center gap-3 text-left group" data-country="CRYPTO" data-currency="USD">
+          <div class="text-3xl shrink-0">🌐</div>
+          <div class="min-w-0">
+            <div class="font-bold text-white text-sm group-hover:text-emerald-400 transition-colors">Binance Pay & Cripto (Internacional)</div>
+            <div class="text-[11px] text-slate-400">USDT / LTC con acreditación global en segundos</div>
+            <span class="inline-block mt-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400">USD ($) · Universal</span>
+          </div>
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal: Vinculación Oficial de Epic Games (Solo tras iniciar con Discord) -->
+  <div id="epicLinkModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden transition-opacity">
+    <div class="relative w-full max-w-md rounded-2xl bg-obsidian-900 border border-white/10 p-6 shadow-2xl space-y-6">
+      
+      <button id="closeEpicModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-wpurple-600 to-wcyan-500 mx-auto flex items-center justify-center text-white text-2xl shadow-lg">
+          <i class="fa-brands fa-epic-games"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white">Vincular Epic Games</h3>
+        <p class="text-xs text-slate-400" id="epicModalUserNotice">
+          Sesión iniciada con Discord. Ingresa tu usuario de Fortnite para completar tu perfil competitivo.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Direct Epic Games 1-Click Button (Matches BR Tokens Flow) -->
+        <div class="space-y-2">
+          <button id="btnModalDirectEpicLogin" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.45)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+            <i class="fa-brands fa-epic-games text-base"></i>
+            <span>VINCULAR CON EPIC GAMES (1-CLIC)</span>
+          </button>
+          <p class="text-[11px] text-slate-400 text-center">
+            Abre la ventana oficial de Epic Games para autorizar en 1 clic automáticamente.
+          </p>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-white/10"></div>
+          <span class="flex-shrink mx-3 text-[10px] font-mono text-slate-500 uppercase">O ingresar nickname manualmente</span>
+          <div class="flex-grow border-t border-white/10"></div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-obsidian-950 border border-white/5 space-y-3">
+          <label class="block text-xs font-semibold text-slate-300">Tu Nickname exacto en Epic Games (Fortnite):</label>
+          <div class="relative">
+            <input type="text" id="inputEpicNick" placeholder="Ej: K1ngFnatic_24" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+          </div>
+
+          <label class="block text-xs font-semibold text-slate-300 pt-1">Tu País / Moneda de Saldo:</label>
+          <div class="relative">
+            <select id="selectCountryModal" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              <option value="ARS">🇦🇷 Argentina (ARS - Mercado Pago / Alias)</option>
+              <option value="CLP">🇨🇱 Chile (CLP - CuentaRUT / MACH)</option>
+              <option value="PEN">🇵🇪 Perú (PEN - Yape / Plin / BCP)</option>
+              <option value="UYU">🇺🇾 Uruguay (UYU - Prex / Midinero)</option>
+              <option value="PYG">🇵🇾 Paraguay (PYG - Giros Tigo / SIPAP)</option>
+              <option value="BOB">🇧🇴 Bolivia (BOB - QR Simple / BCP)</option>
+              <option value="USD">🌐 Internacional (USD - Binance Pay / Cripto)</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="btnSaveEpicLink" class="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold text-xs uppercase tracking-wider hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+          <span>Guardar y Activar Cuenta</span>
+          <i class="fa-solid fa-arrow-right text-xs text-amber-500"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Interactive Modal: Wallet / Depositar y Retirar -->
+  <div id="walletModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden transition-opacity">
+    <div class="relative w-full max-w-lg rounded-3xl bg-obsidian-900 border border-white/10 p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+      
+      <button id="closeWalletModalBtn" class="absolute top-5 right-5 text-slate-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Wallet Header & Balance -->
+      <div class="flex items-center gap-3.5 pb-4 border-b border-white/5">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl shadow-lg">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div>
+          <span class="text-xs font-mono uppercase tracking-wider text-slate-400">Billetera Oficial WTOKENS</span>
+          <div class="flex items-baseline gap-2">
+            <span id="walletModalTokens" class="text-2xl font-black font-mono text-white">S/ 93.75 PEN</span>
+            <span id="walletModalLocal" class="text-xs font-mono text-emerald-400 font-bold">(25.00 WT)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wallet Navigation Tabs -->
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-obsidian-950 border border-white/5 font-mono text-xs">
+        <button id="tabDepositBtn" class="py-2.5 rounded-lg bg-emerald-600 text-white font-bold transition-all flex items-center justify-center gap-1.5 shadow-md">
+          <i class="fa-solid fa-arrow-down"></i>
+          <span>Recargar / Depositar</span>
+        </button>
+        <button id="tabWithdrawBtn" class="py-2.5 rounded-lg text-slate-400 hover:text-white font-semibold transition-all flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-arrow-up"></i>
+          <span>Retirar Ganancias</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: DEPOSIT / RECARGAR -->
+      <div id="tabDepositContent" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Selecciona el método de pago local:</label>
+          <select id="walletDepositCountry" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <option value="ARG">🇦🇷 Argentina · Mercado Pago con QR / Alias / CVU</option>
+            <option value="PER">🇵🇪 Perú · Yape / Plin / PagoEfectivo</option>
+            <option value="CHI">🇨🇱 Chile · CuentaRUT / BancoEstado / MACH</option>
+            <option value="URU">🇺🇾 Uruguay · Prex / Midinero</option>
+            <option value="PAR">🇵🇾 Paraguay · Giros Tigo / SIPAP</option>
+            <option value="BOL">🇧🇴 Bolivia · QR Simple (Banco Unión / BCP)</option>
+            <option value="CRYPTO">🌐 Binance Pay / USDT Cripto (0% Comisión)</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Payment Box -->
+        <div id="paymentBoxDetails" class="p-4 rounded-2xl bg-obsidian-950 border border-white/5 space-y-4">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Confirmation Action -->
+        <div class="space-y-2">
+          <button id="btnConfirmDeposit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-wcyan-600 text-white font-bold text-sm shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Confirmar Recarga</span>
+          </button>
+          <p class="text-[10px] text-center text-slate-400">
+            Acreditación automática en menos de 2 minutos vía webhook oficial.
+          </p>
+        </div>
+      </div>
+
+      <!-- TAB 2: WITHDRAW / RETIRAR -->
+      <div id="tabWithdrawContent" class="space-y-4 hidden">
+        <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2.5">
+          <i class="fa-solid fa-circle-info text-base"></i>
+          <span>Retiro mínimo: <strong>$5.00 USD</strong>. Los retiros se procesan de 13:00 a 22:00 hs.</span>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Monto a retirar (USD Tokens):</label>
+            <input type="number" id="withdrawAmount" min="5" max="500" value="10" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <span id="withdrawLocalEquivalent" class="text-[11px] text-emerald-400 font-mono mt-1 block">Recibirás: ~$12.250 ARS</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Método de cobro:</label>
+            <select id="withdrawMethodSelect" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+              <option value="mp">Mercado Pago (Alias / CVU)</option>
+              <option value="yape">Yape / Plin (Número celular)</option>
+              <option value="cuentarut">CuentaRUT (RUT y Banco)</option>
+              <option value="prex">Prex Uruguay</option>
+              <option value="binance">Binance Pay (Pay ID / Email)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Dato de Destino (Alias, CVU, Celular o Pay ID):</label>
+            <input type="text" id="withdrawDestination" placeholder="Ej: k1ng.mp o 928374819" class="w-full bg-obsidian-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <button id="btnConfirmWithdraw" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-indigo-600 text-white font-bold text-sm shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+          <i class="fa-solid fa-money-bill-transfer"></i>
+          <span>Solicitar Retiro</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
