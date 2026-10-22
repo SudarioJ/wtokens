@@ -8,6 +8,8 @@ import {
   transactionSchema,
   lobbySchema,
   matchSchema,
+  currentTeamSchema,
+  teamInvitationSchema,
 } from "./contracts";
 
 export class ApiError extends Error {
@@ -21,6 +23,15 @@ export class ApiError extends Error {
 export function friendlyError(error: unknown): string {
   if (error instanceof ApiError) {
     const messages: Record<string, string> = {
+      ALREADY_IN_TEAM:
+        "Ya perteneces a un equipo. Sal de él antes de unirte a otro.",
+      TEAM_FULL: "El equipo ya está completo.",
+      INVALID_INVITE: "El código de invitación no es válido o ya venció.",
+      INVALID_MODE: "Esta modalidad todavía no está disponible.",
+      CAPTAIN_REQUIRED: "Solo el capitán puede realizar esta acción.",
+      CAPTAIN_MUST_DISBAND:
+        "Como capitán, debes cerrar el equipo antes de salir.",
+      ACTIVE_MATCH: "Termina tu duelo actual antes de cambiar de equipo.",
       WAGERING_DISABLED:
         "Los desafíos con dinero están deshabilitados en este entorno.",
       NOT_ELIGIBLE: "Tu cuenta aún no está habilitada para participar.",
@@ -100,6 +111,29 @@ async function write<T>(
 
 const uuid = (id: string) => z.uuid().parse(id);
 export const api = {
+  team: () => request("/v1/teams", currentTeamSchema),
+  createTeam: (mode: string, size: number) =>
+    write("/v1/teams", currentTeamSchema, { mode, size }, crypto.randomUUID()),
+  inviteTeam: () =>
+    write(
+      "/v1/teams/invitation",
+      teamInvitationSchema,
+      {},
+      crypto.randomUUID(),
+    ),
+  joinTeam: (code: string) =>
+    write("/v1/teams/join", currentTeamSchema, { code }, crypto.randomUUID()),
+  leaveTeam: () =>
+    write("/v1/teams/leave", currentTeamSchema, {}, crypto.randomUUID()),
+  disbandTeam: () =>
+    write("/v1/teams/disband", currentTeamSchema, {}, crypto.randomUUID()),
+  removeTeamMember: (id: string) =>
+    write(
+      `/v1/teams/members/${uuid(id)}/remove`,
+      currentTeamSchema,
+      {},
+      crypto.randomUUID(),
+    ),
   platform: () => request("/v1/platform", platformSchema),
   health: () =>
     request("/actuator/health", z.object({ status: z.literal("UP") })),

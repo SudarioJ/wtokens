@@ -106,3 +106,30 @@ export type Balance = z.infer<typeof balanceSchema>;
 export type Transaction = z.infer<typeof transactionSchema>;
 export type LobbyMatch = z.infer<typeof lobbySchema>;
 export type Match = z.infer<typeof matchSchema>;
+export const teamSchema = z.object({
+  id: z.uuid(),
+  captainId: z.uuid(),
+  mode: z.string(),
+  size: z.number().int().min(1).max(4),
+  members: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        name: z.string().max(100),
+        points: z.number().int().nonnegative(),
+        level: z.number().int().min(1).max(10),
+      }),
+    )
+    .min(1)
+    .max(4),
+  level: z.number().int().min(1).max(10),
+  points: z.number().int().nonnegative(),
+  complete: z.boolean(),
+});
+export const currentTeamSchema = z.object({ team: teamSchema.nullable() });
+export const teamInvitationSchema = z.object({
+  team: teamSchema,
+  inviteCode: z.string().regex(/^[a-f0-9]{64}$/),
+  expiresAt: z.iso.datetime(),
+});
+export type Team = z.infer<typeof teamSchema>;

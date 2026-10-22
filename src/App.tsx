@@ -40,6 +40,7 @@ import { Landing } from "./components/Landing";
 import { UserAvatar } from "./components/UserAvatar";
 import { CurrencyOptions } from "./components/CurrencyOptions";
 import { RankPanel } from "./components/RankPanel";
+import { TeamPanel } from "./components/TeamPanel";
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
 import { discordCommunityUrl } from "./lib/community";
 import { api, ApiError, friendlyError } from "./lib/api";
@@ -614,6 +615,9 @@ export function App() {
               {view === "arena" && (
                 <>
                   {user?.ranking && <RankPanel ranking={user.ranking} />}
+                  {user && (
+                    <TeamPanel key={user.id} userId={user.id} modes={modes} />
+                  )}
                   <section className="hero" aria-labelledby="hero-title">
                     <img
                       src="/assets/modes/boxfight.jpg"

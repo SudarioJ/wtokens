@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import type { Team } from "../../src/lib/contracts";
 
 async function mockApi(
   page: Page,
@@ -11,6 +12,7 @@ async function mockApi(
   } = {},
 ) {
   let signedIn = options.signedIn ?? false;
+  let team: Team | null = null;
   await page.route("**/actuator/health", (route) =>
     route.fulfill({
       status: options.offline ? 503 : 200,
@@ -19,11 +21,45 @@ async function mockApi(
   );
   await page.route("**/v1/**", (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path === "/v1/teams" && route.request().method() === "POST") {
+      const { mode, size } = route.request().postDataJSON();
+      team = {
+        id: "9585cba1-c01d-4b3b-acb9-3e825f93c977",
+        captainId: "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4",
+        mode,
+        size,
+        members: [
+          {
+            id: "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4",
+            name: "Jugador de prueba",
+            level: 1,
+            points: 0,
+          },
+        ],
+        level: 1,
+        points: 0,
+        complete: size === 1,
+      };
+      return route.fulfill({ json: { team } });
+    }
+    if (path === "/v1/teams/invitation")
+      return route.fulfill({
+        json: {
+          team,
+          inviteCode: "a".repeat(64),
+          expiresAt: "2026-10-23T12:00:00Z",
+        },
+      });
+    if (path === "/v1/teams/disband") {
+      team = null;
+      return route.fulfill({ json: { team } });
+    }
     if (path === "/v1/auth/logout") {
       signedIn = false;
       return route.fulfill({ status: 204 });
     }
     const values: Record<string, unknown> = {
+      "/v1/teams": { team },
       "/v1/platform": {
         discordEnabled: true,
         wageringEnabled: false,
@@ -114,6 +150,52 @@ async function nav(page: Page, name: string) {
   if (await menu.isVisible()) await menu.click();
   await page.getByRole("button", { name, exact: true }).first().click();
 }
+
+test("captain can form a 4v4 team, generate an invitation and close it", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  await page.goto("/app");
+  const panel = page.getByRole("region", { name: "Tu formación", exact: true });
+  await expect(
+    panel.getByRole("heading", { name: "Crea tu equipo" }),
+  ).toBeVisible();
+  await panel.getByRole("combobox", { name: /Formato/ }).selectOption("4");
+  await panel
+    .getByRole("button", { name: "Crear equipo", exact: true })
+    .click();
+  await expect(
+    panel.getByText("Box Fight · 4v4", { exact: true }),
+  ).toBeVisible();
+  await expect(panel.getByRole("listitem")).toHaveCount(4);
+  await panel
+    .getByRole("button", { name: "Generar código de invitación", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("textbox", {
+      name: "Código para tus compañeros",
+      exact: true,
+    }),
+  ).toHaveValue("a".repeat(64));
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await panel.screenshot({
+    path: `test-results/teams-${info.project.name}.png`,
+  });
+  await panel
+    .getByRole("button", { name: "Cerrar equipo", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("heading", { name: "Crea tu equipo" }),
+  ).toBeVisible();
+});
 
 test("ten ranks show server progress independently for each mode", async ({
   page,
