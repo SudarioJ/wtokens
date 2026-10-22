@@ -1,9 +1,9 @@
 /* Private workspace. Public landing retains its own visual language. */
 .app-shell {
-  background: #0b0e13;
+  background: #030405;
   color: #e9edf2;
-  --bg: #0b0e13;
-  --panel: #12171f;
+  --bg: #030405;
+  --panel: #0b0d10;
   --line: #29303a;
   --muted: #a3acba;
 }
@@ -14,8 +14,8 @@
   letter-spacing: -0.025em;
 }
 .app-shell .sidebar {
-  background: #10141b;
-  border-color: #252c36;
+  background: #08090b;
+  border-color: #202630;
   padding-top: 26px;
 }
 .app-shell .brand {
@@ -48,21 +48,21 @@
 }
 .app-shell .nav-item.active {
   color: #e8faff;
-  background: #1a2832;
+  background: #0d2340;
 }
 .app-shell .nav-item.active:before {
   display: none;
 }
 .app-shell .nav-item:hover {
-  background: #1c222c;
+  background: #101c2b;
 }
 .app-shell .sidebar-divider {
   background: #29303a;
   margin: 20px 12px;
 }
 .app-shell .topbar {
-  background: #0b0e13;
-  border-color: #252c36;
+  background: #030405;
+  border-color: #202630;
 }
 .app-shell .header-rank {
   display: flex;
@@ -114,10 +114,10 @@
   background: #293441;
 }
 .app-shell .header-rank progress::-webkit-progress-value {
-  background: #50cde5;
+  background: #4897ff;
 }
 .app-shell .header-rank progress::-moz-progress-bar {
-  background: #50cde5;
+  background: #4897ff;
 }
 @media (max-width: 1100px) {
   .app-shell .topbar-actions {
@@ -302,7 +302,7 @@
   color: #9cdbc3;
 }
 .app-shell .wallet-card {
-  background: #12171f;
+  background: #0b0d10;
   border: 1px solid #303946;
   border-radius: 7px;
   padding: 20px;
@@ -353,7 +353,7 @@
 }
 .app-shell .rank-panel,
 .app-shell .team-panel {
-  background: #12171f;
+  background: #0b0d10;
   border-color: #303946;
   border-radius: 7px;
 }
@@ -368,7 +368,7 @@
   margin-top: 0;
 }
 .app-shell .panel-page {
-  background: #12171f;
+  background: #0b0d10;
   border-color: #303946;
   border-radius: 7px;
 }
@@ -458,4 +458,13 @@
     justify-content: space-between;
     gap: 10px;
   }
+}
+
+.app-shell .button.primary {
+  background: #1c63ce;
+  border-color: #1c63ce;
+  color: #fff;
+}
+.app-shell .button.primary:hover {
+  background: #246edb;
 }

@@ -25,7 +25,6 @@ import {
   Menu,
   Plus,
   RefreshCw,
-  Search,
   ShieldCheck,
   Swords,
   Target,
@@ -40,6 +39,7 @@ import { Landing } from "./components/Landing";
 import { UserAvatar } from "./components/UserAvatar";
 import { CurrencyOptions } from "./components/CurrencyOptions";
 import { RankPanel } from "./components/RankPanel";
+import { useScrollReveal } from "./lib/useScrollReveal";
 import { HeaderRank } from "./components/HeaderRank";
 import { TeamPanel } from "./components/TeamPanel";
 import { MatchHistory } from "./components/MatchHistory";
@@ -61,7 +61,7 @@ import { formatMoney, inputToMinor, prize } from "./lib/money";
 
 type View = "arena" | "teams" | "ranks" | "wallet" | "matches" | "help";
 const viewLabels: Record<View, string> = {
-  arena: "Arena",
+  arena: "Tokens",
   teams: "Equipo",
   ranks: "Rangos",
   wallet: "Billetera",
@@ -132,7 +132,7 @@ const stateNames: Record<Match["state"], string> = {
 const modeName = (code: string) =>
   visualModes.find((mode) => mode.code === code)?.name ?? code;
 const navigation = [
-  { view: "arena" as const, name: "Arena", icon: LayoutGrid },
+  { view: "arena" as const, name: "Tokens", icon: LayoutGrid },
   { view: "teams" as const, name: "Equipo", icon: Users },
   { view: "matches" as const, name: "Historial", icon: History },
   { view: "ranks" as const, name: "Rangos", icon: Trophy },
@@ -152,6 +152,9 @@ export function App() {
     "loading" | "online" | "offline"
   >("loading");
   const [user, setUser] = useState<User | null>(null);
+  const revealRef = useScrollReveal<HTMLElement>(
+    `${panelRequested}:${view}:${user?.id ?? ""}`,
+  );
   const [modes, setModes] = useState<Mode[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [platform, setPlatform] = useState<Platform | null>(null);
@@ -165,8 +168,6 @@ export function App() {
       detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [selectedMatch?.id, view]);
 
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("ALL");
   const [asset, setAsset] = useState(initialCurrency);
   const [createMode, setCreateMode] = useState("BOX_FIGHT");
   const [amount, setAmount] = useState("5");
@@ -310,13 +311,6 @@ export function App() {
     const value = walletAmount(kind);
     return value === undefined ? "—" : formatMoney(value, asset, exponent);
   };
-  const availableModes = visualModes.filter(
-    (mode) =>
-      (filter === "ALL" || mode.code === filter) &&
-      `${mode.name} ${mode.description}`
-        .toLocaleLowerCase("es")
-        .includes(search.toLocaleLowerCase("es")),
-  );
   const canWager =
     !!user?.eligible &&
     !user.suspended &&
@@ -574,36 +568,36 @@ export function App() {
                 )}
               </div>
             </header>
-            <main id="main" className="main" tabIndex={-1}>
+            <main ref={revealRef} id="main" className="main" tabIndex={-1}>
               <div className="page-heading">
                 <div>
                   <h1>{viewLabels[view]}</h1>
                   <p>{viewDescriptions[view]}</p>
                 </div>
                 <div className="page-tools">
-                  <div className={`connection ${connection}`} role="status">
-                    {connection === "offline" ? (
-                      <WifiOff size={14} />
-                    ) : connection === "loading" ? (
-                      <LoaderCircle size={14} className="spin" />
-                    ) : (
-                      <span />
-                    )}
-                    <span>
-                      {connection === "online"
-                        ? "Plataforma conectada"
-                        : connection === "loading"
+                  {connection !== "online" && (
+                    <div className={`connection ${connection}`} role="status">
+                      {connection === "offline" ? (
+                        <WifiOff size={14} />
+                      ) : connection === "loading" ? (
+                        <LoaderCircle size={14} className="spin" />
+                      ) : (
+                        <span />
+                      )}
+                      <span>
+                        {connection === "loading"
                           ? "Conectando"
                           : "Servicio sin conexión"}
-                    </span>
-                    <button
-                      aria-label="Actualizar conexión"
-                      onClick={() => void refresh()}
-                      disabled={connection === "loading"}
-                    >
-                      <RefreshCw size={13} />
-                    </button>
-                  </div>
+                      </span>
+                      <button
+                        aria-label="Actualizar conexión"
+                        onClick={() => void refresh()}
+                        disabled={connection === "loading"}
+                      >
+                        <RefreshCw size={13} />
+                      </button>
+                    </div>
+                  )}
                   {view === "arena" && (
                     <button
                       className="button primary"
@@ -631,50 +625,8 @@ export function App() {
                           </div>
                           <span className="section-meta">Fortnite</span>
                         </div>
-                        <div className="filter-bar">
-                          <div
-                            className="filter-tabs"
-                            role="group"
-                            aria-label="Filtrar modalidad"
-                          >
-                            <button
-                              className={filter === "ALL" ? "selected" : ""}
-                              onClick={() => setFilter("ALL")}
-                            >
-                              Todos los modos
-                            </button>
-                            <button
-                              className={
-                                filter === "BOX_FIGHT" ? "selected" : ""
-                              }
-                              onClick={() => setFilter("BOX_FIGHT")}
-                            >
-                              Box Fight
-                            </button>
-                            <button
-                              className={
-                                filter === "BUILD_FIGHT" ? "selected" : ""
-                              }
-                              onClick={() => setFilter("BUILD_FIGHT")}
-                            >
-                              Build Fight
-                            </button>
-                          </div>
-                          <label className="search">
-                            <Search size={15} />
-                            <input
-                              type="search"
-                              placeholder="Buscar modo"
-                              aria-label="Buscar modalidad"
-                              value={search}
-                              onChange={(event) =>
-                                setSearch(event.target.value)
-                              }
-                            />
-                          </label>
-                        </div>
                         <div className="mode-grid">
-                          {availableModes.map((mode) => {
+                          {visualModes.map((mode) => {
                             const enabled = modes.some(
                               (item) => item.code === mode.code,
                             );
@@ -687,23 +639,13 @@ export function App() {
                                     navigate("teams");
                                   }}
                                   aria-label={`Seleccionar ${mode.name}`}
-                                  disabled={
-                                    mode.code === "ZONE_WARS" ||
-                                    (connection === "online" && !enabled)
-                                  }
+                                  disabled={connection === "online" && !enabled}
                                 >
                                   <img
                                     src={`/assets/modes/${mode.image}.jpg`}
                                     alt={`Arena ${mode.name} de Fortnite`}
                                     loading="lazy"
                                   />
-                                  {mode.code === "ZONE_WARS" && (
-                                    <span
-                                      className={`mode-tag ${mode.code === "ZONE_WARS" ? "muted" : ""}`}
-                                    >
-                                      {mode.tag}
-                                    </span>
-                                  )}
                                   <span className="mode-play">
                                     <ArrowUpRight size={20} />
                                   </span>
@@ -737,25 +679,6 @@ export function App() {
                             );
                           })}
                         </div>
-                        {!availableModes.length && (
-                          <div className="empty-state">
-                            <Search size={25} />
-                            <h3>No encontramos ese modo</h3>
-                            <p>
-                              Prueba con otro nombre o vuelve a ver todas las
-                              modalidades.
-                            </p>
-                            <button
-                              className="text-button"
-                              onClick={() => {
-                                setSearch("");
-                                setFilter("ALL");
-                              }}
-                            >
-                              Limpiar filtros <ArrowRight size={14} />
-                            </button>
-                          </div>
-                        )}
                       </section>
                       <section
                         className="lobby-section"
@@ -824,7 +747,7 @@ export function App() {
                                 {user
                                   ? lobby === null
                                     ? "No pudimos consultar los desafíos. Actualiza la conexión."
-                                    : "Los desafíos aparecerán aquí cuando estén disponibles."
+                                    : "Aquí verás retos de otros jugadores, su modalidad y el monto por jugador. Podrás elegir cuál aceptar."
                                   : "Entra con Discord para consultar los desafíos de la comunidad."}
                               </p>
                             </div>

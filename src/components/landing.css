@@ -7,7 +7,7 @@
     format("woff2");
 }
 .landing {
-  --lp-bg: #061020;
+  --lp-bg: #030405;
   --lp-line: #243655;
   --lp-muted: #a8b8d1;
   --lp-blue: #65b7ff;
@@ -32,7 +32,7 @@
 }
 .lp-header {
   height: 82px;
-  background: #080e1df5;
+  background: #050609f5;
   border-bottom: 1px solid #23325199;
   position: sticky;
   top: 0;
@@ -232,8 +232,8 @@
   flex-direction: column;
   align-items: center;
   background:
-    radial-gradient(ellipse at 10% 20%, #1b3d824b, transparent 52%),
-    linear-gradient(115deg, #101f43, #0b1930 60%, #091528);
+    radial-gradient(ellipse at 10% 20%, #1252a222, transparent 52%),
+    linear-gradient(115deg, #060a12, #030405 60%, #040609);
   scroll-margin-top: 80px;
 }
 .lp-hero-glow {
@@ -647,7 +647,7 @@
   border: 1px solid #253a5c;
   border-radius: 13px;
   padding: 24px;
-  background: linear-gradient(145deg, #152640, #0e192e 75%);
+  background: linear-gradient(145deg, #10141b, #080a0d 75%);
   position: relative;
 }
 .lp-step-top {
@@ -698,7 +698,7 @@
   align-items: center;
   background:
     radial-gradient(ellipse at 95% 5%, #2450a24d, transparent 60%),
-    linear-gradient(135deg, #142a50, #0e1b32);
+    linear-gradient(135deg, #0b121d, #050709);
   border: 1px solid #335483;
   border-radius: 24px;
   padding: 54px;
@@ -904,7 +904,7 @@
   align-items: center;
   gap: 9px;
   border: 1px solid #2d405e;
-  background: #111e34;
+  background: #0b1018;
   border-radius: 7px;
   padding: 12px 17px;
   font-size: 10px;
@@ -2094,4 +2094,11 @@
   border-radius: 0;
   box-shadow: none;
   filter: drop-shadow(0 0 8px #00bfff35);
+}
+
+.lp-countries > span > img {
+  display: block;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px #ffffff20;
 }

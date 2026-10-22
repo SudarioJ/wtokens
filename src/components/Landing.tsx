@@ -1,3 +1,4 @@
+import { useScrollReveal } from "../lib/useScrollReveal";
 import { useState } from "react";
 import {
   ArrowDown,
@@ -110,6 +111,7 @@ export function Landing({
   onEnter,
   onRules,
 }: Props) {
+  const revealRef = useScrollReveal<HTMLDivElement>("landing");
   const [active, setActive] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const mode = modes[active]!;
@@ -118,7 +120,7 @@ export function Landing({
   const closeMenu = () => setMobileOpen(false);
 
   return (
-    <div className="landing">
+    <div className="landing" ref={revealRef}>
       <a href="#landing-main" className="skip-link">
         Ir al contenido
       </a>
@@ -547,15 +549,22 @@ export function Landing({
           </div>
           <div className="lp-countries">
             {[
-              ["🇵🇪", "Perú"],
-              ["🇦🇷", "Argentina"],
-              ["🇨🇱", "Chile"],
-              ["🇺🇾", "Uruguay"],
-              ["🇵🇾", "Paraguay"],
-              ["🇧🇴", "Bolivia"],
+              ["pe", "Perú"],
+              ["ar", "Argentina"],
+              ["cl", "Chile"],
+              ["uy", "Uruguay"],
+              ["py", "Paraguay"],
+              ["bo", "Bolivia"],
+              ["br", "Brasil"],
             ].map(([flag, name]) => (
               <span key={name}>
-                <span aria-hidden="true">{flag}</span>
+                <img
+                  src={`/assets/flags/${flag}.svg`}
+                  alt=""
+                  width="28"
+                  height="20"
+                  loading="lazy"
+                />
                 {name}
               </span>
             ))}

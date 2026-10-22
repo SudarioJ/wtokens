@@ -69,6 +69,7 @@ async function mockApi(
         rulesVersion: "draft-v1",
       },
       "/v1/game-modes": [
+        { code: "ZONE_WARS", name: "Zone Wars 1v1" },
         { code: "BOX_FIGHT", name: "Box Fight 1v1" },
         { code: "BUILD_FIGHT", name: "Build Fight 1v1" },
         { code: "REALISTICS", name: "Realistics 1v1" },
@@ -335,7 +336,7 @@ test("ten ranks show server progress independently for each mode", async ({
     "value",
     "10",
   );
-  await nav(page, "Arena");
+  await nav(page, "Tokens");
   await expect(headerRank).toContainText("Build Fight");
   await headerRank.click();
   await expect(
@@ -483,6 +484,38 @@ test("public landing preserves the original hero and a working carousel", async 
   });
 });
 
+test("country flags include Brazil and scroll reveals respect reduced motion", async ({
+  page,
+}, info) => {
+  await mockApi(page);
+  await page.goto("/");
+  const region = page.locator(".lp-region-section");
+  await expect(region).toHaveAttribute("data-reveal", "pending");
+  await region.scrollIntoViewIfNeeded();
+  await expect(region).toHaveAttribute("data-reveal", "visible");
+  await expect(region.locator(".lp-countries img")).toHaveCount(7);
+  await expect(region.getByText("Brasil", { exact: true })).toBeVisible();
+  await expect
+    .poll(() =>
+      region
+        .locator("img")
+        .evaluateAll((images) =>
+          images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
+        ),
+    )
+    .toBe(true);
+  await expect
+    .poll(() => region.evaluate((element) => getComputedStyle(element).opacity))
+    .toBe("1");
+  await region.screenshot({
+    path: `test-results/countries-${info.project.name}.png`,
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(page.locator('[data-reveal="pending"]')).toHaveCount(0);
+  await expect(region).toHaveCSS("opacity", "1");
+});
+
 test("landing FAQ and mobile navigation remain usable", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
@@ -526,7 +559,7 @@ test("signed-in users can move between the public site and private panel", async
     .click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
-    page.getByRole("heading", { name: "Arena", exact: true }),
+    page.getByRole("heading", { name: "Tokens", exact: true }),
   ).toBeVisible();
   await nav(page, "Volver al sitio");
   await expect(page).toHaveURL(/\/$/);
@@ -536,27 +569,39 @@ test("signed-in users can move between the public site and private panel", async
   await page.goBack();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
-    page.getByRole("heading", { name: "Arena", exact: true }),
+    page.getByRole("heading", { name: "Tokens", exact: true }),
   ).toBeVisible();
 });
 
-test("private dashboard keeps filters and its original design after sign-in", async ({
+test("Tokens shows four modes without unnecessary filters after sign-in", async ({
   page,
 }, info) => {
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
   await expect(
-    page.getByRole("heading", { name: "Arena", exact: true }),
+    page.getByRole("heading", { name: "Tokens", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".landing")).toHaveCount(0);
-  await page
-    .getByRole("searchbox", { name: "Buscar modalidad" })
-    .fill("Realistics");
-  await expect(page.locator(".mode-card")).toHaveCount(1);
-  await page.getByRole("searchbox").fill("");
-  await page.getByRole("button", { name: "Box Fight", exact: true }).click();
-  await expect(page.locator(".mode-card")).toHaveCount(1);
-  await page.getByRole("button", { name: "Todos los modos" }).click();
+  await expect(page.locator(".mode-card")).toHaveCount(4);
+  await expect(
+    page.getByRole("searchbox", { name: "Buscar modalidad" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Seleccionar Zone Wars" }),
+  ).toBeEnabled();
+  await expect(page.locator(".page-tools .connection")).toHaveCount(0);
+  await page.locator(".page-footer").scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => page.locator('[data-reveal="pending"]').count())
+    .toBe(0);
+  await expect
+    .poll(() =>
+      page
+        .locator(".wallet-card")
+        .evaluate((element) => getComputedStyle(element).opacity),
+    )
+    .toBe("1");
+  await page.evaluate(() => window.scrollTo(0, 0));
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -668,7 +713,7 @@ test("landing, login dialog and private panel pass automated WCAG 2 AA checks", 
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
   await expect(
-    page.getByRole("heading", { name: "Arena", exact: true }),
+    page.getByRole("heading", { name: "Tokens", exact: true }),
   ).toBeVisible();
   const panel = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
