@@ -2102,3 +2102,147 @@
   border-radius: 2px;
   box-shadow: 0 0 0 1px #ffffff20;
 }
+/* Landing motion: short entrances and user-triggered interactions. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing .lp-hero-copy > * {
+    animation: lp-rise-in 620ms cubic-bezier(0.2, 0.65, 0.3, 1) backwards;
+  }
+  .landing .lp-hero-copy > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .landing .lp-hero-copy > :nth-child(3) {
+    animation-delay: 160ms;
+  }
+  .landing .lp-carousel {
+    animation: lp-rise-in 760ms 180ms cubic-bezier(0.2, 0.65, 0.3, 1) backwards;
+  }
+  .landing .lp-hero-glow {
+    animation: lp-light-in 1800ms ease-out both;
+  }
+  .landing .lp-slide-center .lp-slide-top,
+  .landing .lp-slide-center .lp-slide-bottom {
+    animation: lp-rise-in 420ms 80ms ease-out backwards;
+  }
+  .landing .lp-carousel-caption {
+    transition: color 180ms ease;
+  }
+  .landing .lp-slide > img {
+    transition: transform 650ms cubic-bezier(0.2, 0.65, 0.3, 1);
+  }
+  .landing .lp-discover svg {
+    animation: lp-discover-nudge 1400ms 900ms ease-in-out 2;
+  }
+  .landing .lp-step-grid > article,
+  .landing .lp-countries > span,
+  .landing .lp-faq-list > details {
+    --reveal-delay: 0ms;
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+  .landing .lp-step-grid > :nth-child(2),
+  .landing .lp-countries > :nth-child(2),
+  .landing .lp-faq-list > :nth-child(2) {
+    --reveal-delay: 60ms;
+  }
+  .landing .lp-step-grid > :nth-child(3),
+  .landing .lp-countries > :nth-child(3),
+  .landing .lp-faq-list > :nth-child(3) {
+    --reveal-delay: 120ms;
+  }
+  .landing .lp-step-grid > :nth-child(4),
+  .landing .lp-countries > :nth-child(4),
+  .landing .lp-faq-list > :nth-child(4) {
+    --reveal-delay: 180ms;
+  }
+  .landing .lp-countries > :nth-child(5) {
+    --reveal-delay: 240ms;
+  }
+  .landing .lp-countries > :nth-child(6) {
+    --reveal-delay: 300ms;
+  }
+  .landing .lp-countries > :nth-child(7) {
+    --reveal-delay: 360ms;
+  }
+  .landing [data-reveal="visible"] {
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+  .landing .lp-discord-preview[data-reveal="visible"] {
+    animation-delay: 100ms;
+  }
+  .landing .lp-button,
+  .landing .lp-play-button,
+  .landing .lp-account {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease,
+      transform 200ms ease;
+  }
+  .landing .lp-button > svg,
+  .landing .lp-play-button > svg,
+  .landing .lp-text-link > svg {
+    transition: transform 200ms ease;
+  }
+  .landing .lp-button:active,
+  .landing .lp-play-button:active,
+  .landing .lp-account:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .landing .lp-faq-list details[open] > p {
+    animation: lp-rise-in 240ms ease-out;
+  }
+  @keyframes lp-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes lp-light-in {
+    from {
+      opacity: 0.2;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes lp-discover-nudge {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(4px);
+    }
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .landing .lp-slide-center:hover > img {
+    transform: scale(1.035);
+  }
+  .landing .lp-step-grid > article:hover {
+    border-color: #527bb0;
+    box-shadow: 0 8px 24px #00000030;
+  }
+  .landing .lp-countries > span:hover {
+    background: #101f34;
+    border-color: #527bb0;
+  }
+  .landing .lp-button:hover,
+  .landing .lp-account:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px #1469e524;
+  }
+  .landing .lp-button:hover > svg,
+  .landing .lp-play-button:hover > svg,
+  .landing .lp-text-link:hover > svg {
+    transform: translateX(3px);
+  }
+}

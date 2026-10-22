@@ -18,7 +18,7 @@ export function useScrollReveal<T extends HTMLElement>(pageKey: string) {
       { threshold: 0.06 },
     );
     const elements = root.querySelectorAll<HTMLElement>(
-      ".lp-section, .mode-card, .lobby-section, .wallet-card, .rank-panel, .team-panel, .panel-page",
+      ".lp-section, .lp-benefit-strip, .lp-step-grid > article, .lp-community-copy, .lp-discord-preview, .lp-countries > span, .lp-faq-list > details, .lp-final-cta, .mode-card, .lobby-section, .wallet-card, .rank-panel, .team-panel, .panel-page",
     );
     for (const element of elements) {
       if (element.getBoundingClientRect().top < window.innerHeight) continue;
