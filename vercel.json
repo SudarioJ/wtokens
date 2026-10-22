@@ -15,6 +15,10 @@
     {
       "source": "/actuator/health",
       "destination": "/api/gateway?route=/actuator/health"
+    },
+    {
+      "source": "/app",
+      "destination": "/"
     }
   ],
   "headers": [

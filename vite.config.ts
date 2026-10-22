@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
               req.method === "GET" &&
               req.headers.accept?.includes("text/html")
             ) {
-              res.writeHead(303, { Location: "/" });
+              res.writeHead(303, { Location: "/app" });
               res.end();
               return;
             }

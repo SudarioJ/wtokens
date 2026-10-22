@@ -30,6 +30,7 @@ assert.ok(
     ?.includes("frame-ancestors 'none'"),
 );
 assert.ok(!root.headers.get("content-security-policy")?.includes("unsafe-"));
+await check("/app", 200);
 await check("/actuator/health", 200);
 await check("/v1/platform", 200);
 await check("/v1/me", 401);

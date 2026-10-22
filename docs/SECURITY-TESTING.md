@@ -20,7 +20,7 @@ El contenido previo se conserva bajo `legacy/` para trazabilidad, fuera del buil
 
 1. `npm run build`: typecheck y empaquetado sin sourcemaps públicos.
 2. `npm test`: dinero con BigInt, validación de API, CSRF/idempotencia, destino fijo del proxy, cookies, cabeceras y exclusión de archivos privados.
-3. `npm run test:e2e`: Chromium escritorio y móvil, filtros, modal y foco, sesión falsificada en localStorage, nombre con payload XSS, estado offline y axe WCAG 2 AA. Estas pruebas utilizan fixtures API, no credenciales reales.
+3. `npm run test:e2e`: Chromium escritorio y móvil, landing pública y carrusel, panel posterior al acceso, regreso al sitio sin cerrar sesión, cierre de sesión, acceso directo a `/app`, filtros, modal y foco, sesión falsificada en localStorage, nombre con payload XSS, estado offline y axe WCAG 2 AA. Estas pruebas utilizan fixtures API, no credenciales reales. Servir el HTML de `/app` no otorga autorización; la interfaz comprueba `/v1/me` y el backend sigue protegiendo datos y operaciones.
 4. `npm run test:security:local`: comprobaciones HTTP contra frontend/proxy y backend Java reales en loopback. Requiere ambos levantados. Verifica rechazo de sesión/cookie/token falsos, POST sin CSRF, salud/capacidades y ausencia de archivos internos. No realiza fuzzing destructivo ni operaciones financieras.
 5. `npm run audit`: consulta OSV para todas las versiones del lockfile activo; falla ante cualquier aviso o respuesta incompleta. `npm run audit:npm` permite además consultar el registro npm. Un fallo de red no significa ausencia de vulnerabilidades. `legacy/backend` tiene su propio árbol antiguo, excluido del producto nuevo; debe retirarse definitivamente antes de un despliegue futuro del antiguo sistema.
 

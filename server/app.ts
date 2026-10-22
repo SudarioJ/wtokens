@@ -24,7 +24,7 @@ export function createApp(options: {
       req.method === "GET" &&
       req.headers.accept?.includes("text/html")
     ) {
-      res.redirect(303, "/");
+      res.redirect(303, "/app");
       return;
     }
     next();
@@ -43,6 +43,9 @@ export function createApp(options: {
       fallthrough: true,
     }),
   );
+  app.get("/app", (_req, res) => {
+    res.sendFile(resolve(options.distDir ?? "dist", "index.html"));
+  });
   app.use((_req, res) => {
     res.status(404).json({ code: "NOT_FOUND" });
   });

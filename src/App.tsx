@@ -36,6 +36,7 @@ import {
   X,
 } from "lucide-react";
 import { Dialog } from "./components/Dialog";
+import { Landing } from "./components/Landing";
 import { api, ApiError, friendlyError } from "./lib/api";
 import type {
   Asset,
@@ -112,6 +113,9 @@ const navigation = [
 ];
 
 export function App() {
+  const [panelRequested, setPanelRequested] = useState(
+    window.location.pathname === "/app",
+  );
   const [view, setView] = useState<View>("arena");
   const [modal, setModal] = useState<Modal>(null);
   const [mobileNav, setMobileNav] = useState(false);
@@ -187,6 +191,40 @@ export function App() {
     const id = window.setTimeout(() => setNotice(null), 8000);
     return () => window.clearTimeout(id);
   }, [notice]);
+  useEffect(() => {
+    const handleHistory = () => {
+      setPanelRequested(window.location.pathname === "/app");
+      setModal(null);
+      setMobileNav(false);
+    };
+    window.addEventListener("popstate", handleHistory);
+    return () => window.removeEventListener("popstate", handleHistory);
+  }, []);
+  useEffect(() => {
+    if (panelRequested && connection !== "loading" && !user) {
+      window.history.replaceState(null, "", "/");
+      setPanelRequested(false);
+      setModal("login");
+    }
+  }, [panelRequested, connection, user]);
+
+  function enterPanel() {
+    if (!user) {
+      openModal("login");
+      return;
+    }
+    window.history.pushState(null, "", "/app");
+    setPanelRequested(true);
+    setMobileNav(false);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  function returnToSite() {
+    window.history.pushState(null, "", "/");
+    setPanelRequested(false);
+    setMobileNav(false);
+    setModal(null);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
 
   function openModal(next: Modal) {
     modalFocus.current =
@@ -325,1010 +363,1058 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
-      <a className="skip-link" href="#main">
-        Ir al contenido
-      </a>
-      <aside
-        className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}
-        aria-label="Navegación principal"
-      >
-        <a
-          className="brand"
-          href="#"
-          onClick={(event) => {
-            event.preventDefault();
-            navigate("arena");
-          }}
-          aria-label="WTOKENS, inicio"
-        >
-          <span className="brand-mark">
-            W<span>•</span>
-          </span>
-          <span>
-            WTOKENS<small>COMPETITIVE ARENA</small>
-          </span>
-        </a>
-        <button
-          className="icon-button mobile-close"
-          onClick={() => setMobileNav(false)}
-          aria-label="Cerrar menú"
-        >
-          <X />
-        </button>
-        <span className="nav-label">TU ZONA DE JUEGO</span>
-        <nav>
-          {navigation.map((item) => (
-            <button
-              key={item.view}
-              className={`nav-item ${view === item.view ? "active" : ""}`}
-              aria-current={view === item.view ? "page" : undefined}
-              onClick={() => navigate(item.view)}
-            >
-              <item.icon size={19} />
-              {item.name}
-              {view === item.view && <ChevronRight size={15} />}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-divider" />
-        <span className="nav-label">COMUNIDAD</span>
-        <button
-          className="nav-item"
-          onClick={() => {
-            navigate("help");
-          }}
-        >
-          <Users size={19} />
-          Discord & comunidad
-          <ArrowUpRight size={14} />
-        </button>
-        <button
-          className={`nav-item ${view === "help" ? "active" : ""}`}
-          onClick={() => navigate("help")}
-        >
-          <CircleHelp size={19} />
-          Centro de ayuda
-        </button>
-        <div className="sidebar-bottom">
-          <div className="sidebar-card">
-            <div className="support-avatar">
-              <Headphones size={21} />
-              <span />
-            </div>
-            <strong>Juega con respaldo.</strong>
-            <p>Consulta las reglas y conoce el proceso de mediación.</p>
-            <button onClick={() => openModal("rules")}>
-              Ver cómo funciona <ArrowRight size={15} />
-            </button>
-          </div>
-          <div className="sidebar-foot">
-            <ShieldCheck size={15} />
-            <span>Tu partida. Tus reglas claras.</span>
-          </div>
-        </div>
-      </aside>
-      {mobileNav && (
-        <button
-          className="nav-backdrop"
-          aria-label="Cerrar navegación"
-          onClick={() => setMobileNav(false)}
+    <div className={panelRequested && user ? "app-shell" : "public-shell"}>
+      {!panelRequested && (
+        <Landing
+          user={user}
+          assets={assets}
+          asset={asset}
+          connection={connection}
+          onAssetChange={setAsset}
+          onEnter={enterPanel}
+          onRules={() => openModal("rules")}
         />
       )}
-      <div className="workspace">
-        <header className="topbar">
-          <div className="topbar-left">
-            <button
-              className="icon-button mobile-menu"
-              onClick={() => setMobileNav(true)}
-              aria-label="Abrir menú"
-              aria-expanded={mobileNav}
+      {panelRequested && !user && (
+        <div className="lp-panel-loading" role="status">
+          <LoaderCircle size={23} className="spin" />
+          Verificando tu sesión de Discord…
+        </div>
+      )}
+      {panelRequested && user && (
+        <>
+          <a className="skip-link" href="#main">
+            Ir al contenido
+          </a>
+          <aside
+            className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}
+            aria-label="Navegación principal"
+          >
+            <a
+              className="brand"
+              href="#"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate("arena");
+              }}
+              aria-label="WTOKENS, inicio"
             >
-              <Menu />
-            </button>
-            <span className="breadcrumb">
-              Plataforma <ChevronRight size={13} />
-              <strong>
-                {view === "arena"
-                  ? "Arena"
-                  : view === "wallet"
-                    ? "Billetera"
-                    : view === "matches"
-                      ? "Mi partida"
-                      : "Ayuda"}
-              </strong>
-            </span>
-          </div>
-          <div className="topbar-actions">
-            <span className="region">
-              <span className="region-dot" />
-              LATAM
-            </span>
-            <div className="currency-select">
-              <label className="sr-only" htmlFor="currency">
-                Moneda de consulta
-              </label>
-              <select
-                id="currency"
-                value={asset}
-                onChange={(event) => setAsset(event.target.value)}
-              >
-                {(assets.length ? assets : [{ code: "USD" }]).map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.code}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={13} />
-            </div>
-            {user ? (
-              <button
-                className="profile-button"
-                onClick={() => navigate("wallet")}
-              >
-                <span className="avatar">
-                  {user.display_name.slice(0, 2).toUpperCase()}
-                </span>
-                <span>{user.display_name}</span>
-              </button>
-            ) : (
-              <button
-                className="button discord-button small"
-                onClick={() => openModal("login")}
-              >
-                <Gamepad2 size={17} />
-                Entrar con Discord
-                <ArrowUpRight size={14} />
-              </button>
-            )}
-          </div>
-        </header>
-        <main id="main" className="main" tabIndex={-1}>
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">
-                <span />
-                FORTNITE COMPETITIVO
-              </div>
-              <h1>
-                {view === "arena"
-                  ? "Bienvenido a la arena."
-                  : view === "wallet"
-                    ? "Tu billetera, sin vueltas."
-                    : view === "matches"
-                      ? "Cada partida cuenta."
-                      : "Estamos en tu equipo."}
-              </h1>
-              <p>
-                {view === "arena"
-                  ? "Elige tu modo. Encuentra a tu rival. Lleva tu juego más lejos."
-                  : view === "wallet"
-                    ? "Consulta tu saldo y los movimientos registrados por la plataforma."
-                    : view === "matches"
-                      ? "Sigue el estado de tu desafío y confirma cada paso."
-                      : "Reglas claras y respuestas para tu próxima partida."}
-              </p>
-            </div>
-            <div className={`connection ${connection}`} role="status">
-              {connection === "offline" ? (
-                <WifiOff size={14} />
-              ) : connection === "loading" ? (
-                <LoaderCircle size={14} className="spin" />
-              ) : (
-                <span />
-              )}
-              <span>
-                {connection === "online"
-                  ? "Plataforma conectada"
-                  : connection === "loading"
-                    ? "Conectando"
-                    : "Servicio sin conexión"}
+              <span className="brand-mark">
+                W<span>•</span>
               </span>
-              <button
-                aria-label="Actualizar conexión"
-                onClick={() => void refresh()}
-                disabled={connection === "loading"}
-              >
-                <RefreshCw size={13} />
+              <span>
+                WTOKENS<small>COMPETITIVE ARENA</small>
+              </span>
+            </a>
+            <button
+              className="icon-button mobile-close"
+              onClick={() => setMobileNav(false)}
+              aria-label="Cerrar menú"
+            >
+              <X />
+            </button>
+            <span className="nav-label">TU ZONA DE JUEGO</span>
+            <nav>
+              {navigation.map((item) => (
+                <button
+                  key={item.view}
+                  className={`nav-item ${view === item.view ? "active" : ""}`}
+                  aria-current={view === item.view ? "page" : undefined}
+                  onClick={() => navigate(item.view)}
+                >
+                  <item.icon size={19} />
+                  {item.name}
+                  {view === item.view && <ChevronRight size={15} />}
+                </button>
+              ))}
+            </nav>
+            <div className="sidebar-divider" />
+            <span className="nav-label">COMUNIDAD</span>
+            <button
+              className="nav-item"
+              onClick={() => {
+                navigate("help");
+              }}
+            >
+              <Users size={19} />
+              Discord & comunidad
+              <ArrowUpRight size={14} />
+            </button>
+            <button
+              className={`nav-item ${view === "help" ? "active" : ""}`}
+              onClick={() => navigate("help")}
+            >
+              <CircleHelp size={19} />
+              Centro de ayuda
+            </button>
+            <div className="sidebar-bottom">
+              <button className="nav-item" onClick={returnToSite}>
+                <ArrowUpRight size={18} />
+                Volver al sitio
               </button>
+              <div className="sidebar-card">
+                <div className="support-avatar">
+                  <Headphones size={21} />
+                  <span />
+                </div>
+                <strong>Juega con respaldo.</strong>
+                <p>Consulta las reglas y conoce el proceso de mediación.</p>
+                <button onClick={() => openModal("rules")}>
+                  Ver cómo funciona <ArrowRight size={15} />
+                </button>
+              </div>
+              <div className="sidebar-foot">
+                <ShieldCheck size={15} />
+                <span>Tu partida. Tus reglas claras.</span>
+              </div>
             </div>
-          </div>
-
-          {view === "arena" && (
-            <>
-              <section className="hero" aria-labelledby="hero-title">
-                <img
-                  src="/assets/modes/boxfight.jpg"
-                  alt="Duelo de Fortnite en una arena de construcción"
-                  className="hero-image"
-                />
-                <div className="hero-shade" />
-                <div className="hero-content">
-                  <div className="hero-chip">
-                    <span />
-                    TU SIGUIENTE NIVEL ESTÁ AQUÍ
-                  </div>
-                  <h2 id="hero-title">
-                    Menos espera.
-                    <br />
-                    Más <span>competencia.</span>
-                  </h2>
-                  <p>
-                    Una comunidad que juega en serio.
-                    <br />
-                    Desafíos 1v1, reglas claras y toda tu actividad en un solo
-                    lugar.
-                  </p>
-                  <div className="hero-actions">
-                    <button
-                      className="button primary"
-                      onClick={() =>
-                        document
-                          .getElementById("modes")
-                          ?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "start",
-                          })
-                      }
-                    >
-                      Explorar modalidades <ArrowRight size={18} />
-                    </button>
-                    <button
-                      className="hero-secondary"
-                      onClick={() => openModal("rules")}
-                    >
-                      Cómo funciona <ExternalLink size={14} />
-                    </button>
-                  </div>
-                  <div className="hero-footer">
-                    <span>
-                      <Crosshair size={14} />
-                      FORTNITE
-                    </span>
-                    <span>
-                      <Users size={14} />
-                      DUELOS 1V1
-                    </span>
-                    <span>
-                      <ShieldCheck size={14} />
-                      MEDIACIÓN
-                    </span>
-                  </div>
-                </div>
-                <div className="hero-index">
-                  <span>01</span> / ARENA BOX FIGHT
-                </div>
-              </section>
-              <div className="content-columns">
-                <div className="arena-content">
-                  <section
-                    id="modes"
-                    className="modes-section"
-                    aria-labelledby="modes-title"
+          </aside>
+          {mobileNav && (
+            <button
+              className="nav-backdrop"
+              aria-label="Cerrar navegación"
+              onClick={() => setMobileNav(false)}
+            />
+          )}
+          <div className="workspace">
+            <header className="topbar">
+              <div className="topbar-left">
+                <button
+                  className="icon-button mobile-menu"
+                  onClick={() => setMobileNav(true)}
+                  aria-label="Abrir menú"
+                  aria-expanded={mobileNav}
+                >
+                  <Menu />
+                </button>
+                <span className="breadcrumb">
+                  Plataforma <ChevronRight size={13} />
+                  <strong>
+                    {view === "arena"
+                      ? "Arena"
+                      : view === "wallet"
+                        ? "Billetera"
+                        : view === "matches"
+                          ? "Mi partida"
+                          : "Ayuda"}
+                  </strong>
+                </span>
+              </div>
+              <div className="topbar-actions">
+                <span className="region">
+                  <span className="region-dot" />
+                  LATAM
+                </span>
+                <div className="currency-select">
+                  <label className="sr-only" htmlFor="currency">
+                    Moneda de consulta
+                  </label>
+                  <select
+                    id="currency"
+                    value={asset}
+                    onChange={(event) => setAsset(event.target.value)}
                   >
-                    <div className="section-heading">
-                      <div>
-                        <span className="eyebrow">ENCUENTRA TU TERRENO</span>
-                        <h2 id="modes-title">¿Cuál es tu modo?</h2>
-                      </div>
-                      <span className="section-meta">4 formas de competir</span>
-                    </div>
-                    <div className="filter-bar">
-                      <div
-                        className="filter-tabs"
-                        role="group"
-                        aria-label="Filtrar modalidad"
-                      >
-                        <button
-                          className={filter === "ALL" ? "selected" : ""}
-                          onClick={() => setFilter("ALL")}
-                        >
-                          Todos los modos
-                        </button>
-                        <button
-                          className={filter === "BOX_FIGHT" ? "selected" : ""}
-                          onClick={() => setFilter("BOX_FIGHT")}
-                        >
-                          Box Fight
-                        </button>
-                        <button
-                          className={filter === "BUILD_FIGHT" ? "selected" : ""}
-                          onClick={() => setFilter("BUILD_FIGHT")}
-                        >
-                          Build Fight
-                        </button>
-                      </div>
-                      <label className="search">
-                        <Search size={15} />
-                        <input
-                          type="search"
-                          placeholder="Buscar modo"
-                          aria-label="Buscar modalidad"
-                          value={search}
-                          onChange={(event) => setSearch(event.target.value)}
-                        />
-                      </label>
-                    </div>
-                    <div className="mode-grid">
-                      {availableModes.map((mode) => {
-                        const enabled = modes.some(
-                          (item) => item.code === mode.code,
-                        );
-                        return (
-                          <article className="mode-card" key={mode.code}>
-                            <button
-                              className="mode-image-button"
-                              onClick={() => challenge(mode.code)}
-                              aria-label={`Seleccionar ${mode.name}`}
-                              disabled={
-                                mode.code === "ZONE_WARS" ||
-                                (connection === "online" && !enabled)
-                              }
-                            >
-                              <img
-                                src={`/assets/modes/${mode.image}.jpg`}
-                                alt={`Arena ${mode.name} de Fortnite`}
-                                loading="lazy"
-                              />
-                              <span
-                                className={`mode-tag ${mode.code === "ZONE_WARS" ? "muted" : ""}`}
-                              >
-                                {mode.tag}
-                              </span>
-                              <span className="mode-play">
-                                <ArrowUpRight size={20} />
-                              </span>
-                              <span className="image-caption">
-                                {mode.label}
-                              </span>
-                            </button>
-                            <div className="mode-body">
-                              <div className="mode-title">
-                                <h3>{mode.name}</h3>
-                                <mode.icon size={19} />
-                              </div>
-                              <p>{mode.description}</p>
-                              <div className="mode-footer">
-                                <span>
-                                  <Users size={12} />
-                                  1v1 <i />
-                                  {mode.difficulty}
-                                </span>
-                                <span
-                                  className={`mode-status ${enabled ? "available" : ""}`}
-                                >
-                                  {enabled
-                                    ? "En catálogo"
-                                    : connection === "online"
-                                      ? "Próximamente"
-                                      : "Vista previa"}
-                                </span>
-                              </div>
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                    {!availableModes.length && (
-                      <div className="empty-state">
-                        <Search size={25} />
-                        <h3>No encontramos ese modo</h3>
-                        <p>
-                          Prueba con otro nombre o vuelve a ver todas las
-                          modalidades.
-                        </p>
-                        <button
-                          className="text-button"
-                          onClick={() => {
-                            setSearch("");
-                            setFilter("ALL");
-                          }}
-                        >
-                          Limpiar filtros <ArrowRight size={14} />
-                        </button>
-                      </div>
+                    {(assets.length ? assets : [{ code: "USD" }]).map(
+                      (item) => (
+                        <option key={item.code} value={item.code}>
+                          {item.code}
+                        </option>
+                      ),
                     )}
-                  </section>
-                  <section
-                    className="lobby-section"
-                    aria-labelledby="lobby-title"
+                  </select>
+                  <ChevronDown size={13} />
+                </div>
+                {user ? (
+                  <button
+                    className="profile-button"
+                    onClick={() => navigate("wallet")}
                   >
-                    <div className="section-heading">
-                      <div>
-                        <span className="eyebrow">EL PRÓXIMO DUELO</span>
-                        <h2 id="lobby-title">Desafíos abiertos</h2>
+                    <span className="avatar">
+                      {user.display_name.slice(0, 2).toUpperCase()}
+                    </span>
+                    <span>{user.display_name}</span>
+                  </button>
+                ) : (
+                  <button
+                    className="button discord-button small"
+                    onClick={() => openModal("login")}
+                  >
+                    <Gamepad2 size={17} />
+                    Entrar con Discord
+                    <ArrowUpRight size={14} />
+                  </button>
+                )}
+              </div>
+            </header>
+            <main id="main" className="main" tabIndex={-1}>
+              <div className="page-heading">
+                <div>
+                  <div className="eyebrow">
+                    <span />
+                    FORTNITE COMPETITIVO
+                  </div>
+                  <h1>
+                    {view === "arena"
+                      ? "Bienvenido a la arena."
+                      : view === "wallet"
+                        ? "Tu billetera, sin vueltas."
+                        : view === "matches"
+                          ? "Cada partida cuenta."
+                          : "Estamos en tu equipo."}
+                  </h1>
+                  <p>
+                    {view === "arena"
+                      ? "Elige tu modo. Encuentra a tu rival. Lleva tu juego más lejos."
+                      : view === "wallet"
+                        ? "Consulta tu saldo y los movimientos registrados por la plataforma."
+                        : view === "matches"
+                          ? "Sigue el estado de tu desafío y confirma cada paso."
+                          : "Reglas claras y respuestas para tu próxima partida."}
+                  </p>
+                </div>
+                <div className={`connection ${connection}`} role="status">
+                  {connection === "offline" ? (
+                    <WifiOff size={14} />
+                  ) : connection === "loading" ? (
+                    <LoaderCircle size={14} className="spin" />
+                  ) : (
+                    <span />
+                  )}
+                  <span>
+                    {connection === "online"
+                      ? "Plataforma conectada"
+                      : connection === "loading"
+                        ? "Conectando"
+                        : "Servicio sin conexión"}
+                  </span>
+                  <button
+                    aria-label="Actualizar conexión"
+                    onClick={() => void refresh()}
+                    disabled={connection === "loading"}
+                  >
+                    <RefreshCw size={13} />
+                  </button>
+                </div>
+              </div>
+
+              {view === "arena" && (
+                <>
+                  <section className="hero" aria-labelledby="hero-title">
+                    <img
+                      src="/assets/modes/boxfight.jpg"
+                      alt="Duelo de Fortnite en una arena de construcción"
+                      className="hero-image"
+                    />
+                    <div className="hero-shade" />
+                    <div className="hero-content">
+                      <div className="hero-chip">
+                        <span />
+                        TU SIGUIENTE NIVEL ESTÁ AQUÍ
                       </div>
-                      <button
-                        className="text-button"
-                        onClick={() => challenge()}
-                      >
-                        <Plus size={15} />
-                        Crear desafío
-                      </button>
+                      <h2 id="hero-title">
+                        Menos espera.
+                        <br />
+                        Más <span>competencia.</span>
+                      </h2>
+                      <p>
+                        Una comunidad que juega en serio.
+                        <br />
+                        Desafíos 1v1, reglas claras y toda tu actividad en un
+                        solo lugar.
+                      </p>
+                      <div className="hero-actions">
+                        <button
+                          className="button primary"
+                          onClick={() =>
+                            document.getElementById("modes")?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            })
+                          }
+                        >
+                          Explorar modalidades <ArrowRight size={18} />
+                        </button>
+                        <button
+                          className="hero-secondary"
+                          onClick={() => openModal("rules")}
+                        >
+                          Cómo funciona <ExternalLink size={14} />
+                        </button>
+                      </div>
+                      <div className="hero-footer">
+                        <span>
+                          <Crosshair size={14} />
+                          FORTNITE
+                        </span>
+                        <span>
+                          <Users size={14} />
+                          DUELOS 1V1
+                        </span>
+                        <span>
+                          <ShieldCheck size={14} />
+                          MEDIACIÓN
+                        </span>
+                      </div>
                     </div>
-                    {lobby?.length ? (
-                      <div className="lobby-list">
-                        {lobby.map((offer) => (
-                          <article className="lobby-row" key={offer.id}>
-                            <span className="lobby-icon">
-                              <Swords size={19} />
+                    <div className="hero-index">
+                      <span>01</span> / ARENA BOX FIGHT
+                    </div>
+                  </section>
+                  <div className="content-columns">
+                    <div className="arena-content">
+                      <section
+                        id="modes"
+                        className="modes-section"
+                        aria-labelledby="modes-title"
+                      >
+                        <div className="section-heading">
+                          <div>
+                            <span className="eyebrow">
+                              ENCUENTRA TU TERRENO
                             </span>
-                            <div>
-                              <strong>{modeName(offer.mode)}</strong>
-                              <small>1v1 · {offer.rules_version}</small>
+                            <h2 id="modes-title">¿Cuál es tu modo?</h2>
+                          </div>
+                          <span className="section-meta">
+                            4 formas de competir
+                          </span>
+                        </div>
+                        <div className="filter-bar">
+                          <div
+                            className="filter-tabs"
+                            role="group"
+                            aria-label="Filtrar modalidad"
+                          >
+                            <button
+                              className={filter === "ALL" ? "selected" : ""}
+                              onClick={() => setFilter("ALL")}
+                            >
+                              Todos los modos
+                            </button>
+                            <button
+                              className={
+                                filter === "BOX_FIGHT" ? "selected" : ""
+                              }
+                              onClick={() => setFilter("BOX_FIGHT")}
+                            >
+                              Box Fight
+                            </button>
+                            <button
+                              className={
+                                filter === "BUILD_FIGHT" ? "selected" : ""
+                              }
+                              onClick={() => setFilter("BUILD_FIGHT")}
+                            >
+                              Build Fight
+                            </button>
+                          </div>
+                          <label className="search">
+                            <Search size={15} />
+                            <input
+                              type="search"
+                              placeholder="Buscar modo"
+                              aria-label="Buscar modalidad"
+                              value={search}
+                              onChange={(event) =>
+                                setSearch(event.target.value)
+                              }
+                            />
+                          </label>
+                        </div>
+                        <div className="mode-grid">
+                          {availableModes.map((mode) => {
+                            const enabled = modes.some(
+                              (item) => item.code === mode.code,
+                            );
+                            return (
+                              <article className="mode-card" key={mode.code}>
+                                <button
+                                  className="mode-image-button"
+                                  onClick={() => challenge(mode.code)}
+                                  aria-label={`Seleccionar ${mode.name}`}
+                                  disabled={
+                                    mode.code === "ZONE_WARS" ||
+                                    (connection === "online" && !enabled)
+                                  }
+                                >
+                                  <img
+                                    src={`/assets/modes/${mode.image}.jpg`}
+                                    alt={`Arena ${mode.name} de Fortnite`}
+                                    loading="lazy"
+                                  />
+                                  <span
+                                    className={`mode-tag ${mode.code === "ZONE_WARS" ? "muted" : ""}`}
+                                  >
+                                    {mode.tag}
+                                  </span>
+                                  <span className="mode-play">
+                                    <ArrowUpRight size={20} />
+                                  </span>
+                                  <span className="image-caption">
+                                    {mode.label}
+                                  </span>
+                                </button>
+                                <div className="mode-body">
+                                  <div className="mode-title">
+                                    <h3>{mode.name}</h3>
+                                    <mode.icon size={19} />
+                                  </div>
+                                  <p>{mode.description}</p>
+                                  <div className="mode-footer">
+                                    <span>
+                                      <Users size={12} />
+                                      1v1 <i />
+                                      {mode.difficulty}
+                                    </span>
+                                    <span
+                                      className={`mode-status ${enabled ? "available" : ""}`}
+                                    >
+                                      {enabled
+                                        ? "En catálogo"
+                                        : connection === "online"
+                                          ? "Próximamente"
+                                          : "Vista previa"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                        {!availableModes.length && (
+                          <div className="empty-state">
+                            <Search size={25} />
+                            <h3>No encontramos ese modo</h3>
+                            <p>
+                              Prueba con otro nombre o vuelve a ver todas las
+                              modalidades.
+                            </p>
+                            <button
+                              className="text-button"
+                              onClick={() => {
+                                setSearch("");
+                                setFilter("ALL");
+                              }}
+                            >
+                              Limpiar filtros <ArrowRight size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </section>
+                      <section
+                        className="lobby-section"
+                        aria-labelledby="lobby-title"
+                      >
+                        <div className="section-heading">
+                          <div>
+                            <span className="eyebrow">EL PRÓXIMO DUELO</span>
+                            <h2 id="lobby-title">Desafíos abiertos</h2>
+                          </div>
+                          <button
+                            className="text-button"
+                            onClick={() => challenge()}
+                          >
+                            <Plus size={15} />
+                            Crear desafío
+                          </button>
+                        </div>
+                        {lobby?.length ? (
+                          <div className="lobby-list">
+                            {lobby.map((offer) => (
+                              <article className="lobby-row" key={offer.id}>
+                                <span className="lobby-icon">
+                                  <Swords size={19} />
+                                </span>
+                                <div>
+                                  <strong>{modeName(offer.mode)}</strong>
+                                  <small>1v1 · {offer.rules_version}</small>
+                                </div>
+                                <div className="lobby-amount">
+                                  <strong>
+                                    {formatMoney(
+                                      offer.stake_minor,
+                                      offer.asset,
+                                      assets.find(
+                                        (item) => item.code === offer.asset,
+                                      )?.exponent ?? 2,
+                                    )}
+                                  </strong>
+                                  <small>aporte por jugador</small>
+                                </div>
+                                <button
+                                  className="button secondary small"
+                                  disabled={busy || !canWager}
+                                  onClick={() =>
+                                    void matchAction(offer.id, "accept")
+                                  }
+                                >
+                                  Aceptar
+                                  <ArrowRight size={14} />
+                                </button>
+                              </article>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="lobby-empty">
+                            <div className="empty-graphic">
+                              <Swords size={25} />
                             </div>
-                            <div className="lobby-amount">
-                              <strong>
-                                {formatMoney(
-                                  offer.stake_minor,
-                                  offer.asset,
-                                  assets.find(
-                                    (item) => item.code === offer.asset,
-                                  )?.exponent ?? 2,
-                                )}
-                              </strong>
-                              <small>aporte por jugador</small>
+                            <div>
+                              <h3>
+                                {user
+                                  ? "Tu rival podría ser el próximo."
+                                  : "Tu próxima partida empieza contigo."}
+                              </h3>
+                              <p>
+                                {user
+                                  ? lobby === null
+                                    ? "No pudimos consultar los desafíos. Actualiza la conexión."
+                                    : "Aún no hay desafíos abiertos. Crea uno cuando tu cuenta esté habilitada."
+                                  : "Entra con Discord para consultar los desafíos de la comunidad."}
+                              </p>
                             </div>
                             <button
                               className="button secondary small"
-                              disabled={busy || !canWager}
                               onClick={() =>
-                                void matchAction(offer.id, "accept")
+                                user ? challenge() : openModal("login")
                               }
                             >
-                              Aceptar
-                              <ArrowRight size={14} />
+                              {user ? "Crear desafío" : "Entrar"}
+                              <ArrowRight size={15} />
                             </button>
-                          </article>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="lobby-empty">
-                        <div className="empty-graphic">
-                          <Swords size={25} />
-                        </div>
-                        <div>
-                          <h3>
-                            {user
-                              ? "Tu rival podría ser el próximo."
-                              : "Tu próxima partida empieza contigo."}
-                          </h3>
-                          <p>
-                            {user
-                              ? lobby === null
-                                ? "No pudimos consultar los desafíos. Actualiza la conexión."
-                                : "Aún no hay desafíos abiertos. Crea uno cuando tu cuenta esté habilitada."
-                              : "Entra con Discord para consultar los desafíos de la comunidad."}
-                          </p>
-                        </div>
-                        <button
-                          className="button secondary small"
-                          onClick={() =>
-                            user ? challenge() : openModal("login")
-                          }
-                        >
-                          {user ? "Crear desafío" : "Entrar"}
-                          <ArrowRight size={15} />
-                        </button>
-                      </div>
-                    )}
-                  </section>
-                </div>
-                <aside className="right-rail" aria-label="Tu cuenta y guía">
-                  <section className="wallet-card">
-                    <div className="card-topline">
-                      <span>
-                        <Wallet size={17} />
-                        TU BILLETERA
-                      </span>
-                      <span className="currency-pill">{asset}</span>
-                    </div>
-                    <span className="balance-label">Saldo disponible</span>
-                    <div className="balance-value">
-                      {user ? displayBalance("AVAILABLE") : "—"}
-                      <small>{asset}</small>
-                    </div>
-                    <div className="reserved">
-                      <span>
-                        <ShieldCheck size={13} />
-                        En partidas
-                      </span>
-                      <strong>{user ? displayBalance("RESERVED") : "—"}</strong>
-                    </div>
-                    <button
-                      className="button primary full"
-                      onClick={() =>
-                        user ? navigate("wallet") : openModal("login")
-                      }
-                    >
-                      {user ? "Ver mi billetera" : "Conectar mi cuenta"}
-                      <ArrowRight size={16} />
-                    </button>
-                    <p className="wallet-caption">
-                      {user
-                        ? "El saldo se consulta directamente en la plataforma."
-                        : "Tu saldo aparecerá después de iniciar sesión."}
-                    </p>
-                  </section>
-                  <section className="steps-card">
-                    <span className="eyebrow">ASÍ DE SIMPLE</span>
-                    <h3>Del lobby a la partida.</h3>
-                    <ol>
-                      <li>
-                        <span>01</span>
-                        <div>
-                          <strong>Conecta tu Discord</strong>
-                          <p>Una cuenta para toda tu actividad.</p>
-                        </div>
-                      </li>
-                      <li>
-                        <span>02</span>
-                        <div>
-                          <strong>Elige tu desafío</strong>
-                          <p>Consulta reglas, aporte y comisión.</p>
-                        </div>
-                      </li>
-                      <li>
-                        <span>03</span>
-                        <div>
-                          <strong>Compite y confirma</strong>
-                          <p>Reporta el resultado de tu partida.</p>
-                        </div>
-                      </li>
-                    </ol>
-                    <button
-                      className="text-button"
-                      onClick={() => openModal("rules")}
-                    >
-                      Conocer el proceso
-                      <ArrowRight size={14} />
-                    </button>
-                  </section>
-                  <section className="fairplay-card">
-                    <ShieldCheck size={25} />
-                    <h3>El respeto también juega.</h3>
-                    <p>
-                      Competimos con reglas claras. Si hay un desacuerdo, el
-                      resultado pasa a mediación.
-                    </p>
-                    <button onClick={() => openModal("rules")}>
-                      Leer las reglas <ArrowUpRight size={13} />
-                    </button>
-                  </section>
-                </aside>
-              </div>
-            </>
-          )}
-
-          {view === "wallet" && (
-            <section className="panel-page">
-              {!user ? (
-                <Guest
-                  title="Tu saldo empieza con tu cuenta."
-                  text="Entra con Discord para consultar el dinero disponible, las reservas y tus movimientos."
-                  onLogin={() => openModal("login")}
-                />
-              ) : (
-                <>
-                  <div className="wallet-summary">
-                    <div>
-                      <span className="eyebrow">DISPONIBLE / {asset}</span>
-                      <h2>{displayBalance("AVAILABLE")}</h2>
-                      <p>Saldo registrado en tu cuenta</p>
-                    </div>
-                    <div>
-                      <span className="eyebrow">RESERVADO EN PARTIDAS</span>
-                      <h2>{displayBalance("RESERVED")}</h2>
-                      <p>Se libera al resolver cada desafío</p>
-                    </div>
-                    <div className="wallet-actions">
-                      <button
-                        className="button primary"
-                        onClick={() => openModal("payments")}
-                      >
-                        <Plus size={17} />
-                        Depositar
-                      </button>
-                      <button
-                        className="button secondary"
-                        onClick={() => openModal("payments")}
-                      >
-                        <ArrowUpRight size={17} />
-                        Retirar
-                      </button>
-                    </div>
-                  </div>
-                  <div className="info-note">
-                    <CircleHelp size={17} />
-                    <span>
-                      Las equivalencias y conversiones aún no están disponibles.
-                      Cada saldo se muestra en su moneda original.
-                    </span>
-                  </div>
-                  <div className="section-heading">
-                    <h2>Movimientos recientes</h2>
-                    <span className="section-meta">Últimos 100 registros</span>
-                  </div>
-                  {transactions?.length ? (
-                    <div className="transaction-list">
-                      {transactions.map((item, index) => (
-                        <div
-                          className="transaction-row"
-                          key={`${item.journal_id}:${item.kind}:${index}`}
-                        >
-                          <span className="transaction-icon">
-                            {BigInt(item.amount_minor) > 0n ? (
-                              <ArrowDownLeft size={19} />
-                            ) : (
-                              <ArrowUpRight size={19} />
-                            )}
-                          </span>
-                          <div>
-                            <strong>
-                              {item.kind === "RESERVED"
-                                ? "Reserva de partida"
-                                : "Movimiento de saldo"}
-                            </strong>
-                            <small>
-                              {new Intl.DateTimeFormat("es", {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              }).format(new Date(item.created_at))}
-                            </small>
                           </div>
+                        )}
+                      </section>
+                    </div>
+                    <aside className="right-rail" aria-label="Tu cuenta y guía">
+                      <section className="wallet-card">
+                        <div className="card-topline">
+                          <span>
+                            <Wallet size={17} />
+                            TU BILLETERA
+                          </span>
+                          <span className="currency-pill">{asset}</span>
+                        </div>
+                        <span className="balance-label">Saldo disponible</span>
+                        <div className="balance-value">
+                          {user ? displayBalance("AVAILABLE") : "—"}
+                          <small>{asset}</small>
+                        </div>
+                        <div className="reserved">
+                          <span>
+                            <ShieldCheck size={13} />
+                            En partidas
+                          </span>
                           <strong>
-                            {formatMoney(
-                              item.amount_minor,
-                              item.asset,
-                              assets.find((value) => value.code === item.asset)
-                                ?.exponent ?? 2,
-                            )}
+                            {user ? displayBalance("RESERVED") : "—"}
                           </strong>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <CreditCard size={30} />
-                      <h3>
-                        {transactions === null
-                          ? "No se pudo consultar el historial"
-                          : "Todo listo para tu primer movimiento"}
-                      </h3>
-                      <p>
-                        {transactions === null
-                          ? "Actualiza la conexión para volver a intentarlo."
-                          : "Aquí aparecerán los movimientos confirmados por la plataforma."}
-                      </p>
-                    </div>
-                  )}
-                  <button
-                    className="text-button signout"
-                    disabled={busy}
-                    onClick={() =>
-                      void run(async () => {
-                        await api.logout();
-                        await refresh();
-                        notify("Sesión cerrada.");
-                      })
-                    }
-                  >
-                    <LogOut size={16} />
-                    Cerrar sesión
-                  </button>
+                        <button
+                          className="button primary full"
+                          onClick={() =>
+                            user ? navigate("wallet") : openModal("login")
+                          }
+                        >
+                          {user ? "Ver mi billetera" : "Conectar mi cuenta"}
+                          <ArrowRight size={16} />
+                        </button>
+                        <p className="wallet-caption">
+                          {user
+                            ? "El saldo se consulta directamente en la plataforma."
+                            : "Tu saldo aparecerá después de iniciar sesión."}
+                        </p>
+                      </section>
+                      <section className="steps-card">
+                        <span className="eyebrow">ASÍ DE SIMPLE</span>
+                        <h3>Del lobby a la partida.</h3>
+                        <ol>
+                          <li>
+                            <span>01</span>
+                            <div>
+                              <strong>Conecta tu Discord</strong>
+                              <p>Una cuenta para toda tu actividad.</p>
+                            </div>
+                          </li>
+                          <li>
+                            <span>02</span>
+                            <div>
+                              <strong>Elige tu desafío</strong>
+                              <p>Consulta reglas, aporte y comisión.</p>
+                            </div>
+                          </li>
+                          <li>
+                            <span>03</span>
+                            <div>
+                              <strong>Compite y confirma</strong>
+                              <p>Reporta el resultado de tu partida.</p>
+                            </div>
+                          </li>
+                        </ol>
+                        <button
+                          className="text-button"
+                          onClick={() => openModal("rules")}
+                        >
+                          Conocer el proceso
+                          <ArrowRight size={14} />
+                        </button>
+                      </section>
+                      <section className="fairplay-card">
+                        <ShieldCheck size={25} />
+                        <h3>El respeto también juega.</h3>
+                        <p>
+                          Competimos con reglas claras. Si hay un desacuerdo, el
+                          resultado pasa a mediación.
+                        </p>
+                        <button onClick={() => openModal("rules")}>
+                          Leer las reglas <ArrowUpRight size={13} />
+                        </button>
+                      </section>
+                    </aside>
+                  </div>
                 </>
               )}
-            </section>
-          )}
 
-          {view === "matches" && (
-            <section className="panel-page">
-              {!user ? (
-                <Guest
-                  title="Tu próxima rivalidad empieza aquí."
-                  text="Conecta tu cuenta para consultar y gestionar tus desafíos."
-                  onLogin={() => openModal("login")}
-                />
-              ) : (
-                <>
-                  <form
-                    className="lookup-form"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void run(async () => {
-                        const match = await api.match(matchLookup.trim());
-                        setSelectedMatch(match);
-                      });
-                    }}
-                  >
-                    <label htmlFor="match-id">
-                      Consultar partida por su ID
-                    </label>
-                    <div>
-                      <input
-                        id="match-id"
-                        value={matchLookup}
-                        onChange={(event) => setMatchLookup(event.target.value)}
-                        placeholder="ID de la partida"
-                        required
-                      />
-                      <button className="button secondary" disabled={busy}>
-                        Consultar
-                        <ArrowRight size={15} />
-                      </button>
-                    </div>
-                  </form>
-                  {selectedMatch ? (
-                    <div className="match-detail">
-                      <div className="section-heading">
-                        <h2>{modeName(selectedMatch.mode)} · 1v1</h2>
-                        <span className="status-chip">
-                          {stateNames[selectedMatch.state]}
-                        </span>
-                      </div>
-                      <p className="match-id">ID: {selectedMatch.id}</p>
-                      <div className="match-versus">
+              {view === "wallet" && (
+                <section className="panel-page">
+                  {!user ? (
+                    <Guest
+                      title="Tu saldo empieza con tu cuenta."
+                      text="Entra con Discord para consultar el dinero disponible, las reservas y tus movimientos."
+                      onLogin={() => openModal("login")}
+                    />
+                  ) : (
+                    <>
+                      <div className="wallet-summary">
                         <div>
-                          <span className="avatar big">
-                            {user.id === selectedMatch.creatorId ? "TÚ" : "J1"}
-                          </span>
-                          <strong>
-                            {user.id === selectedMatch.creatorId
-                              ? user.display_name
-                              : "Jugador 1"}
-                          </strong>
+                          <span className="eyebrow">DISPONIBLE / {asset}</span>
+                          <h2>{displayBalance("AVAILABLE")}</h2>
+                          <p>Saldo registrado en tu cuenta</p>
                         </div>
-                        <span>VS</span>
                         <div>
-                          <span className="avatar big rival">
-                            {selectedMatch.opponentId
-                              ? user.id === selectedMatch.opponentId
-                                ? "TÚ"
-                                : "J2"
-                              : "?"}
-                          </span>
-                          <strong>
-                            {!selectedMatch.opponentId
-                              ? "Buscando rival"
-                              : user.id === selectedMatch.opponentId
-                                ? user.display_name
-                                : "Jugador 2"}
-                          </strong>
+                          <span className="eyebrow">RESERVADO EN PARTIDAS</span>
+                          <h2>{displayBalance("RESERVED")}</h2>
+                          <p>Se libera al resolver cada desafío</p>
                         </div>
-                      </div>
-                      <div className="match-totals">
-                        <span>
-                          Aporte por jugador
-                          <strong>
-                            {formatMoney(
-                              selectedMatch.stakeMinor,
-                              selectedMatch.asset,
-                              assets.find(
-                                (item) => item.code === selectedMatch.asset,
-                              )?.exponent ?? 2,
-                            )}
-                          </strong>
-                        </span>
-                        <span>
-                          Premio neto
-                          <strong>
-                            {formatMoney(
-                              prize(
-                                selectedMatch.stakeMinor,
-                                selectedMatch.feeBps,
-                              ),
-                              selectedMatch.asset,
-                              assets.find(
-                                (item) => item.code === selectedMatch.asset,
-                              )?.exponent ?? 2,
-                            )}
-                          </strong>
-                        </span>
-                        <span>
-                          Comisión del pozo
-                          <strong>{selectedMatch.feeBps / 100}%</strong>
-                        </span>
-                      </div>
-                      <div className="info-note">
-                        <ShieldCheck size={17} />
-                        <span>
-                          {selectedMatch.state === "DISPUTED"
-                            ? "El resultado está en mediación. Los fondos permanecen reservados."
-                            : selectedMatch.state === "SETTLED"
-                              ? "Resultado confirmado. Consulta la liquidación en tu billetera."
-                              : "Confirma cada paso con tu rival. No declares un resultado antes de terminar la partida."}
-                        </span>
-                      </div>
-                      <div className="match-actions">
-                        <button
-                          className="button secondary"
-                          disabled={busy}
-                          onClick={() =>
-                            void run(async () =>
-                              setSelectedMatch(
-                                await api.match(selectedMatch.id),
-                              ),
-                            )
-                          }
-                        >
-                          <RefreshCw size={15} />
-                          Actualizar
-                        </button>
-                        {selectedMatch.state === "OPEN" &&
-                          user.id === selectedMatch.creatorId && (
-                            <button
-                              className="button secondary"
-                              disabled={busy}
-                              onClick={() =>
-                                void matchAction(selectedMatch.id, "cancel")
-                              }
-                            >
-                              Cancelar desafío
-                            </button>
-                          )}
-                        {selectedMatch.state === "FUNDED" && (
+                        <div className="wallet-actions">
                           <button
                             className="button primary"
-                            disabled={busy}
-                            onClick={() =>
-                              void matchAction(selectedMatch.id, "ready")
-                            }
+                            onClick={() => openModal("payments")}
                           >
-                            <Check size={17} />
-                            Estoy listo
+                            <Plus size={17} />
+                            Depositar
                           </button>
-                        )}
-                        {["IN_PROGRESS", "RESULT_PENDING"].includes(
-                          selectedMatch.state,
-                        ) && (
-                          <>
-                            <button
-                              className="button primary"
-                              disabled={busy}
-                              onClick={() =>
-                                void run(async () => {
-                                  const match = await api.result(
-                                    selectedMatch.id,
-                                    user.id,
-                                    key(
-                                      `result:${selectedMatch.id}:${user.id}`,
-                                    ),
-                                  );
-                                  await refresh();
-                                  setSelectedMatch(match);
-                                  notify("Resultado enviado.");
-                                })
-                              }
+                          <button
+                            className="button secondary"
+                            onClick={() => openModal("payments")}
+                          >
+                            <ArrowUpRight size={17} />
+                            Retirar
+                          </button>
+                        </div>
+                      </div>
+                      <div className="info-note">
+                        <CircleHelp size={17} />
+                        <span>
+                          Las equivalencias y conversiones aún no están
+                          disponibles. Cada saldo se muestra en su moneda
+                          original.
+                        </span>
+                      </div>
+                      <div className="section-heading">
+                        <h2>Movimientos recientes</h2>
+                        <span className="section-meta">
+                          Últimos 100 registros
+                        </span>
+                      </div>
+                      {transactions?.length ? (
+                        <div className="transaction-list">
+                          {transactions.map((item, index) => (
+                            <div
+                              className="transaction-row"
+                              key={`${item.journal_id}:${item.kind}:${index}`}
                             >
-                              Reportar mi victoria
-                            </button>
+                              <span className="transaction-icon">
+                                {BigInt(item.amount_minor) > 0n ? (
+                                  <ArrowDownLeft size={19} />
+                                ) : (
+                                  <ArrowUpRight size={19} />
+                                )}
+                              </span>
+                              <div>
+                                <strong>
+                                  {item.kind === "RESERVED"
+                                    ? "Reserva de partida"
+                                    : "Movimiento de saldo"}
+                                </strong>
+                                <small>
+                                  {new Intl.DateTimeFormat("es", {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  }).format(new Date(item.created_at))}
+                                </small>
+                              </div>
+                              <strong>
+                                {formatMoney(
+                                  item.amount_minor,
+                                  item.asset,
+                                  assets.find(
+                                    (value) => value.code === item.asset,
+                                  )?.exponent ?? 2,
+                                )}
+                              </strong>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="empty-state">
+                          <CreditCard size={30} />
+                          <h3>
+                            {transactions === null
+                              ? "No se pudo consultar el historial"
+                              : "Todo listo para tu primer movimiento"}
+                          </h3>
+                          <p>
+                            {transactions === null
+                              ? "Actualiza la conexión para volver a intentarlo."
+                              : "Aquí aparecerán los movimientos confirmados por la plataforma."}
+                          </p>
+                        </div>
+                      )}
+                      <button
+                        className="text-button signout"
+                        disabled={busy}
+                        onClick={() =>
+                          void run(async () => {
+                            await api.logout();
+                            returnToSite();
+                            await refresh();
+                            notify("Sesión cerrada.");
+                          })
+                        }
+                      >
+                        <LogOut size={16} />
+                        Cerrar sesión
+                      </button>
+                    </>
+                  )}
+                </section>
+              )}
+
+              {view === "matches" && (
+                <section className="panel-page">
+                  {!user ? (
+                    <Guest
+                      title="Tu próxima rivalidad empieza aquí."
+                      text="Conecta tu cuenta para consultar y gestionar tus desafíos."
+                      onLogin={() => openModal("login")}
+                    />
+                  ) : (
+                    <>
+                      <form
+                        className="lookup-form"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void run(async () => {
+                            const match = await api.match(matchLookup.trim());
+                            setSelectedMatch(match);
+                          });
+                        }}
+                      >
+                        <label htmlFor="match-id">
+                          Consultar partida por su ID
+                        </label>
+                        <div>
+                          <input
+                            id="match-id"
+                            value={matchLookup}
+                            onChange={(event) =>
+                              setMatchLookup(event.target.value)
+                            }
+                            placeholder="ID de la partida"
+                            required
+                          />
+                          <button className="button secondary" disabled={busy}>
+                            Consultar
+                            <ArrowRight size={15} />
+                          </button>
+                        </div>
+                      </form>
+                      {selectedMatch ? (
+                        <div className="match-detail">
+                          <div className="section-heading">
+                            <h2>{modeName(selectedMatch.mode)} · 1v1</h2>
+                            <span className="status-chip">
+                              {stateNames[selectedMatch.state]}
+                            </span>
+                          </div>
+                          <p className="match-id">ID: {selectedMatch.id}</p>
+                          <div className="match-versus">
+                            <div>
+                              <span className="avatar big">
+                                {user.id === selectedMatch.creatorId
+                                  ? "TÚ"
+                                  : "J1"}
+                              </span>
+                              <strong>
+                                {user.id === selectedMatch.creatorId
+                                  ? user.display_name
+                                  : "Jugador 1"}
+                              </strong>
+                            </div>
+                            <span>VS</span>
+                            <div>
+                              <span className="avatar big rival">
+                                {selectedMatch.opponentId
+                                  ? user.id === selectedMatch.opponentId
+                                    ? "TÚ"
+                                    : "J2"
+                                  : "?"}
+                              </span>
+                              <strong>
+                                {!selectedMatch.opponentId
+                                  ? "Buscando rival"
+                                  : user.id === selectedMatch.opponentId
+                                    ? user.display_name
+                                    : "Jugador 2"}
+                              </strong>
+                            </div>
+                          </div>
+                          <div className="match-totals">
+                            <span>
+                              Aporte por jugador
+                              <strong>
+                                {formatMoney(
+                                  selectedMatch.stakeMinor,
+                                  selectedMatch.asset,
+                                  assets.find(
+                                    (item) => item.code === selectedMatch.asset,
+                                  )?.exponent ?? 2,
+                                )}
+                              </strong>
+                            </span>
+                            <span>
+                              Premio neto
+                              <strong>
+                                {formatMoney(
+                                  prize(
+                                    selectedMatch.stakeMinor,
+                                    selectedMatch.feeBps,
+                                  ),
+                                  selectedMatch.asset,
+                                  assets.find(
+                                    (item) => item.code === selectedMatch.asset,
+                                  )?.exponent ?? 2,
+                                )}
+                              </strong>
+                            </span>
+                            <span>
+                              Comisión del pozo
+                              <strong>{selectedMatch.feeBps / 100}%</strong>
+                            </span>
+                          </div>
+                          <div className="info-note">
+                            <ShieldCheck size={17} />
+                            <span>
+                              {selectedMatch.state === "DISPUTED"
+                                ? "El resultado está en mediación. Los fondos permanecen reservados."
+                                : selectedMatch.state === "SETTLED"
+                                  ? "Resultado confirmado. Consulta la liquidación en tu billetera."
+                                  : "Confirma cada paso con tu rival. No declares un resultado antes de terminar la partida."}
+                            </span>
+                          </div>
+                          <div className="match-actions">
                             <button
                               className="button secondary"
                               disabled={busy}
-                              onClick={() => {
-                                const rival =
-                                  user.id === selectedMatch.creatorId
-                                    ? selectedMatch.opponentId
-                                    : selectedMatch.creatorId;
-                                if (rival)
-                                  void run(async () => {
-                                    const match = await api.result(
-                                      selectedMatch.id,
-                                      rival,
-                                      key(
-                                        `result:${selectedMatch.id}:${rival}`,
-                                      ),
-                                    );
-                                    await refresh();
-                                    setSelectedMatch(match);
-                                    notify("Resultado enviado.");
-                                  });
-                              }}
+                              onClick={() =>
+                                void run(async () =>
+                                  setSelectedMatch(
+                                    await api.match(selectedMatch.id),
+                                  ),
+                                )
+                              }
                             >
-                              Confirmar victoria rival
+                              <RefreshCw size={15} />
+                              Actualizar
                             </button>
-                          </>
-                        )}
-                        {["FUNDED", "IN_PROGRESS", "RESULT_PENDING"].includes(
-                          selectedMatch.state,
-                        ) && (
+                            {selectedMatch.state === "OPEN" &&
+                              user.id === selectedMatch.creatorId && (
+                                <button
+                                  className="button secondary"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void matchAction(selectedMatch.id, "cancel")
+                                  }
+                                >
+                                  Cancelar desafío
+                                </button>
+                              )}
+                            {selectedMatch.state === "FUNDED" && (
+                              <button
+                                className="button primary"
+                                disabled={busy}
+                                onClick={() =>
+                                  void matchAction(selectedMatch.id, "ready")
+                                }
+                              >
+                                <Check size={17} />
+                                Estoy listo
+                              </button>
+                            )}
+                            {["IN_PROGRESS", "RESULT_PENDING"].includes(
+                              selectedMatch.state,
+                            ) && (
+                              <>
+                                <button
+                                  className="button primary"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void run(async () => {
+                                      const match = await api.result(
+                                        selectedMatch.id,
+                                        user.id,
+                                        key(
+                                          `result:${selectedMatch.id}:${user.id}`,
+                                        ),
+                                      );
+                                      await refresh();
+                                      setSelectedMatch(match);
+                                      notify("Resultado enviado.");
+                                    })
+                                  }
+                                >
+                                  Reportar mi victoria
+                                </button>
+                                <button
+                                  className="button secondary"
+                                  disabled={busy}
+                                  onClick={() => {
+                                    const rival =
+                                      user.id === selectedMatch.creatorId
+                                        ? selectedMatch.opponentId
+                                        : selectedMatch.creatorId;
+                                    if (rival)
+                                      void run(async () => {
+                                        const match = await api.result(
+                                          selectedMatch.id,
+                                          rival,
+                                          key(
+                                            `result:${selectedMatch.id}:${rival}`,
+                                          ),
+                                        );
+                                        await refresh();
+                                        setSelectedMatch(match);
+                                        notify("Resultado enviado.");
+                                      });
+                                  }}
+                                >
+                                  Confirmar victoria rival
+                                </button>
+                              </>
+                            )}
+                            {[
+                              "FUNDED",
+                              "IN_PROGRESS",
+                              "RESULT_PENDING",
+                            ].includes(selectedMatch.state) && (
+                              <button
+                                className="text-button"
+                                onClick={() => openModal("dispute")}
+                              >
+                                Solicitar mediación
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="empty-state">
+                          <Swords size={32} />
+                          <h3>Cada gran duelo tiene un comienzo.</h3>
+                          <p>
+                            Crea un desafío o consulta una partida con su
+                            identificador.
+                          </p>
                           <button
-                            className="text-button"
-                            onClick={() => openModal("dispute")}
+                            className="button primary"
+                            onClick={() => challenge()}
                           >
-                            Solicitar mediación
+                            Explorar desafíos
+                            <ArrowRight size={16} />
                           </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <Swords size={32} />
-                      <h3>Cada gran duelo tiene un comienzo.</h3>
-                      <p>
-                        Crea un desafío o consulta una partida con su
-                        identificador.
-                      </p>
-                      <button
-                        className="button primary"
-                        onClick={() => challenge()}
-                      >
-                        Explorar desafíos
-                        <ArrowRight size={16} />
-                      </button>
-                    </div>
+                        </div>
+                      )}
+                    </>
                   )}
-                </>
+                </section>
               )}
-            </section>
-          )}
 
-          {view === "help" && (
-            <section className="panel-page help-page">
-              <div className="help-intro">
-                <Headphones size={34} />
-                <h2>Reglas claras. Mejor juego.</h2>
+              {view === "help" && (
+                <section className="panel-page help-page">
+                  <div className="help-intro">
+                    <Headphones size={34} />
+                    <h2>Reglas claras. Mejor juego.</h2>
+                    <p>
+                      Tu comunidad merece una experiencia transparente desde el
+                      primer clic.
+                    </p>
+                  </div>
+                  {[
+                    {
+                      title: "¿Cómo entro a la plataforma?",
+                      text: "Usa Entrar con Discord. La sesión la gestiona el servidor; conectar Discord no habilita automáticamente tu cuenta para aportar dinero.",
+                    },
+                    {
+                      title: "¿Cómo se confirma una victoria?",
+                      text: "Ambos participantes reportan al ganador. Si coinciden, se liquida la partida; si no coinciden, se abre una disputa y se conservan las reservas.",
+                    },
+                    {
+                      title: "¿Qué pasa con mi saldo reservado?",
+                      text: "Se mantiene separado del saldo disponible. Cancelar una oferta abierta o vencer su plazo libera el aporte. Una partida iniciada requiere resultado o mediación.",
+                    },
+                    {
+                      title: "¿Puedo depositar o retirar?",
+                      text: "Los pagos y retiros aún no están integrados. Nunca envíes dinero a datos bancarios, enlaces o mensajes que esta plataforma no haya validado.",
+                    },
+                    {
+                      title: "¿Dónde está la comunidad de Discord?",
+                      text: "El enlace oficial del servidor está pendiente de configurar. El acceso con Discord sirve para identificarte y no te une automáticamente a un servidor.",
+                    },
+                    {
+                      title: "¿Hay apuestas de terceros o monedas digitales?",
+                      text: "Esta versión contempla desafíos entre participantes. No incluye apuestas de espectadores ni tokens negociables. Las conversiones de moneda aún están pendientes.",
+                    },
+                  ].map((item) => (
+                    <details key={item.title}>
+                      <summary>
+                        {item.title}
+                        <Plus size={18} />
+                      </summary>
+                      <p>{item.text}</p>
+                    </details>
+                  ))}
+                </section>
+              )}
+
+              <footer className="page-footer">
+                <span>
+                  © {new Date().getFullYear()} WTOKENS
+                  <span className="footer-dot">·</span>Hecho para competir.
+                </span>
+                <div>
+                  <button onClick={() => openModal("rules")}>Reglamento</button>
+                  <button onClick={() => navigate("help")}>
+                    Ayuda y privacidad
+                  </button>
+                  <span className="age-mark">18+</span>
+                </div>
                 <p>
-                  Tu comunidad merece una experiencia transparente desde el
-                  primer clic.
+                  Plataforma independiente. Sin afiliación ni patrocinio de Epic
+                  Games.
                 </p>
-              </div>
-              {[
-                {
-                  title: "¿Cómo entro a la plataforma?",
-                  text: "Usa Entrar con Discord. La sesión la gestiona el servidor; conectar Discord no habilita automáticamente tu cuenta para aportar dinero.",
-                },
-                {
-                  title: "¿Cómo se confirma una victoria?",
-                  text: "Ambos participantes reportan al ganador. Si coinciden, se liquida la partida; si no coinciden, se abre una disputa y se conservan las reservas.",
-                },
-                {
-                  title: "¿Qué pasa con mi saldo reservado?",
-                  text: "Se mantiene separado del saldo disponible. Cancelar una oferta abierta o vencer su plazo libera el aporte. Una partida iniciada requiere resultado o mediación.",
-                },
-                {
-                  title: "¿Puedo depositar o retirar?",
-                  text: "Los pagos y retiros aún no están integrados. Nunca envíes dinero a datos bancarios, enlaces o mensajes que esta plataforma no haya validado.",
-                },
-                {
-                  title: "¿Dónde está la comunidad de Discord?",
-                  text: "El enlace oficial del servidor está pendiente de configurar. El acceso con Discord sirve para identificarte y no te une automáticamente a un servidor.",
-                },
-                {
-                  title: "¿Hay apuestas de terceros o monedas digitales?",
-                  text: "Esta versión contempla desafíos entre participantes. No incluye apuestas de espectadores ni tokens negociables. Las conversiones de moneda aún están pendientes.",
-                },
-              ].map((item) => (
-                <details key={item.title}>
-                  <summary>
-                    {item.title}
-                    <Plus size={18} />
-                  </summary>
-                  <p>{item.text}</p>
-                </details>
-              ))}
-            </section>
-          )}
-
-          <footer className="page-footer">
-            <span>
-              © {new Date().getFullYear()} WTOKENS
-              <span className="footer-dot">·</span>Hecho para competir.
-            </span>
-            <div>
-              <button onClick={() => openModal("rules")}>Reglamento</button>
-              <button onClick={() => navigate("help")}>
-                Ayuda y privacidad
-              </button>
-              <span className="age-mark">18+</span>
-            </div>
-            <p>
-              Plataforma independiente. Sin afiliación ni patrocinio de Epic
-              Games.
-            </p>
-          </footer>
-        </main>
-      </div>
+              </footer>
+            </main>
+          </div>
+        </>
+      )}
       {notice && (
         <div
           className={`toast ${notice.error ? "toast-error" : ""}`}

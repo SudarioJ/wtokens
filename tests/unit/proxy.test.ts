@@ -85,7 +85,13 @@ describe("production server", () => {
       .get("/v1/me")
       .set("Accept", "text/html");
     expect(result.status).toBe(303);
-    expect(result.headers.location).toBe("/");
+    expect(result.headers.location).toBe("/app");
+  });
+  it("serves the SPA at the private panel entry while session authorization stays in the API", async () => {
+    const result = await request(app()).get("/app");
+    expect(result.status).toBe(200);
+    expect(result.headers["content-type"]).toContain("text/html");
+    expect(result.text).toContain('<div id="root"></div>');
   });
   it("rejects oversized requests before sending a body to the backend", async () => {
     const result = await request(app())

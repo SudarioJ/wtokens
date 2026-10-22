@@ -1,6 +1,14 @@
 # WTOKENS · TypeScript Arena
 
-Frontend React + TypeScript para [el backend Java WTOKENS](https://github.com/SudarioJ/wtokens-backend). Rediseño adaptable de arena, modalidades, billetera, partida y ayuda. Los datos de identidad y dinero se consultan en el servidor; no se simulan recargas, retiros o ganadores.
+Frontend React + TypeScript para [el backend Java WTOKENS](https://github.com/SudarioJ/wtokens-backend). Landing pública basada en la web original y panel privado con el nuevo diseño de arena, modalidades, billetera, partida y ayuda. Los datos de identidad y dinero se consultan en el servidor; no se simulan recargas, retiros o ganadores.
+
+## Landing y panel
+
+- `/`: landing pública con encabezado horizontal, título original, carrusel de modalidades, sistema, comunidad Discord, sección LATAM y preguntas frecuentes. Sigue disponible aunque el usuario tenga sesión; «Mi panel» abre su espacio personal.
+- `/app`: panel con navegación lateral, lobby, billetera y gestión de partidas. Comprueba `/v1/me` antes de mostrar la interfaz personal; sin sesión vuelve a la landing y solicita Discord. Esa separación visual complementa la autorización que ya aplica el backend a los datos y operaciones.
+- Después del callback de Discord se abre `/app`. «Volver al sitio» regresa a `/` manteniendo la sesión; cerrar sesión vuelve a la landing y limpia los datos privados.
+
+El carrusel tiene controles anterior/siguiente, indicadores y teclado, sin rotación automática. Las imágenes, tipografía condensada y paleta azul conservan la dirección de la landing original; el diseño azul/lima del panel se mantiene para después del acceso. No se publican cantidades inventadas de jugadores ni equivalencias sin proveedor.
 
 ## Inicio rápido
 
@@ -39,13 +47,13 @@ DISCORD_REDIRECT_URI=http://127.0.0.1:3000/login/oauth2/code/discord
 COOKIE_SECURE=false
 ```
 
-Registrar exactamente esa URL en Discord Developer Portal. Si se usa Vite, el callback debe usar el puerto 5173. La web inicia `/oauth2/authorization/discord`; Spring mantiene la sesión HttpOnly y el proxy conserva las cookies. El backend retorna a `/v1/me` después del login: el proxy redirige la navegación HTML a `/`; las consultas JSON siguen llegando al API.
+Registrar exactamente esa URL en Discord Developer Portal. Si se usa Vite, el callback debe usar el puerto 5173. La web inicia `/oauth2/authorization/discord`; Spring mantiene la sesión HttpOnly y el proxy conserva las cookies. El backend retorna a `/v1/me` después del login: el proxy redirige la navegación HTML a `/app`; las consultas JSON siguen llegando al API.
 
 Sin credenciales de Discord se puede verificar salud y catálogo, pero la interfaz informa que el login no está configurado. No hay bypass de sesión ni usuario demo en el producto. Las apuestas del backend están apagadas por defecto, y entrar con Discord no establece elegibilidad.
 
 ## Qué cambió
 
-- Interfaz oscura con acentos azul y lima, imágenes originales del repositorio, navegación lateral y móvil, buscador y filtros funcionales.
+- Landing pública azul con carrusel 3D y contenido del negocio; panel privado oscuro con acentos azul y lima, navegación lateral y móvil, buscador y filtros funcionales.
 - Diálogos nativos con foco, Escape, labels, contraste revisado y respeto por movimiento reducido.
 - TypeScript estricto en código activo: componentes, contratos Zod, cliente API, dinero y servidor/proxy.
 - Billetera y extracto basados en respuestas validadas. Importes en unidades menores como string y cálculos BigInt; nunca float para dinero.
