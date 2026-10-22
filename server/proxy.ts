@@ -33,6 +33,27 @@ function headers(source: IncomingMessage["headers"]): OutgoingHttpHeaders {
   );
 }
 
+// Servlet redirects can use the backend's internal HTTP scheme behind Cloud Run.
+// Keep its redirects on the public browser origin without trusting forwarded headers.
+export function browserLocation(value: string, target: URL): string {
+  try {
+    const redirect = new URL(value);
+    if (
+      ["http:", "https:"].includes(redirect.protocol) &&
+      redirect.host === target.host &&
+      !redirect.username &&
+      !redirect.password
+    ) {
+      // Prevent a backend path beginning // from becoming a protocol-relative redirect.
+      if (redirect.pathname.startsWith("//")) return "/?auth_error=discord";
+      return redirect.pathname + redirect.search + redirect.hash;
+    }
+  } catch {
+    // Already-relative redirects remain relative.
+  }
+  return value;
+}
+
 // A single fixed destination, no dynamic path matching library and no automatic redirects.
 export function proxyRequest(
   origin: string,
@@ -69,7 +90,12 @@ export function proxyRequest(
             "referrer-policy",
           ].includes(name)
         )
-          res.setHeader(name, value);
+          res.setHeader(
+            name,
+            name === "location" && typeof value === "string"
+              ? browserLocation(value, target)
+              : value,
+          );
       }
       res.setHeader("Cache-Control", "no-store");
       res.statusCode = response.statusCode ?? 502;

@@ -4,6 +4,30 @@ import { type AddressInfo } from "node:net";
 import request from "supertest";
 import { createApp } from "../../server/app";
 import { backendOrigin, isBackendPath } from "../../server/security";
+import { browserLocation } from "../../server/proxy";
+
+describe("OAuth redirects through Cloud Run", () => {
+  const backend = new URL("https://backend.example.run.app");
+  it.each([
+    ["http://backend.example.run.app/v1/me", "/v1/me"],
+    ["https://backend.example.run.app/v1/me", "/v1/me"],
+    [
+      "http://backend.example.run.app/?auth_error=discord",
+      "/?auth_error=discord",
+    ],
+    ["/v1/me", "/v1/me"],
+    [
+      "https://discord.com/oauth2/authorize?state=fixture",
+      "https://discord.com/oauth2/authorize?state=fixture",
+    ],
+    [
+      "http://backend.example.run.app//attacker.example",
+      "/?auth_error=discord",
+    ],
+  ])("keeps the correct browser origin for %s", (location, expected) => {
+    expect(browserLocation(location, backend)).toBe(expected);
+  });
+});
 
 describe("fixed backend origin", () => {
   it.each([
@@ -40,6 +64,11 @@ describe("production server", () => {
   let target: string;
   beforeAll(async () => {
     backend = createServer((req, res) => {
+      if (req.url === "/login/oauth2/code/discord") {
+        res.writeHead(302, { Location: `${target}/v1/me` });
+        res.end();
+        return;
+      }
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({
@@ -86,6 +115,11 @@ describe("production server", () => {
       .set("Accept", "text/html");
     expect(result.status).toBe(303);
     expect(result.headers.location).toBe("/app");
+  });
+  it("rewrites an actual upstream OAuth redirect before returning it to the browser", async () => {
+    const result = await request(app()).get("/login/oauth2/code/discord");
+    expect(result.status).toBe(302);
+    expect(result.headers.location).toBe("/v1/me");
   });
   it("serves the SPA at the private panel entry while session authorization stays in the API", async () => {
     const result = await request(app()).get("/app");
