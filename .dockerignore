@@ -1,0 +1,9 @@
+.git
+.env*
+!.env.example
+node_modules
+legacy
+dist
+test-results
+playwright-report
+tests

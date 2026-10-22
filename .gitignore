@@ -29,3 +29,8 @@ data/*.db
 # OS metadata
 .DS_Store
 Thumbs.db
+test-results/
+playwright-report/
+coverage/
+.env.*
+!.env.example

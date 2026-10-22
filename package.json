@@ -1,10 +1,48 @@
 {
-  "name": "wtokens",
-  "version": "2.0.0",
+  "name": "wtokens-web",
+  "version": "3.0.0",
   "private": true,
-  "description": "WTOKENS - Plataforma Competitiva de Fortnite",
+  "description": "WTOKENS TypeScript frontend for the Java API",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
-    "build": "echo 'Build ready'",
-    "start": "node server.js"
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx server/index.ts",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "audit": "npm audit --audit-level=high --fetch-timeout=20000 --fetch-retries=1",
+    "test:security:local": "tsx scripts/security-smoke.ts",
+    "format": "prettier --write src server api scripts tests *.ts *.json *.html"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "express": "^5.3.0",
+    "http-proxy-middleware": "^4.2.0",
+    "lucide-react": "^1.61.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/supertest": "^7.2.1",
+    "@vitejs/plugin-react": "^6.1.2",
+    "prettier": "^3.9.10",
+    "supertest": "^7.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }
