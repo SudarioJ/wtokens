@@ -423,13 +423,13 @@ function formatMoney(usdAmount, currencyKey = currentCurrency) {
   const curr = CURRENCIES[currencyKey] || CURRENCIES.USD;
   const localVal = usdAmount * curr.rate;
   if (currencyKey === 'USD') {
-    return `$${usdAmount.toFixed(2)} USD`;
+    return `$${usdAmount.toFixed(curr.decimals)} USD`;
   }
   const formattedLocal = localVal.toLocaleString('es-ES', {
     minimumFractionDigits: curr.decimals,
     maximumFractionDigits: curr.decimals
   });
-  return `${curr.symbol}${formattedLocal} ${currencyKey} ($${usdAmount.toFixed(2)} USD)`;
+  return `${curr.symbol}${formattedLocal} ${currencyKey}`;
 }
 
 function formatMoneyShort(usdAmount, currencyKey = currentCurrency) {
@@ -2365,11 +2365,20 @@ function initHeroShowcaseCarousel() {
   stage.addEventListener('mouseenter', stopAutoRotate);
   stage.addEventListener('mouseleave', startAutoRotate);
 
+  const handleCurrencyChange = (e) => {
+    const val = e.target.value;
+    currentCurrency = val;
+    applyUserCountry(val, true);
+    updateAllCurrencyDisplays();
+  };
+
   if (currencySelector) {
-    currencySelector.addEventListener('change', (e) => {
-      currentCurrency = e.target.value;
-      updateAllCurrencyDisplays();
-    });
+    currencySelector.addEventListener('change', handleCurrencyChange);
+  }
+
+  const currencySelectorMobile = document.getElementById('currencySelectorMobile');
+  if (currencySelectorMobile) {
+    currencySelectorMobile.addEventListener('change', handleCurrencyChange);
   }
 
   renderCarousel(0);

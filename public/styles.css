@@ -1,29 +1,29 @@
-/* Custom CSS for WTOKENS — Editorial Dark Emerald & Champagne Bronze Aesthetic */
+/* Custom CSS for WTOKENS — Editorial Deep Blue & Electric Cobalt Aesthetic */
 
 :root {
-  --emerald-bg-deep: #060b0a;
-  --emerald-bg-mid: #0c1a17;
-  --emerald-spotlight: #1a3c34;
-  --bronze-accent: #c89d7c;
-  --bronze-bright: #e0b694;
-  --emerald-neon: #10b981;
+  --blue-bg-deep: #060810;
+  --blue-bg-mid: #0a1122;
+  --blue-spotlight: #16366e;
+  --blue-accent: #3b82f6;
+  --blue-bright: #60a5fa;
+  --cyan-neon: #38bdf8;
 }
 
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(200, 157, 124, 0.18);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.22);
   }
   50% {
-    box-shadow: 0 0 35px rgba(200, 157, 124, 0.4);
+    box-shadow: 0 0 38px rgba(59, 130, 246, 0.48);
   }
 }
 
-/* Editorial Atmospheric Background (Yamaha Reference) */
-.editorial-emerald-bg {
-  background-color: #060b0a;
+/* Editorial Atmospheric Deep Blue Background */
+.editorial-blue-bg {
+  background-color: #060810;
   background-image:
-    radial-gradient(circle at 20% 15%, rgba(31, 74, 64, 0.72) 0%, rgba(14, 34, 29, 0.55) 42%, rgba(6, 11, 10, 0.98) 85%),
-    radial-gradient(circle at 80% 75%, rgba(200, 157, 124, 0.07) 0%, transparent 55%);
+    radial-gradient(circle at 20% 15%, rgba(22, 54, 110, 0.75) 0%, rgba(10, 22, 48, 0.58) 42%, rgba(6, 8, 16, 0.98) 85%),
+    radial-gradient(circle at 82% 75%, rgba(14, 165, 233, 0.09) 0%, transparent 55%);
 }
 
 /* Custom Scrollbar */
@@ -33,35 +33,35 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #060b0a;
+  background: #060810;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #172e28;
+  background: #142342;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #c89d7c;
+  background: #3b82f6;
 }
 
 /* Glassmorphism Classes */
 .glass-panel {
-  background: rgba(11, 22, 19, 0.72);
+  background: rgba(10, 18, 36, 0.72);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-panel-glow {
-  background: rgba(12, 25, 22, 0.82);
+  background: rgba(10, 20, 42, 0.82);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(200, 157, 124, 0.32);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(37, 99, 235, 0.15);
 }
 
-/* 3D Coverflow Showcase Carousel (Yamaha Style) */
+/* 3D Coverflow Showcase Carousel (Yamaha Style in Cobalt Blue) */
 .showcase-stage {
   position: relative;
   height: 410px;
@@ -85,7 +85,7 @@
   border-radius: 30px;
   overflow: hidden;
   cursor: pointer;
-  background: #0b1513;
+  background: #091020;
   border: 1px solid rgba(255, 255, 255, 0.14);
   transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
               opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
@@ -107,11 +107,11 @@
   z-index: 30;
   transform: translate3d(0, 0, 0) scale(1);
   opacity: 1;
-  border-color: rgba(200, 157, 124, 0.45);
+  border-color: rgba(96, 165, 250, 0.65);
   box-shadow:
-    0 32px 75px rgba(0, 0, 0, 0.88),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 45px rgba(26, 60, 52, 0.45);
+    0 32px 75px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(59, 130, 246, 0.3),
+    0 0 50px rgba(37, 99, 235, 0.45);
 }
 
 /* Left Flanking Slide */
@@ -141,8 +141,8 @@
 
 .showcase-card[data-pos="-1"]:hover,
 .showcase-card[data-pos="1"]:hover {
-  opacity: 0.82;
-  border-color: rgba(200, 157, 124, 0.35);
+  opacity: 0.85;
+  border-color: rgba(96, 165, 250, 0.45);
 }
 
 .showcase-card .card-details-overlay {
@@ -178,15 +178,15 @@
 }
 
 .rank-tab.active {
-  background-color: #c89d7c !important;
-  color: #060b0a !important;
-  box-shadow: 0 0 15px rgba(200, 157, 124, 0.4);
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.45);
 }
 
 /* Custom Range Slider */
 input[type=range] {
   -webkit-appearance: none;
-  background: #142621;
+  background: #142342;
   height: 6px;
   border-radius: 3px;
 }
@@ -196,9 +196,9 @@ input[type=range]::-webkit-slider-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #c89d7c;
+  background: #38bdf8;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(200, 157, 124, 0.6);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
   transition: transform 0.1s ease;
 }
 
@@ -217,10 +217,10 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 
 .dash-nav-btn.active {
-  background-color: rgba(200, 157, 124, 0.14) !important;
+  background-color: rgba(59, 130, 246, 0.16) !important;
   color: #ffffff !important;
-  border-left: 2px solid #c89d7c;
-  box-shadow: 0 0 12px rgba(200, 157, 124, 0.08);
+  border-left: 2px solid #3b82f6;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.12);
 }
 
 .switch-toggle {
@@ -228,19 +228,19 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 
 .switch-toggle.active {
-  background-color: #c89d7c !important;
-  color: #060b0a !important;
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
 }
 
 .dash-period-btn.active {
-  background-color: rgba(200, 157, 124, 0.18) !important;
+  background-color: rgba(59, 130, 246, 0.2) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
 }
 
 .dash-fin-tab.active {
-  background-color: rgba(200, 157, 124, 0.18) !important;
+  background-color: rgba(59, 130, 246, 0.2) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
 }
