@@ -123,6 +123,24 @@ test("ten ranks show server progress independently for each mode", async ({
   const ranks = page.getByRole("region", { name: "Bronce", exact: true });
   await expect(ranks).toBeVisible();
   await expect(ranks.getByRole("listitem")).toHaveCount(10);
+  await expect
+    .poll(() =>
+      ranks
+        .locator("img")
+        .evaluateAll(
+          (images) =>
+            images.length === 11 &&
+            images.every(
+              (image) =>
+                (image as HTMLImageElement).complete &&
+                (image as HTMLImageElement).naturalWidth > 0,
+            ),
+        ),
+    )
+    .toBe(true);
+  await expect(
+    page.getByRole("img", { name: "Insignia de Bronce", exact: true }),
+  ).toBeVisible();
   await expect(ranks.getByRole("progressbar")).toHaveAttribute("value", "0");
   await page
     .getByRole("combobox", { name: "Modalidad del rango", exact: true })
@@ -131,6 +149,9 @@ test("ten ranks show server progress independently for each mode", async ({
     page.getByRole("heading", { name: "Oro", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("progressbar")).toHaveAttribute("value", "10");
+  await expect(
+    page.getByRole("img", { name: "Insignia de Oro", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("combobox", { name: "Modalidad del rango", exact: true })
     .selectOption("BOX_FIGHT");
@@ -146,6 +167,9 @@ test("ten ranks show server progress independently for each mode", async ({
     path: `test-results/ranks-${info.project.name}.png`,
     fullPage: true,
   });
+  await page
+    .locator(".rank-panel")
+    .screenshot({ path: `test-results/rank-artwork-${info.project.name}.png` });
 });
 
 test("regional currency selection persists between landing, reload and panel", async ({

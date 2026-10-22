@@ -1,7 +1,22 @@
 import { useState } from "react";
-import { Shield, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import type { User } from "../lib/contracts";
 import "./ranks.css";
+
+const rankArtwork = [
+  "bronze",
+  "silver",
+  "gold",
+  "platinum",
+  "diamond",
+  "elite",
+  "champion",
+  "master",
+  "grandmaster",
+  "legend",
+];
+const badgeSource = (level: number) =>
+  `/assets/ranks/${rankArtwork[level - 1]}.png`;
 
 export function RankPanel({
   ranking,
@@ -23,12 +38,14 @@ export function RankPanel({
   return (
     <section className="rank-panel" aria-labelledby="rank-title">
       <div className="rank-summary">
-        <div
-          className={`rank-emblem rank-level-${tier.level}`}
-          aria-hidden="true"
-        >
-          <Shield size={42} />
-          <span>{tier.level}</span>
+        <div className="rank-emblem">
+          <img
+            src={badgeSource(tier.level)}
+            width="96"
+            height="96"
+            alt={`Insignia de ${tier.name}`}
+            decoding="async"
+          />
         </div>
         <div className="rank-identity">
           <span className="eyebrow">
@@ -84,7 +101,14 @@ export function RankPanel({
             aria-current={item.level === tier.level ? "step" : undefined}
             className={item.level <= tier.level ? "rank-unlocked" : ""}
           >
-            <span>{item.level}</span>
+            <img
+              src={badgeSource(item.level)}
+              width="64"
+              height="64"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
             <strong>{item.name}</strong>
             <small>{item.minimumPoints} pts</small>
           </li>
