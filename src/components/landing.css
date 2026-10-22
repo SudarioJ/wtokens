@@ -2246,9 +2246,9 @@
     transform: translateX(3px);
   }
 }
-/* Actual server capture, framed without recreating Discord's interface. */
+/* Crisp channel directory based on the actual server, integrated into the landing. */
 .landing .lp-discord-preview {
-  width: min(100%, 330px);
+  width: min(100%, 350px);
   justify-self: center;
   margin: 0;
   padding: 0;
@@ -2258,18 +2258,77 @@
   box-shadow: none;
   transform: none;
 }
-.landing .lp-discord-capture {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: 1px solid #ffffff18;
-  border-radius: 10px;
-  box-shadow: 0 14px 34px #00000045;
+.lp-server-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ffffff18;
 }
-.landing .lp-discord-preview figcaption {
-  margin-top: 12px;
+.lp-server-identity img {
+  object-fit: contain;
+}
+.lp-server-identity strong {
+  display: block;
+  font:
+    650 17px "Inter Variable",
+    sans-serif;
+  letter-spacing: 0.02em;
+}
+.lp-server-identity span {
+  display: block;
+  color: #a4afbe;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.lp-server-identity > svg {
+  margin-left: auto;
+  color: #8994a5;
+}
+.landing .lp-server-directory .lp-server-label {
+  text-align: left;
+  margin: 23px 0 12px;
   font-size: 10px;
-  line-height: 1.6;
-  color: #a8b8d1;
-  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #9ba7b8;
+}
+.lp-server-channels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lp-server-channels li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 29px;
+  color: #bec7d5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.lp-server-channels svg {
+  color: #677487;
+  flex-shrink: 0;
+}
+.lp-server-channels .lp-channel-group-start {
+  margin-top: 10px;
+}
+.lp-server-visit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding-top: 15px;
+  border-top: 1px solid #ffffff18;
+  font-size: 11px;
+  color: #9fc4ff;
+}
+.lp-server-visit:hover {
+  color: white;
+}
+@media (max-width: 700px) {
+  .landing .lp-server-directory {
+    width: 100%;
+  }
 }

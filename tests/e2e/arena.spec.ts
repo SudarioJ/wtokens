@@ -516,21 +516,27 @@ test("country flags include Brazil and scroll reveals respect reduced motion", a
   await expect(region).toHaveCSS("opacity", "1");
 });
 
-test("community shows the real Discord server capture and invitation", async ({
+test("community renders crisp server channels and a working invitation", async ({
   page,
 }, info) => {
   await mockApi(page);
   await page.goto("/");
   const section = page.locator(".lp-community-section");
-  const image = section.getByRole("img", {
-    name: /Captura real de los canales de WTOKENS/,
+  const directory = section.getByRole("figure", {
+    name: "Canales del servidor WTOKENS",
   });
-  await image.scrollIntoViewIfNeeded();
-  await expect
-    .poll(() =>
-      image.evaluate((element) => (element as HTMLImageElement).naturalWidth),
-    )
-    .toBe(301);
+  await directory.scrollIntoViewIfNeeded();
+  await expect(directory.getByRole("listitem")).toHaveCount(13);
+  await expect(
+    directory.getByText("1v1-buildfight", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    directory.getByText("4v4-mid-realistic", { exact: true }),
+  ).toBeVisible();
+  await expect(section.locator('img[src*="discord-wtokens"]')).toHaveCount(0);
+  await expect(
+    directory.getByRole("link", { name: "Ver el servidor" }),
+  ).toHaveAttribute("href", "https://discord.gg/GTwH2C2A");
   await expect(section.locator(".lp-channel")).toHaveCount(0);
   await expect(
     section.getByRole("link", { name: "Unirme al Discord" }),
@@ -543,7 +549,7 @@ test("community shows the real Discord server capture and invitation", async ({
     )
     .toBe("1");
   await section.screenshot({
-    path: `test-results/discord-real-${info.project.name}.png`,
+    path: `test-results/discord-integrado-${info.project.name}.png`,
   });
   expect(
     await page.evaluate(

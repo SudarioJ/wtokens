@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Gamepad2,
   Headphones,
+  Hash,
   Menu,
   MessageCircle,
   ShieldCheck,
@@ -487,17 +488,58 @@ export function Landing({
                 <ArrowUpRight size={16} />
               </a>
             </div>
-            <figure className="lp-discord-preview">
-              <img
-                className="lp-discord-capture"
-                src="/assets/discord-wtokens.jpg"
-                alt="Captura real de los canales de WTOKENS en Discord: Build Fight, Box Fight, Zone Wars y Realistics, con formatos por equipos."
-                width="301"
-                height="530"
-                loading="lazy"
-                decoding="async"
-              />
-              <figcaption>Las colas de nuestro servidor de Discord.</figcaption>
+            <figure
+              className="lp-discord-preview lp-server-directory"
+              aria-label="Canales del servidor WTOKENS"
+            >
+              <div className="lp-server-identity">
+                <img src="/assets/brand.svg" alt="" width="38" height="38" />
+                <div>
+                  <strong>WTOKENS</strong>
+                  <span>Discord · Fortnite</span>
+                </div>
+                <MessageCircle size={21} aria-hidden="true" />
+              </div>
+              <figcaption className="lp-server-label">
+                COLAS FORTNITE
+              </figcaption>
+              <ul className="lp-server-channels">
+                {[
+                  "1v1-buildfight",
+                  "1v1-boxfight",
+                  "2v2-boxfight",
+                  "3v3-boxfight",
+                  "4v4-boxfight",
+                  "1v1-zonewars",
+                  "2v2-zonewars",
+                  "3v3-zonewars",
+                  "4v4-zonewars",
+                  "1v1-mid-realistic",
+                  "2v2-mid-realistic",
+                  "3v3-mid-realistic",
+                  "4v4-mid-realistic",
+                ].map((channel, index) => (
+                  <li
+                    key={channel}
+                    className={
+                      [1, 5, 9].includes(index)
+                        ? "lp-channel-group-start"
+                        : undefined
+                    }
+                  >
+                    <Hash size={17} strokeWidth={1.7} aria-hidden="true" />
+                    <span>{channel}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                className="lp-server-visit"
+                href={discordCommunityUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver el servidor <ArrowUpRight size={14} />
+              </a>
             </figure>
           </div>
         </section>
