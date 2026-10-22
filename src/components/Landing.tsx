@@ -446,10 +446,6 @@ export function Landing({
         >
           <div className="lp-community-card">
             <div className="lp-community-copy">
-              <span className="lp-kicker">
-                <MessageCircle size={13} />
-                NUESTRA COMUNIDAD ESTÁ EN DISCORD
-              </span>
               <h2 id="community-title">
                 EL JUEGO NOS UNE.
                 <br />
