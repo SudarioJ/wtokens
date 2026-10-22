@@ -2246,3 +2246,30 @@
     transform: translateX(3px);
   }
 }
+/* Actual server capture, framed without recreating Discord's interface. */
+.landing .lp-discord-preview {
+  width: min(100%, 330px);
+  justify-self: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+.landing .lp-discord-capture {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #ffffff18;
+  border-radius: 10px;
+  box-shadow: 0 14px 34px #00000045;
+}
+.landing .lp-discord-preview figcaption {
+  margin-top: 12px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #a8b8d1;
+  text-align: center;
+}

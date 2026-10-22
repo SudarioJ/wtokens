@@ -487,50 +487,18 @@ export function Landing({
                 <ArrowUpRight size={16} />
               </a>
             </div>
-            <div
-              className="lp-discord-preview"
-              aria-label="Vista ilustrativa de los canales de la comunidad"
-            >
-              <div className="lp-discord-title">
-                <img src="/assets/brand.svg" alt="" width="33" height="33" />
-                <span>
-                  WTOKENS<small>FORTNITE COMMUNITY</small>
-                </span>
-                <ChevronDown size={15} />
-              </div>
-              <div className="lp-channel-label">EL PUNTO DE ENCUENTRO</div>
-              <div className="lp-channel">
-                # <span>bienvenida</span>
-                <span className="lp-channel-badge">INICIO</span>
-              </div>
-              <div className="lp-channel">
-                # <span>reglas-de-la-arena</span>
-              </div>
-              <div className="lp-channel-label">ELIGE TU TERRENO</div>
-              <div className="lp-channel lp-channel-selected">
-                <Swords size={16} />
-                <span>1v1-boxfight</span>
-                <ArrowRight size={15} />
-              </div>
-              <div className="lp-channel">
-                # <span>1v1-buildfight</span>
-              </div>
-              <div className="lp-channel">
-                # <span>realistics</span>
-              </div>
-              <div className="lp-channel-label">JUGAMOS EN EQUIPO</div>
-              <div className="lp-channel">
-                <Headphones size={15} />
-                <span>soporte-y-mediación</span>
-              </div>
-              <div className="lp-discord-preview-footer">
-                <ShieldCheck size={16} />
-                <span>Respeto dentro y fuera de la partida.</span>
-              </div>
-              <small className="lp-preview-caption">
-                VISTA ILUSTRATIVA DE LA COMUNIDAD
-              </small>
-            </div>
+            <figure className="lp-discord-preview">
+              <img
+                className="lp-discord-capture"
+                src="/assets/discord-wtokens.jpg"
+                alt="Captura real de los canales de WTOKENS en Discord: Build Fight, Box Fight, Zone Wars y Realistics, con formatos por equipos."
+                width="301"
+                height="530"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Las colas de nuestro servidor de Discord.</figcaption>
+            </figure>
           </div>
         </section>
 

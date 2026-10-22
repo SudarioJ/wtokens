@@ -516,6 +516,42 @@ test("country flags include Brazil and scroll reveals respect reduced motion", a
   await expect(region).toHaveCSS("opacity", "1");
 });
 
+test("community shows the real Discord server capture and invitation", async ({
+  page,
+}, info) => {
+  await mockApi(page);
+  await page.goto("/");
+  const section = page.locator(".lp-community-section");
+  const image = section.getByRole("img", {
+    name: /Captura real de los canales de WTOKENS/,
+  });
+  await image.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      image.evaluate((element) => (element as HTMLImageElement).naturalWidth),
+    )
+    .toBe(301);
+  await expect(section.locator(".lp-channel")).toHaveCount(0);
+  await expect(
+    section.getByRole("link", { name: "Unirme al Discord" }),
+  ).toHaveAttribute("href", "https://discord.gg/GTwH2C2A");
+  await expect
+    .poll(() =>
+      section
+        .locator("figure")
+        .evaluate((element) => getComputedStyle(element).opacity),
+    )
+    .toBe("1");
+  await section.screenshot({
+    path: `test-results/discord-real-${info.project.name}.png`,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("landing FAQ and mobile navigation remain usable", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
