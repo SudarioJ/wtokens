@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,26 +26,27 @@
           fontFamily: {
             sans: ['Outfit', 'sans-serif'],
             mono: ['Space Grotesk', 'monospace'],
+            display: ['Bebas Neue', 'sans-serif'],
           },
           colors: {
             obsidian: {
-              950: '#06070B',
-              900: '#0A0C14',
-              850: '#0F121E',
-              800: '#151928',
-              700: '#1E2438',
-              600: '#2A334E'
+              950: '#060B0A',
+              900: '#0A1412',
+              850: '#0E1D19',
+              800: '#142923',
+              700: '#1E3B33',
+              600: '#2A4E44'
             },
             wpurple: {
-              400: '#A78BFA',
-              500: '#8B5CF6',
-              600: '#7C3AED',
-              700: '#6D28D9'
+              400: '#E0B694',
+              500: '#C89D7C',
+              600: '#B58663',
+              700: '#966B4B'
             },
             wcyan: {
-              400: '#22D3EE',
-              500: '#06B6D4',
-              600: '#0891B2'
+              400: '#34D399',
+              500: '#10B981',
+              600: '#059669'
             },
             wgreen: {
               400: '#34D399',
@@ -53,20 +54,20 @@
               600: '#059669'
             },
             wgold: {
-              400: '#FBBF24',
-              500: '#F59E0B',
-              600: '#D97706'
+              400: '#E5C185',
+              500: '#C89D7C',
+              600: '#A67B5B'
             }
           },
           animation: {
-            'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+            'glow-pulse': 'glowPulse 4s ease-in-out infinite',
             'float': 'float 4s ease-in-out infinite',
             'marquee': 'marquee 25s linear infinite',
           },
           keyframes: {
             glowPulse: {
-              '0%, 100%': { opacity: 0.4, transform: 'scale(1)' },
-              '50%': { opacity: 0.7, transform: 'scale(1.05)' },
+              '0%, 100%': { opacity: 0.45, transform: 'scale(1)' },
+              '50%': { opacity: 0.75, transform: 'scale(1.04)' },
             },
             float: {
               '0%, 100%': { transform: 'translateY(0px)' },
@@ -84,59 +85,100 @@
   
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-obsidian-950 text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-wpurple-600 selection:text-white">
+<body class="editorial-emerald-bg text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-wpurple-500 selection:text-obsidian-950">
 
-  <!-- Ambient Glowing Background Blobs -->
+  <!-- Ambient Atmospheric Emerald & Bronze Glow -->
   <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-wpurple-600/15 rounded-full blur-[140px] animate-glow-pulse"></div>
-    <div class="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-wcyan-500/10 rounded-full blur-[160px] animate-glow-pulse" style="animation-delay: 1.5s;"></div>
-    <div class="absolute bottom-10 left-1/4 w-80 h-80 bg-wpurple-500/10 rounded-full blur-[150px]"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(#1e2438_1px,transparent_1px)] [background-size:32px_32px] opacity-25"></div>
+    <div class="absolute -top-32 -left-24 w-[38rem] h-[38rem] bg-[#1F4E43]/40 rounded-full blur-[150px] animate-glow-pulse"></div>
+    <div class="absolute top-1/4 right-0 w-[30rem] h-[30rem] bg-[#C89D7C]/10 rounded-full blur-[160px] animate-glow-pulse" style="animation-delay: 1.5s;"></div>
+    <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-[#13332B]/30 rounded-full blur-[150px]"></div>
   </div>
 
+  <!-- Fixed Left Editorial Sidebar Strip (Yamaha Reference Style) -->
+  <aside class="hidden md:flex fixed inset-y-0 left-0 z-50 w-16 lg:w-20 flex-col items-center justify-between py-6 bg-[#07110F]/75 backdrop-blur-xl border-r border-white/[0.06] select-none">
+    <!-- Top Drawer Trigger -->
+    <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-1.5 text-white/85 hover:text-white hover:bg-white/5 transition-all group" title="Abrir Arena / Menú">
+      <span class="w-5 h-0.5 bg-white rounded-full group-hover:w-6 transition-all"></span>
+      <span class="w-6 h-0.5 bg-wpurple-400 rounded-full"></span>
+      <span class="w-4 h-0.5 bg-white rounded-full group-hover:w-6 transition-all"></span>
+    </button>
 
-  <!-- Main Navigation Header -->
-  <header class="sticky top-0 z-40 backdrop-blur-xl bg-obsidian-950/80 border-b border-white/5 transition-all duration-300" id="mainHeader">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <!-- Middle Vertical Social Icons -->
+    <div class="flex flex-col items-center gap-6 text-white/70">
+      <a href="https://instagram.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center hover:text-white hover:scale-110 transition-all" title="Instagram">
+        <i class="fa-brands fa-instagram text-lg"></i>
+      </a>
+      <a href="https://twitter.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center hover:text-white hover:scale-110 transition-all" title="X / Twitter">
+        <i class="fa-brands fa-x-twitter text-lg"></i>
+      </a>
+      <a href="#discord-arena" class="w-9 h-9 rounded-lg flex items-center justify-center hover:text-wpurple-400 hover:scale-110 transition-all" title="Discord Oficial">
+        <i class="fa-brands fa-discord text-lg"></i>
+      </a>
+      <a href="https://tiktok.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center hover:text-white hover:scale-110 transition-all" title="TikTok">
+        <i class="fa-brands fa-tiktok text-base"></i>
+      </a>
+    </div>
+
+    <!-- Bottom Status Indicator -->
+    <div class="flex flex-col items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="text-[9px] font-mono tracking-widest uppercase text-slate-400 [writing-mode:vertical-rl] rotate-180">ESCROW</span>
+    </div>
+  </aside>
+
+  <!-- Main Navigation Header (Editorial Style) -->
+  <header class="sticky top-0 z-40 md:pl-16 lg:pl-20 backdrop-blur-xl bg-[#07110F]/70 border-b border-white/[0.06] transition-all duration-300" id="mainHeader">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
       
-      <!-- Brand Logo -->
-      <a href="#" class="flex items-center gap-3 group">
-        <img src="assets/logo.png" alt="WTOKENS" class="w-12 h-12 rounded-xl object-cover shadow-[0_0_20px_rgba(6,182,212,0.4)] group-hover:scale-105 transition-transform border border-wcyan-500/30">
-        <div class="flex flex-col">
-          <div class="flex items-center gap-1.5">
-            <span class="font-extrabold text-xl tracking-tight text-white group-hover:text-wcyan-400 transition-colors">WTOKENS</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-wcyan-500/20 text-wcyan-300 border border-wcyan-500/30">LATAM</span>
-          </div>
-          <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono">Fortnite Arena</span>
+      <!-- Brand Wordmark (Condensed Editorial Font) -->
+      <a href="#" class="flex items-center gap-3.5 group">
+        <img src="assets/logo.png" alt="WTOKENS" class="w-10 h-10 rounded-xl object-cover border border-wpurple-400/40 shadow-[0_0_20px_rgba(200,157,124,0.25)] group-hover:scale-105 transition-transform">
+        <div class="flex items-baseline gap-2">
+          <span class="font-display text-3xl sm:text-4xl tracking-[0.06em] text-white leading-none">WTOKENS</span>
+          <span class="text-[9px] font-mono font-bold tracking-[0.2em] uppercase px-1.5 py-0.5 rounded bg-wpurple-500/15 text-wpurple-400 border border-wpurple-500/30">LATAM</span>
         </div>
       </a>
 
-      <!-- Desktop Nav Links -->
-      <nav class="hidden lg:flex items-center gap-1">
-        <a href="#modalidades" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">Modalidades</a>
-        <a href="#como-funciona" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">Cómo Funciona</a>
-        <a href="#discord-arena" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">Arena Discord</a>
-        <a href="#faq" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all">FAQ</a>
+      <!-- Editorial Uppercase Tracked Navigation -->
+      <nav class="hidden lg:flex items-center gap-8">
+        <a href="#heroShowcaseSection" class="text-xs uppercase tracking-[0.18em] font-extrabold text-white transition-all">MODOS</a>
+        <a href="#modalidades" class="text-xs uppercase tracking-[0.18em] font-medium text-slate-300/80 hover:text-white transition-all">ARENA</a>
+        <a href="#como-funciona" class="text-xs uppercase tracking-[0.18em] font-medium text-slate-300/80 hover:text-white transition-all">BÓVEDA</a>
+        <a href="#discord-arena" class="text-xs uppercase tracking-[0.18em] font-medium text-slate-300/80 hover:text-white transition-all">COMUNIDAD</a>
+        <a href="#faq" class="text-xs uppercase tracking-[0.18em] font-medium text-slate-300/80 hover:text-white transition-all">NOSOTROS</a>
       </nav>
 
-      <!-- Action Area: Discord OAuth & User Panel Pill -->
-      <div class="flex items-center gap-3">
+      <!-- Action Area: Currency Selector & Discord Auth -->
+      <div class="flex items-center gap-4">
+        <!-- Currency Selector (Like ENG v in Reference) -->
+        <div class="relative hidden sm:flex items-center">
+          <select id="currencySelector" aria-label="Seleccionar moneda" class="appearance-none bg-transparent hover:bg-white/5 text-xs font-bold tracking-[0.16em] uppercase text-white pr-6 pl-2.5 py-1.5 rounded-lg border border-transparent hover:border-white/10 cursor-pointer focus:outline-none">
+            <option value="USD" class="bg-obsidian-900 text-white">USD</option>
+            <option value="ARS" class="bg-obsidian-900 text-white">ARS</option>
+            <option value="PEN" class="bg-obsidian-900 text-white">PEN</option>
+            <option value="CLP" class="bg-obsidian-900 text-white">CLP</option>
+            <option value="UYU" class="bg-obsidian-900 text-white">UYU</option>
+            <option value="BOB" class="bg-obsidian-900 text-white">BOB</option>
+            <option value="PYG" class="bg-obsidian-900 text-white">PYG</option>
+          </select>
+          <i class="fa-solid fa-chevron-down text-[10px] text-wpurple-400 pointer-events-none -ml-4"></i>
+        </div>
+
         <!-- Auth Area: Logged Out vs Logged In -->
         <div id="userAuthContainer">
           <!-- Logged Out Button -->
-          <button id="btnOpenDiscordLogin" class="relative group overflow-hidden rounded-xl bg-gradient-to-r from-wpurple-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(124,58,237,0.35)] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
-            <i class="fa-brands fa-discord text-base"></i>
-            <span id="btnLoginText">Entrar con Discord</span>
-            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          <button id="btnOpenDiscordLogin" class="relative group overflow-hidden rounded-full bg-gradient-to-r from-[#C89D7C] to-[#A67B5B] px-5 py-2.5 text-xs font-extrabold uppercase tracking-[0.12em] text-obsidian-950 shadow-[0_0_25px_rgba(200,157,124,0.3)] hover:shadow-[0_0_35px_rgba(200,157,124,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+            <i class="fa-brands fa-discord text-sm"></i>
+            <span id="btnLoginText">Entrar</span>
           </button>
 
           <!-- Logged In Profile Pill (Hidden initially) -->
           <div id="userProfilePill" class="hidden items-center gap-2">
-            <button id="btnGoToDashboard" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-obsidian-900 hover:bg-obsidian-850 border border-wpurple-500/40 shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:border-wcyan-400/50 transition-all group">
+            <button id="btnGoToDashboard" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-obsidian-900 hover:bg-obsidian-850 border border-wpurple-500/40 shadow-[0_0_15px_rgba(200,157,124,0.2)] hover:border-wcyan-400/50 transition-all group">
               <img id="userNavAvatar" src="assets/logo.png" alt="Avatar" class="w-8 h-8 rounded-lg object-cover border border-wpurple-500/40">
               <div class="flex flex-col text-left">
                 <span id="userNavName" class="text-xs font-bold text-white max-w-[100px] truncate">@usuario</span>
-                <span class="text-[10px] text-wcyan-400 font-mono font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">Mi Panel <i class="fa-solid fa-arrow-right text-[8px]"></i></span>
+                <span class="text-[10px] text-wpurple-400 font-mono font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">Mi Panel <i class="fa-solid fa-arrow-right text-[8px]"></i></span>
               </div>
             </button>
             <button id="btnUserLogout" class="text-slate-400 hover:text-rose-400 p-2 rounded-lg hover:bg-white/5 transition-colors" title="Cerrar sesión">
@@ -146,7 +188,7 @@
         </div>
 
         <!-- Mobile Menu Button -->
-        <button id="mobileMenuBtn" class="lg:hidden p-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none">
+        <button id="mobileMenuBtn" class="lg:hidden p-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 focus:outline-none">
           <i class="fa-solid fa-bars text-xl"></i>
         </button>
       </div>
@@ -155,12 +197,13 @@
 
     <!-- Mobile Drawer Navigation -->
     <div id="mobileMenu" class="hidden lg:hidden border-t border-white/5 bg-obsidian-950/95 backdrop-blur-2xl px-6 py-6 space-y-3">
-      <a href="#modalidades" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Modalidades de Fortnite</a>
-      <a href="#como-funciona" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Cómo Funciona</a>
-      <a href="#discord-arena" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Arena en Discord</a>
-      <a href="#faq" class="block py-2 text-base font-medium text-slate-300 hover:text-wpurple-400">Preguntas Frecuentes</a>
+      <a href="#heroShowcaseSection" class="block py-2 text-sm uppercase tracking-widest font-bold text-white">Showcase 3D</a>
+      <a href="#modalidades" class="block py-2 text-sm uppercase tracking-widest font-medium text-slate-300 hover:text-wpurple-400">Modalidades de Fortnite</a>
+      <a href="#como-funciona" class="block py-2 text-sm uppercase tracking-widest font-medium text-slate-300 hover:text-wpurple-400">Cómo Funciona</a>
+      <a href="#discord-arena" class="block py-2 text-sm uppercase tracking-widest font-medium text-slate-300 hover:text-wpurple-400">Arena en Discord</a>
+      <a href="#faq" class="block py-2 text-sm uppercase tracking-widest font-medium text-slate-300 hover:text-wpurple-400">Preguntas Frecuentes</a>
       <div class="pt-4 border-t border-white/10 space-y-3">
-        <button id="mobileDiscordBtn" class="w-full justify-center rounded-xl bg-wpurple-600 py-3 text-sm font-bold text-white flex items-center gap-2 shadow-lg">
+        <button id="mobileDiscordBtn" class="w-full justify-center rounded-xl bg-wpurple-500 py-3 text-sm font-bold text-obsidian-950 flex items-center gap-2 shadow-lg">
           <i class="fa-brands fa-discord"></i> <span id="mobileLoginBtnText">Entrar con Discord</span>
         </button>
       </div>
@@ -168,200 +211,253 @@
   </header>
 
   <!-- LANDING PAGE VIEW (Página Pública de Presentación) -->
-  <div id="landingView">
+  <div id="landingView" class="md:pl-16 lg:pl-20">
 
+  <!-- ===================================================================== -->
+  <!-- HERO SHOWCASE: 3D DEPTH CAROUSEL (Yamaha Reference Style + 4 Photos)  -->
+  <!-- ===================================================================== -->
+  <section id="heroShowcaseSection" class="relative z-10 pt-8 pb-20 md:pt-14 md:pb-28 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
 
-  <!-- Hero Section -->
-  <section class="relative z-10 pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+      <!-- Top Micro Header above Carousel -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6 text-center sm:text-left">
+        <div class="inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-[11px] font-mono uppercase tracking-[0.2em] text-slate-300">FORTNITE COMPETITIVE ESCROW · SUDAMÉRICA</span>
+        </div>
+        <div class="text-xs font-mono tracking-[0.18em] uppercase text-wpurple-400">
+          <span id="heroSlideCounter">01 / 04</span> · <span id="heroSlideModeTag">BOX FIGHT CLÁSICO</span>
+        </div>
+      </div>
+
+      <!-- 3D Carousel Container with Giant Background Watermark -->
+      <div class="relative py-4 sm:py-8">
+        
+        <!-- Oversized Background Watermark Typography (Yamaha "2" / Number Effect) -->
+        <div class="absolute inset-0 flex items-center justify-between px-4 sm:px-16 pointer-events-none select-none overflow-hidden">
+          <span id="heroWatermarkNum" class="font-display text-[14rem] sm:text-[22rem] lg:text-[26rem] leading-none text-white/[0.04] tracking-tighter transition-all duration-500">01</span>
+          <span id="heroWatermarkText" class="font-display text-[8rem] sm:text-[14rem] lg:text-[17rem] leading-none text-white/[0.03] tracking-wider uppercase hidden sm:block transition-all duration-500">BOX</span>
+        </div>
+
+        <!-- Left Thin Chevron Arrow -->
+        <button id="heroPrevBtn" aria-label="Modalidad anterior" class="absolute left-1 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-16 flex items-center justify-center text-white/50 hover:text-white hover:scale-110 transition-all focus:outline-none">
+          <svg class="w-8 h-12 stroke-current" fill="none" stroke-width="1.5" viewBox="0 0 24 48">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 24l12 18" />
+          </svg>
+        </button>
+
+        <!-- Right Thin Chevron Arrow -->
+        <button id="heroNextBtn" aria-label="Siguiente modalidad" class="absolute right-1 sm:right-4 lg:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-16 flex items-center justify-center text-white/50 hover:text-white hover:scale-110 transition-all focus:outline-none">
+          <svg class="w-8 h-12 stroke-current" fill="none" stroke-width="1.5" viewBox="0 0 24 48">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 18L6 42" />
+          </svg>
+        </button>
+
+        <!-- 3D Cards Stage -->
+        <div class="showcase-stage" id="heroShowcaseStage">
+          
+          <!-- Slide 0: Box Fight (Initial Center LCP Image) -->
+          <article class="showcase-card group" data-index="0" data-pos="0" data-mode="BOX FIGHT 1V1" data-num="01" data-watermark="BOX">
+            <img src="assets/modes/boxfight.jpg" alt="Fortnite Box Fight 1v1" fetchpriority="high" width="640" height="370" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30"></div>
+            <!-- Top Badge -->
+            <div class="card-details-overlay absolute top-5 left-6 right-6 flex items-center justify-between">
+              <span class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-wpurple-400">
+                01 · BOX FIGHT CLÁSICO
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-[10px] font-mono font-bold text-emerald-300">
+                ● 22 EN COLA
+              </span>
+            </div>
+            <!-- Bottom Caption (Like Reference "*Tersedia pada Connected-ABS Version") -->
+            <div class="card-details-overlay absolute bottom-5 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <p class="text-[11px] font-mono text-slate-300/90 tracking-wide">*Disponible en 1v1 · 2v2 · 3v3 · 4v4 (Bóveda Escrow Activa)</p>
+                <h2 class="font-display text-3xl sm:text-4xl tracking-wider text-white leading-none mt-1">BOX FIGHT ARENA · <span class="text-wpurple-400" data-usd="0.5">DESDE $0.50 USD</span></h2>
+              </div>
+              <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="self-start sm:self-auto px-5 py-2.5 rounded-full bg-white text-obsidian-950 font-extrabold text-xs uppercase tracking-[0.15em] hover:bg-wpurple-400 transition-colors shadow-lg">
+                Jugar Ahora
+              </button>
+            </div>
+          </article>
+
+          <!-- Slide 1: Build Fight -->
+          <article class="showcase-card group" data-index="1" data-pos="1" data-mode="BUILD FIGHT 1V1" data-num="02" data-watermark="BUILD">
+            <img src="assets/modes/buildfight.jpg" alt="Fortnite Build Fight 1v1" fetchpriority="low" width="640" height="370" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30"></div>
+            <div class="card-details-overlay absolute top-5 left-6 right-6 flex items-center justify-between">
+              <span class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-wpurple-400">
+                02 · BUILD FIGHT PURO
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-[10px] font-mono font-bold text-emerald-300">
+                ● 14 EN COLA
+              </span>
+            </div>
+            <div class="card-details-overlay absolute bottom-5 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <p class="text-[11px] font-mono text-slate-300/90 tracking-wide">*Conquista de altura ilimitada y auto-reset en isla competitiva</p>
+                <h2 class="font-display text-3xl sm:text-4xl tracking-wider text-white leading-none mt-1">BUILD FIGHT 1V1 · <span class="text-wpurple-400" data-usd="0.5">DESDE $0.50 USD</span></h2>
+              </div>
+              <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="self-start sm:self-auto px-5 py-2.5 rounded-full bg-white text-obsidian-950 font-extrabold text-xs uppercase tracking-[0.15em] hover:bg-wpurple-400 transition-colors shadow-lg">
+                Jugar Ahora
+              </button>
+            </div>
+          </article>
+
+          <!-- Slide 2: Zone Wars -->
+          <article class="showcase-card group" data-index="2" data-pos="2" data-mode="ZONE WARS ENDGAME" data-num="03" data-watermark="ZONE">
+            <img src="assets/modes/zonewars.jpg" alt="Fortnite Zone Wars Endgame" fetchpriority="low" width="640" height="370" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30"></div>
+            <div class="card-details-overlay absolute top-5 left-6 right-6 flex items-center justify-between">
+              <span class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-wpurple-400">
+                03 · ZONE WARS FNCS
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-[10px] font-mono font-bold text-emerald-300">
+                ● 18 EN COLA
+              </span>
+            </div>
+            <div class="card-details-overlay absolute bottom-5 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <p class="text-[11px] font-mono text-slate-300/90 tracking-wide">*Tormenta móvil de endgame · Rotaciones y siphon competitivo</p>
+                <h2 class="font-display text-3xl sm:text-4xl tracking-wider text-white leading-none mt-1">ZONE WARS ARENA · <span class="text-wpurple-400" data-usd="0.5">DESDE $0.50 USD</span></h2>
+              </div>
+              <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="self-start sm:self-auto px-5 py-2.5 rounded-full bg-white text-obsidian-950 font-extrabold text-xs uppercase tracking-[0.15em] hover:bg-wpurple-400 transition-colors shadow-lg">
+                Jugar Ahora
+              </button>
+            </div>
+          </article>
+
+          <!-- Slide 3: Realistic 1v1 -->
+          <article class="showcase-card group" data-index="3" data-pos="-1" data-mode="REALISTIC & MID FIGHT" data-num="04" data-watermark="REAL">
+            <img src="assets/modes/realistic.jpg" alt="Fortnite Realistic 1v1" fetchpriority="low" width="640" height="370" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30"></div>
+            <div class="card-details-overlay absolute top-5 left-6 right-6 flex items-center justify-between">
+              <span class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-wpurple-400">
+                04 · REALISTICS & MID
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-[10px] font-mono font-bold text-emerald-300">
+                ● 11 EN COLA
+              </span>
+            </div>
+            <div class="card-details-overlay absolute bottom-5 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <p class="text-[11px] font-mono text-slate-300/90 tracking-wide">*Terreno natural, loot competitivo y materiales reales de partida</p>
+                <h2 class="font-display text-3xl sm:text-4xl tracking-wider text-white leading-none mt-1">REALISTIC 1V1 · <span class="text-wpurple-400" data-usd="0.5">DESDE $0.50 USD</span></h2>
+              </div>
+              <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="self-start sm:self-auto px-5 py-2.5 rounded-full bg-white text-obsidian-950 font-extrabold text-xs uppercase tracking-[0.15em] hover:bg-wpurple-400 transition-colors shadow-lg">
+                Jugar Ahora
+              </button>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Bottom "TAP TO VIEW MORE" Caption & Mode Dots (Yamaha Reference) -->
+        <div class="mt-8 flex flex-col items-center gap-4">
+          <a href="#modalidades" id="heroTapMoreBtn" class="text-xs font-bold uppercase tracking-[0.26em] text-white/85 hover:text-wpurple-400 transition-colors flex items-center gap-2">
+            <span>TAP TO VIEW MORE</span>
+          </a>
+          <div class="flex items-center gap-2" id="heroCarouselDots">
+            <button data-slide-dot="0" aria-label="Modo 1" class="w-6 h-1.5 rounded-full bg-wpurple-400 transition-all"></button>
+            <button data-slide-dot="1" aria-label="Modo 2" class="w-2 h-1.5 rounded-full bg-white/25 hover:bg-white/50 transition-all"></button>
+            <button data-slide-dot="2" aria-label="Modo 3" class="w-2 h-1.5 rounded-full bg-white/25 hover:bg-white/50 transition-all"></button>
+            <button data-slide-dot="3" aria-label="Modo 4" class="w-2 h-1.5 rounded-full bg-white/25 hover:bg-white/50 transition-all"></button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Lower Editorial Hero Split: Headline + Live Escrow Vault Card -->
+      <div class="mt-16 pt-14 border-t border-white/[0.07] grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
         
         <!-- Left Column: Copy & CTAs -->
-        <div class="lg:col-span-7 text-center lg:text-left space-y-8">
-          
-          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-obsidian-850/80 border border-wpurple-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(139,92,246,0.2)]">
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-wcyan-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-wcyan-500"></span>
-            </span>
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">
-              Fortnite Arena & Wagers · 100% Mediado
-            </span>
-          </div>
-
-          <h1 class="text-4xl sm:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.08]">
-            JUEGA <span class="bg-gradient-to-r from-wpurple-400 via-indigo-300 to-wcyan-400 bg-clip-text text-transparent">VALIENDO.</span><br>
-            WTOKENS <span class="text-white relative inline-block">
-              MEDIA.
-              <span class="absolute bottom-1 left-0 w-full h-2 bg-gradient-to-r from-wpurple-500 to-wcyan-400 opacity-40 rounded-full"></span>
-            </span>
+        <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+          <h1 class="font-display text-5xl sm:text-7xl xl:text-8xl tracking-wide leading-[0.95] text-white">
+            JUEGA <span class="text-wpurple-400">VALIENDO.</span><br>
+            WTOKENS <span class="text-emerald-400">MEDIA.</span>
           </h1>
 
-          <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-            La primera arena competitiva de Fortnite para <strong>Argentina, Chile, Uruguay, Perú, Paraguay y Bolivia</strong>. Apuesta entradas retenidas en bóveda segura con tus métodos de pago locales y retira al instante sin fraudes.
+          <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+            La primera arena competitiva y sistema de bóveda (escrow) P2P de Fortnite para <strong>Argentina, Chile, Uruguay, Perú, Paraguay y Bolivia</strong>. Entradas retenidas de forma atómica y retiros inmediatos en tu moneda local.
           </p>
 
           <!-- CTAs -->
           <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-wpurple-600 via-wpurple-500 to-indigo-600 text-white font-bold text-base shadow-[0_0_25px_rgba(139,92,246,0.4)] hover:shadow-[0_0_35px_rgba(139,92,246,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-              <i class="fa-brands fa-discord text-xl"></i>
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-[#C89D7C] to-[#A67B5B] text-obsidian-950 font-extrabold uppercase tracking-[0.14em] text-xs shadow-[0_0_25px_rgba(200,157,124,0.35)] hover:shadow-[0_0_35px_rgba(200,157,124,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+              <i class="fa-brands fa-discord text-lg"></i>
               <span>Entrar con Discord</span>
             </button>
-            <a href="#modalidades" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 border border-white/10 hover:border-wpurple-500/40 text-slate-200 hover:text-white font-semibold text-base transition-all flex items-center justify-center gap-2">
+            <a href="#modalidades" class="w-full sm:w-auto px-8 py-4 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/15 hover:border-wpurple-400/50 text-white font-bold uppercase tracking-[0.14em] text-xs transition-all flex items-center justify-center gap-2">
               <i class="fa-solid fa-gamepad text-wpurple-400"></i>
-              <span>Ver Modalidades</span>
+              <span>Explorar Modalidades</span>
             </a>
           </div>
-
-          <!-- Trust Badges -->
-          <div class="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/5 text-left">
-            <div class="space-y-1">
-              <div class="flex items-center gap-1.5 text-wpurple-400 text-sm font-semibold">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>Bóveda Segura</span>
-              </div>
-              <p class="text-xs text-slate-400">Entrada retenida hasta el resultado</p>
-            </div>
-            <div class="space-y-1">
-              <div class="flex items-center gap-1.5 text-wcyan-400 text-sm font-semibold">
-                <i class="fa-solid fa-bolt"></i>
-                <span>Retiros Rápidos</span>
-              </div>
-              <p class="text-xs text-slate-400">Cobros directos a tu billetera</p>
-            </div>
-            <div class="space-y-1">
-              <div class="flex items-center gap-1.5 text-emerald-400 text-sm font-semibold">
-                <i class="fa-solid fa-headset"></i>
-                <span>Soporte 24/7</span>
-              </div>
-              <p class="text-xs text-slate-400">Mediadores en vivo en Discord</p>
-            </div>
-            <div class="space-y-1">
-              <div class="flex items-center gap-1.5 text-wgold-400 text-sm font-semibold">
-                <i class="fa-solid fa-gamepad"></i>
-                <span>Puro Fortnite</span>
-              </div>
-              <p class="text-xs text-slate-400">Build, Box, Zone & Realistics</p>
-            </div>
-          </div>
-
         </div>
 
-        <!-- Right Column: Interactive Discord Bot Match Card Simulation -->
+        <!-- Right Column: Live Escrow Match Vault Preview -->
         <div class="lg:col-span-5 relative">
-          
-          <div class="relative mx-auto max-w-md rounded-2xl bg-gradient-to-b from-obsidian-800/90 to-obsidian-900/95 border border-white/10 p-5 shadow-2xl backdrop-blur-2xl">
-            
-            <!-- Card Header -->
-            <div class="flex items-center justify-between pb-4 border-b border-white/5">
+          <div class="relative mx-auto max-w-md rounded-3xl glass-panel-glow p-5 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-white/10">
               <div class="flex items-center gap-2.5">
-                <img src="assets/logo.png" alt="WTOKENS" class="w-9 h-9 rounded-xl object-cover border border-amber-500/30 shadow-md">
+                <img src="assets/logo.png" alt="WTOKENS" class="w-9 h-9 rounded-xl object-cover border border-wpurple-400/40 shadow-md">
                 <div>
                   <div class="flex items-center gap-1.5">
-                    <span class="font-bold text-sm text-white">SISTEMA | WTOKENS</span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">APP</span>
+                    <span class="font-bold text-sm text-white">BÓVEDA | WTOKENS</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-wpurple-500/20 text-wpurple-400 border border-wpurple-500/30 font-mono">ESCROW</span>
                   </div>
-                  <span class="text-[11px] text-slate-400 font-mono">Bóveda de Mediación Oficial</span>
+                  <span class="text-[11px] text-slate-400 font-mono">Liquidación Automática P2P</span>
                 </div>
               </div>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                🟢 PARTIDA ACTIVA
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                ● SALA EN VIVO
               </span>
             </div>
 
-            <!-- Discord Bot Message Body -->
             <div class="py-4 space-y-4">
-              
-              <div class="p-3.5 rounded-xl bg-obsidian-950/70 border border-white/5 space-y-2">
+              <div class="p-3.5 rounded-2xl bg-obsidian-950/80 border border-white/5 space-y-2">
                 <div class="flex items-center justify-between text-xs font-mono text-slate-400">
                   <span>ID: #FN-89214</span>
-                  <span class="text-wpurple-400 font-semibold">Fortnite · Box Fight 1v1</span>
+                  <span class="text-wpurple-400 font-semibold">Box Fight 1v1</span>
                 </div>
                 <div class="flex items-center justify-between py-2 border-y border-white/5">
                   <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs">🎮</div>
+                    <div class="w-7 h-7 rounded-full bg-obsidian-800 flex items-center justify-center text-xs">🎮</div>
                     <div>
                       <div class="text-xs font-bold text-white">K1ng_Fortnite</div>
-                      <div class="text-[10px] text-slate-400">Epic: K1ngFnatic</div>
+                      <div class="text-[10px] text-slate-400">Epic Verificado</div>
                     </div>
                   </div>
-                  <span class="text-xs font-black font-mono text-slate-400">VS</span>
+                  <span class="text-xs font-black font-mono text-wpurple-400">VS</span>
                   <div class="flex items-center gap-2 text-right">
                     <div>
                       <div class="text-xs font-bold text-white">Vortex_BR</div>
-                      <div class="text-[10px] text-slate-400">Epic: VortexPlays</div>
+                      <div class="text-[10px] text-slate-400">Epic Verificado</div>
                     </div>
-                    <div class="w-7 h-7 rounded-full bg-wpurple-900/60 border border-wpurple-500/40 flex items-center justify-center text-xs">⚡</div>
+                    <div class="w-7 h-7 rounded-full bg-wpurple-500/20 border border-wpurple-500/40 flex items-center justify-center text-xs">⚡</div>
                   </div>
                 </div>
-
                 <div class="flex items-center justify-between pt-1">
                   <span class="text-xs text-slate-400">Pozo Retenido en Bóveda:</span>
                   <span id="heroPotDisplay" class="font-mono font-black text-emerald-400 text-sm" data-usd="40">$40.00 USD</span>
                 </div>
               </div>
 
-              <!-- Status Steps -->
-              <div class="space-y-2 text-xs">
+              <div class="space-y-1.5 text-xs">
                 <div class="flex items-center gap-2 text-slate-300">
                   <i class="fa-solid fa-circle-check text-emerald-400"></i>
                   <span>Entradas de <strong data-usd="20">$20.00 USD</strong> bloqueadas en bóveda</span>
                 </div>
-                <div class="flex items-center gap-2 text-slate-300">
-                  <i class="fa-solid fa-circle-check text-emerald-400"></i>
-                  <span>Cuentas de Epic Games verificadas en sala</span>
-                </div>
-                <div class="flex items-center gap-2 text-wcyan-400">
-                  <i class="fa-solid fa-spinner animate-spin text-wcyan-400"></i>
-                  <span>Jugando mejor de 5 (BO5) en isla competitiva...</span>
+                <div class="flex items-center gap-2 text-wpurple-400">
+                  <i class="fa-solid fa-clock text-wpurple-400"></i>
+                  <span>Confirmación automática o mediación con clip en 10 min</span>
                 </div>
               </div>
-
-              <!-- Mediación oficial en Discord -->
-              <div class="p-3 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center gap-2.5 text-xs text-slate-300">
-                <i class="fa-brands fa-discord text-[#5865F2] text-lg shrink-0"></i>
-                <div class="text-[11px] leading-tight">
-                  <span class="text-white font-semibold">Mediación Oficial en Discord</span>
-                  <p class="text-slate-400">Subida de clips, verificación de victoria y mediadores en vivo vía bot.</p>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Footer indicator -->
-            <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-              <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-shield-cat text-amber-500"></i> Anti-Scam Shield Activo
-              </span>
-              <span>Delay: 0.04s</span>
-            </div>
-
-          </div>
-
-          <!-- Floating Accent Cards -->
-          <div class="hidden sm:flex absolute -bottom-6 -left-8 p-3.5 rounded-xl bg-obsidian-900/90 border border-white/10 backdrop-blur-xl shadow-xl items-center gap-3 animate-float">
-            <div class="w-10 h-10 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
-              <i class="fa-solid fa-shield-halved text-lg"></i>
-            </div>
-            <div>
-              <div class="text-[10px] uppercase font-mono text-slate-400">Bóveda de Apuesta</div>
-              <div class="text-xs font-bold text-white">Fondos Protegidos <span class="text-emerald-400 font-mono text-[10px] ml-1">100% Escrow</span></div>
             </div>
           </div>
-
-          <div class="hidden sm:flex absolute -top-6 -right-6 p-3.5 rounded-xl bg-obsidian-900/90 border border-white/10 backdrop-blur-xl shadow-xl items-center gap-3 animate-float" style="animation-delay: 2s;">
-            <div class="w-10 h-10 rounded-lg bg-[#5865F2]/20 border border-[#5865F2]/30 flex items-center justify-center text-[#5865F2]">
-              <i class="fa-brands fa-discord text-lg"></i>
-            </div>
-            <div>
-              <div class="text-[10px] uppercase font-mono text-slate-400">Discord Bot</div>
-              <div class="text-xs font-bold text-emerald-400">Sincronizado en Vivo</div>
-            </div>
-          </div>
-
         </div>
 
       </div>
+
     </div>
   </section>
 
@@ -400,7 +496,7 @@
           <div class="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
             Epic Games
           </div>
-          <p class="text-[11px] text-slate-400">Cuentas oficiales verificadas por OAuth</p>
+          <p class="text-[11px] text-slate-400">Cuentas oficiales verificadas por API</p>
         </div>
 
         <div class="p-5 rounded-2xl bg-obsidian-850/50 border border-white/5 hover:border-[#5865F2]/30 transition-all space-y-2">
@@ -494,110 +590,109 @@
         <span class="text-xs font-mono font-bold tracking-widest uppercase text-wpurple-400 bg-wpurple-500/10 border border-wpurple-500/20 px-3 py-1 rounded-full">
           MODALIDADES COMPETITIVAS
         </span>
-        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-          Elige tu especialidad en <span class="bg-gradient-to-r from-wpurple-400 to-wcyan-400 bg-clip-text text-transparent">Fortnite</span>
+        <h2 class="font-display text-4xl sm:text-6xl tracking-wide text-white">
+          ELIGE TU ESPECIALIDAD EN <span class="text-wpurple-400">FORTNITE</span>
         </h2>
         <p class="text-slate-400 text-base sm:text-lg">
           Sin otros juegos distractores. Nos enfocamos al 100% en el competitivo de Fortnite con mapas oficiales, emparejamiento por rangos y reglas estrictas anti-cheat.
         </p>
       </div>
 
-      <!-- Modes Grid -->
+      <!-- Modes Grid with Official Photos -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
         <!-- Mode 1: Box Fight -->
-        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-wpurple-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.15)] flex flex-col justify-between">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-xl bg-wpurple-600/20 border border-wpurple-500/30 flex items-center justify-center text-wpurple-400 text-xl group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-box-open"></i>
-              </div>
-              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+        <div class="group relative rounded-3xl bg-obsidian-900/75 border border-white/10 hover:border-wpurple-500/60 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.75)] flex flex-col justify-between">
+          <div>
+            <div class="relative h-44 overflow-hidden">
+              <img src="assets/modes/boxfight.jpg" alt="Box Fight Clásico" loading="lazy" width="400" height="220" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-obsidian-900 via-transparent to-black/30"></div>
+              <span class="absolute top-3 left-3 font-display text-2xl text-white/90 bg-black/50 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/10">01</span>
+              <span class="absolute top-3 right-3 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-wpurple-400 border border-wpurple-500/30">
                 1v1 · 2v2 · 3v3 · 4v4
               </span>
             </div>
-            <div>
+            <div class="p-6 space-y-3">
               <h3 class="text-xl font-bold text-white group-hover:text-wpurple-400 transition-colors">Box Fight Clásico</h3>
-              <p class="text-slate-400 text-sm mt-1">El formato rey de Fortnite. Escopeta pump, fusil y espacio cerrado para probar reflejos puros, edición y control de cajas.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">BO5 / BO7 / BO9</span>
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Sin Delay</span>
-              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Alta Actividad</span>
+              <p class="text-slate-400 text-sm leading-relaxed">El formato rey de Fortnite. Escopeta pump, fusil y espacio cerrado para probar reflejos puros, edición y control de cajas.</p>
+              <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-300">
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">BO5 / BO7</span>
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Sin Delay</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Alta Actividad</span>
+              </div>
             </div>
           </div>
-          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+          <div class="px-6 pb-6 pt-4 border-t border-white/5 flex items-center justify-between">
             <div>
               <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
-              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+              <span class="text-sm font-black text-emerald-400 font-mono" data-usd="0.5">$0.50 USD</span>
             </div>
-            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-wpurple-600 hover:bg-wpurple-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-full bg-wpurple-500 hover:bg-wpurple-400 text-obsidian-950 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5">
               <span>Desafiar</span>
               <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </button>
           </div>
         </div>
 
-        <!-- Mode 2: Zone Wars -->
-        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-wcyan-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(6,182,212,0.15)] flex flex-col justify-between">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-xl bg-wcyan-500/20 border border-wcyan-500/30 flex items-center justify-center text-wcyan-400 text-xl group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-volcano"></i>
-              </div>
-              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
-                1v1 · 2v2 · 3v3 · 4v4
-              </span>
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-white group-hover:text-wcyan-400 transition-colors">Zone Wars Endgame</h3>
-              <p class="text-slate-400 text-sm mt-1">Simulación exacta de finales de torneo (FNCS) con tormenta móvil, rotaciones forzadas y gestión de materiales.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Tormenta Dinámica</span>
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Loot Competitivo</span>
-              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Alta Actividad</span>
-            </div>
-          </div>
-          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
-            <div>
-              <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
-              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
-            </div>
-            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-wcyan-600 hover:bg-wcyan-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
-              <span>Desafiar</span>
-              <i class="fa-solid fa-arrow-right text-[10px]"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Mode 3: Build Fight -->
-        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-wgold-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(245,158,11,0.15)] flex flex-col justify-between">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-xl bg-wgold-500/20 border border-wgold-500/30 flex items-center justify-center text-wgold-400 text-xl group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-crosshairs"></i>
-              </div>
-              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+        <!-- Mode 2: Build Fight -->
+        <div class="group relative rounded-3xl bg-obsidian-900/75 border border-white/10 hover:border-wpurple-500/60 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.75)] flex flex-col justify-between">
+          <div>
+            <div class="relative h-44 overflow-hidden">
+              <img src="assets/modes/buildfight.jpg" alt="Build Fight 1v1" loading="lazy" width="400" height="220" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-obsidian-900 via-transparent to-black/30"></div>
+              <span class="absolute top-3 left-3 font-display text-2xl text-white/90 bg-black/50 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/10">02</span>
+              <span class="absolute top-3 right-3 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-wpurple-400 border border-wpurple-500/30">
                 1v1 Duelo Puro
               </span>
             </div>
-            <div>
-              <h3 class="text-xl font-bold text-white group-hover:text-wgold-400 transition-colors">Build Fight 1v1</h3>
-              <p class="text-slate-400 text-sm mt-1">Conquista de altura libre. Duelos mecánicos intensos sin límite de construcción con reinicio automático de mapa.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Altura Ilimitada</span>
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Auto-Reset</span>
-              <span class="px-2 py-0.5 rounded bg-wpurple-500/10 text-wpurple-400">Favorito Pros</span>
+            <div class="p-6 space-y-3">
+              <h3 class="text-xl font-bold text-white group-hover:text-wpurple-400 transition-colors">Build Fight 1v1</h3>
+              <p class="text-slate-400 text-sm leading-relaxed">Conquista de altura libre. Duelos mecánicos intensos sin límite de construcción con reinicio automático de mapa.</p>
+              <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-300">
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Altura Ilimitada</span>
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Auto-Reset</span>
+                <span class="px-2 py-0.5 rounded bg-wpurple-500/15 text-wpurple-400">Favorito Pros</span>
+              </div>
             </div>
           </div>
-          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+          <div class="px-6 pb-6 pt-4 border-t border-white/5 flex items-center justify-between">
             <div>
               <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
-              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+              <span class="text-sm font-black text-emerald-400 font-mono" data-usd="0.5">$0.50 USD</span>
             </div>
-            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-wgold-600 hover:bg-wgold-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-full bg-wpurple-500 hover:bg-wpurple-400 text-obsidian-950 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5">
+              <span>Desafiar</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode 3: Zone Wars -->
+        <div class="group relative rounded-3xl bg-obsidian-900/75 border border-white/10 hover:border-wpurple-500/60 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.75)] flex flex-col justify-between">
+          <div>
+            <div class="relative h-44 overflow-hidden">
+              <img src="assets/modes/zonewars.jpg" alt="Zone Wars Endgame" loading="lazy" width="400" height="220" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-obsidian-900 via-transparent to-black/30"></div>
+              <span class="absolute top-3 left-3 font-display text-2xl text-white/90 bg-black/50 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/10">03</span>
+              <span class="absolute top-3 right-3 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-wpurple-400 border border-wpurple-500/30">
+                1v1 · 2v2 · 3v3 · 4v4
+              </span>
+            </div>
+            <div class="p-6 space-y-3">
+              <h3 class="text-xl font-bold text-white group-hover:text-wpurple-400 transition-colors">Zone Wars Endgame</h3>
+              <p class="text-slate-400 text-sm leading-relaxed">Simulación exacta de finales de torneo (FNCS) con tormenta móvil, rotaciones forzadas y gestión de materiales.</p>
+              <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-300">
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Tormenta Dinámica</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">Alta Actividad</span>
+              </div>
+            </div>
+          </div>
+          <div class="px-6 pb-6 pt-4 border-t border-white/5 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
+              <span class="text-sm font-black text-emerald-400 font-mono" data-usd="0.5">$0.50 USD</span>
+            </div>
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-full bg-wpurple-500 hover:bg-wpurple-400 text-obsidian-950 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5">
               <span>Desafiar</span>
               <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </button>
@@ -605,31 +700,31 @@
         </div>
 
         <!-- Mode 4: Realistics / Mid Fight -->
-        <div class="group relative rounded-2xl bg-obsidian-900/60 border border-white/5 hover:border-indigo-500/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(99,102,241,0.15)] flex flex-col justify-between">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-bullseye"></i>
-              </div>
-              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+        <div class="group relative rounded-3xl bg-obsidian-900/75 border border-white/10 hover:border-wpurple-500/60 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.75)] flex flex-col justify-between">
+          <div>
+            <div class="relative h-44 overflow-hidden">
+              <img src="assets/modes/realistic.jpg" alt="Realistics & Mid Fight" loading="lazy" width="400" height="220" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-obsidian-900 via-transparent to-black/30"></div>
+              <span class="absolute top-3 left-3 font-display text-2xl text-white/90 bg-black/50 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/10">04</span>
+              <span class="absolute top-3 right-3 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-wpurple-400 border border-wpurple-500/30">
                 1v1 · 2v2 · 3v3 · 4v4
               </span>
             </div>
-            <div>
-              <h3 class="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">Realistics & Mid Fight</h3>
-              <p class="text-slate-400 text-sm mt-1">Situaciones reales de partida con loot variado, materiales limitados y terreno irregular para medir tu toma de decisiones.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-400">
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Mats Limitados</span>
-              <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Salud Realista</span>
+            <div class="p-6 space-y-3">
+              <h3 class="text-xl font-bold text-white group-hover:text-wpurple-400 transition-colors">Realistics & Mid Fight</h3>
+              <p class="text-slate-400 text-sm leading-relaxed">Situaciones reales de partida con loot variado, materiales limitados y terreno irregular para medir tu toma de decisiones.</p>
+              <div class="flex flex-wrap gap-1.5 pt-1 text-[11px] font-mono text-slate-300">
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Mats Limitados</span>
+                <span class="px-2 py-0.5 rounded bg-obsidian-800 border border-white/5">Salud Realista</span>
+              </div>
             </div>
           </div>
-          <div class="pt-6 border-t border-white/5 mt-6 flex items-center justify-between">
+          <div class="px-6 pb-6 pt-4 border-t border-white/5 flex items-center justify-between">
             <div>
               <span class="text-[10px] uppercase font-mono text-slate-400 block">Entrada mínima</span>
-              <span class="text-sm font-black text-emerald-400 font-mono">Desde $0.50 USD</span>
+              <span class="text-sm font-black text-emerald-400 font-mono" data-usd="0.5">$0.50 USD</span>
             </div>
-            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+            <button onclick="document.getElementById('btnOpenDiscordLogin').click()" class="px-4 py-2 rounded-full bg-wpurple-500 hover:bg-wpurple-400 text-obsidian-950 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5">
               <span>Desafiar</span>
               <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </button>

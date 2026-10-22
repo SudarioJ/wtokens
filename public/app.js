@@ -456,6 +456,7 @@ function escapeHTML(str) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initHeroShowcaseCarousel();
   initMobileMenu();
   initFAQ();
   initLeaderboardFilter();
@@ -2257,4 +2258,122 @@ function initWalletModal() {
     });
   }
 }
+
+/**
+ * 3D Coverflow Showcase Carousel (Yamaha Editorial Style)
+ */
+function initHeroShowcaseCarousel() {
+  const stage = document.getElementById('heroShowcaseStage');
+  if (!stage) return;
+
+  const cards = Array.from(stage.querySelectorAll('.showcase-card'));
+  const prevBtn = document.getElementById('heroPrevBtn');
+  const nextBtn = document.getElementById('heroNextBtn');
+  const dots = Array.from(document.querySelectorAll('[data-slide-dot]'));
+  const counterEl = document.getElementById('heroSlideCounter');
+  const modeTagEl = document.getElementById('heroSlideModeTag');
+  const watermarkNumEl = document.getElementById('heroWatermarkNum');
+  const watermarkTextEl = document.getElementById('heroWatermarkText');
+  const currencySelector = document.getElementById('currencySelector');
+
+  let activeIndex = 0;
+  const total = cards.length;
+  let autoTimer = null;
+
+  function renderCarousel(index) {
+    activeIndex = (index + total) % total;
+
+    cards.forEach((card, i) => {
+      let diff = i - activeIndex;
+      if (diff > total / 2) diff -= total;
+      if (diff < -total / 2) diff += total;
+      card.setAttribute('data-pos', String(diff));
+    });
+
+    const activeCard = cards[activeIndex];
+    if (activeCard) {
+      const num = activeCard.getAttribute('data-num') || `0${activeIndex + 1}`;
+      const modeName = activeCard.getAttribute('data-mode') || '';
+      const watermark = activeCard.getAttribute('data-watermark') || '';
+
+      if (counterEl) counterEl.textContent = `${num} / 0${total}`;
+      if (modeTagEl) modeTagEl.textContent = modeName;
+      if (watermarkNumEl) watermarkNumEl.textContent = num;
+      if (watermarkTextEl) watermarkTextEl.textContent = watermark;
+    }
+
+    dots.forEach((dot, i) => {
+      if (i === activeIndex) {
+        dot.className = 'w-6 h-1.5 rounded-full bg-wpurple-400 transition-all';
+      } else {
+        dot.className = 'w-2 h-1.5 rounded-full bg-white/25 hover:bg-white/50 transition-all';
+      }
+    });
+  }
+
+  function nextSlide() {
+    renderCarousel(activeIndex + 1);
+  }
+
+  function prevSlide() {
+    renderCarousel(activeIndex - 1);
+  }
+
+  function startAutoRotate() {
+    stopAutoRotate();
+    autoTimer = setInterval(nextSlide, 5500);
+  }
+
+  function stopAutoRotate() {
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      prevSlide();
+      startAutoRotate();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      nextSlide();
+      startAutoRotate();
+    });
+  }
+
+  cards.forEach((card, i) => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      if (i !== activeIndex) {
+        renderCarousel(i);
+        startAutoRotate();
+      }
+    });
+  });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      renderCarousel(i);
+      startAutoRotate();
+    });
+  });
+
+  stage.addEventListener('mouseenter', stopAutoRotate);
+  stage.addEventListener('mouseleave', startAutoRotate);
+
+  if (currencySelector) {
+    currencySelector.addEventListener('change', (e) => {
+      currentCurrency = e.target.value;
+      updateAllCurrencyDisplays();
+    });
+  }
+
+  renderCarousel(0);
+  startAutoRotate();
+}
+
 

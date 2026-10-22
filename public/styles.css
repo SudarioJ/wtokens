@@ -1,12 +1,29 @@
-/* Custom CSS for WTOKENS */
+/* Custom CSS for WTOKENS — Editorial Dark Emerald & Champagne Bronze Aesthetic */
+
+:root {
+  --emerald-bg-deep: #060b0a;
+  --emerald-bg-mid: #0c1a17;
+  --emerald-spotlight: #1a3c34;
+  --bronze-accent: #c89d7c;
+  --bronze-bright: #e0b694;
+  --emerald-neon: #10b981;
+}
 
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    box-shadow: 0 0 20px rgba(200, 157, 124, 0.18);
   }
   50% {
-    box-shadow: 0 0 35px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 35px rgba(200, 157, 124, 0.4);
   }
+}
+
+/* Editorial Atmospheric Background (Yamaha Reference) */
+.editorial-emerald-bg {
+  background-color: #060b0a;
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(31, 74, 64, 0.72) 0%, rgba(14, 34, 29, 0.55) 42%, rgba(6, 11, 10, 0.98) 85%),
+    radial-gradient(circle at 80% 75%, rgba(200, 157, 124, 0.07) 0%, transparent 55%);
 }
 
 /* Custom Scrollbar */
@@ -16,40 +33,143 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #06070B;
+  background: #060b0a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2438;
+  background: #172e28;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7C3AED;
+  background: #c89d7c;
 }
 
 /* Glassmorphism Classes */
 .glass-panel {
-  background: rgba(15, 18, 30, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(11, 22, 19, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-panel-glow {
-  background: rgba(15, 18, 30, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.15);
+  background: rgba(12, 25, 22, 0.82);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(200, 157, 124, 0.32);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+}
+
+/* 3D Coverflow Showcase Carousel (Yamaha Style) */
+.showcase-stage {
+  position: relative;
+  height: 410px;
+  perspective: 1400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .showcase-stage {
+    height: 300px;
+  }
+}
+
+.showcase-card {
+  position: absolute;
+  width: min(640px, 78vw);
+  height: 370px;
+  border-radius: 30px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #0b1513;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.4s ease;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 640px) {
+  .showcase-card {
+    width: 86vw;
+    height: 265px;
+    border-radius: 22px;
+  }
+}
+
+/* Active Center Slide */
+.showcase-card[data-pos="0"] {
+  z-index: 30;
+  transform: translate3d(0, 0, 0) scale(1);
+  opacity: 1;
+  border-color: rgba(200, 157, 124, 0.45);
+  box-shadow:
+    0 32px 75px rgba(0, 0, 0, 0.88),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 45px rgba(26, 60, 52, 0.45);
+}
+
+/* Left Flanking Slide */
+.showcase-card[data-pos="-1"] {
+  z-index: 20;
+  transform: translate3d(-52%, 12px, -160px) scale(0.68);
+  opacity: 0.55;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75);
+}
+
+/* Right Flanking Slide */
+.showcase-card[data-pos="1"] {
+  z-index: 20;
+  transform: translate3d(52%, 12px, -160px) scale(0.68);
+  opacity: 0.55;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75);
+}
+
+/* Back / Hidden Slide */
+.showcase-card[data-pos="2"],
+.showcase-card[data-pos="-2"] {
+  z-index: 10;
+  transform: translate3d(0, 20px, -320px) scale(0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.showcase-card[data-pos="-1"]:hover,
+.showcase-card[data-pos="1"]:hover {
+  opacity: 0.82;
+  border-color: rgba(200, 157, 124, 0.35);
+}
+
+.showcase-card .card-details-overlay {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+}
+
+.showcase-card[data-pos="0"] .card-details-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .showcase-card,
+  .showcase-card .card-details-overlay {
+    transition: none !important;
+  }
 }
 
 /* Subtle Grid Background Pattern */
 .bg-grid-pattern {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
 }
 
 /* Leaderboard tab active transition */
@@ -58,15 +178,15 @@
 }
 
 .rank-tab.active {
-  background-color: #7C3AED !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+  background-color: #c89d7c !important;
+  color: #060b0a !important;
+  box-shadow: 0 0 15px rgba(200, 157, 124, 0.4);
 }
 
 /* Custom Range Slider */
 input[type=range] {
   -webkit-appearance: none;
-  background: #1E2438;
+  background: #142621;
   height: 6px;
   border-radius: 3px;
 }
@@ -76,9 +196,9 @@ input[type=range]::-webkit-slider-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #06B6D4;
+  background: #c89d7c;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
+  box-shadow: 0 0 10px rgba(200, 157, 124, 0.6);
   transition: transform 0.1s ease;
 }
 
@@ -91,15 +211,16 @@ input[type=range]::-webkit-slider-thumb:hover {
   transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
 }
 
-/* Dashboard Helper Styles (BRTokens Aesthetic) */
+/* Dashboard Helper Styles */
 .dash-nav-btn {
   transition: all 0.15s ease-in-out;
 }
 
 .dash-nav-btn.active {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(200, 157, 124, 0.14) !important;
   color: #ffffff !important;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.03);
+  border-left: 2px solid #c89d7c;
+  box-shadow: 0 0 12px rgba(200, 157, 124, 0.08);
 }
 
 .switch-toggle {
@@ -107,19 +228,19 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 
 .switch-toggle.active {
-  background-color: #f59e0b !important;
-  color: #07080e !important;
+  background-color: #c89d7c !important;
+  color: #060b0a !important;
   font-weight: 700 !important;
 }
 
 .dash-period-btn.active {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(200, 157, 124, 0.18) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
 }
 
 .dash-fin-tab.active {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(200, 157, 124, 0.18) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
 }
