@@ -87,6 +87,12 @@ describe("production server", () => {
     expect(result.status).toBe(303);
     expect(result.headers.location).toBe("/");
   });
+  it("rejects oversized requests before sending a body to the backend", async () => {
+    const result = await request(app())
+      .post("/v1/matches")
+      .set("Content-Length", "2000000");
+    expect(result.status).toBe(413);
+  });
   it.each([
     "/legacy/frontend/app.js",
     "/.env",

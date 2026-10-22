@@ -82,7 +82,7 @@ npm run test:security:local  # Con frontend :3000 y Java :8080 levantados
 npm run audit
 ```
 
-Los tests de navegador usan API fixtures y cubren escritorio y móvil. El smoke local usa los servicios reales sin realizar apuestas ni pagos. La CI separa verificación de UI y consulta de avisos de dependencias. [Ver alcance y límites de seguridad](docs/SECURITY-TESTING.md).
+Los tests de navegador usan API fixtures y cubren escritorio y móvil. El smoke local usa los servicios reales sin realizar apuestas ni pagos. `npm run audit` consulta OSV para todas las versiones del lockfile; falla si encuentra avisos o si la fuente no responde. `npm run audit:npm` conserva la comprobación opcional del registro npm. La CI separa verificación de UI y auditoría OSV. [Ver alcance y límites de seguridad](docs/SECURITY-TESTING.md).
 
 Los resultados no equivalen a una auditoría completa del negocio ni verifican pagos, KYC, licencias, fraude o toda la autorización autenticada. Un error de red de npm audit debe reportarse como auditoría inconclusa, aunque las pruebas de aplicación pasen.
 

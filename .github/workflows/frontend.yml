@@ -1,7 +1,7 @@
 name: TypeScript UI and security checks
 on:
   push:
-    branches: [main, feat/typescript-arena-ui]
+    branches: [main]
   pull_request:
 permissions:
   contents: read
@@ -37,4 +37,4 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci --no-audit
-      - run: npm audit --audit-level=high --fetch-timeout=20000 --fetch-retries=1
+      - run: npm run audit

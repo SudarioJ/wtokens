@@ -1,5 +1,5 @@
 import express from "express";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import { proxyRequest } from "./proxy";
 import { resolve } from "node:path";
 import { backendOrigin, isBackendPath, securityHeaders } from "./security";
 
@@ -29,44 +29,13 @@ export function createApp(options: {
     }
     next();
   });
-  app.use(
-    createProxyMiddleware({
-      target,
-      changeOrigin: true,
-      xfwd: false,
-      pathFilter: isBackendPath,
-      proxyTimeout: 8000,
-      timeout: 10000,
-      on: {
-        proxyReq(proxyReq) {
-          for (const header of [
-            "forwarded",
-            "x-forwarded-host",
-            "x-forwarded-proto",
-            "x-forwarded-for",
-          ])
-            proxyReq.removeHeader(header);
-        },
-        proxyRes(proxyRes) {
-          proxyRes.headers["cache-control"] = "no-store";
-        },
-        error(_err, _req, res) {
-          if ("writeHead" in res && !res.headersSent) {
-            res.writeHead(503, {
-              "Content-Type": "application/json",
-              "Cache-Control": "no-store",
-            });
-            res.end(
-              JSON.stringify({
-                code: "BACKEND_UNAVAILABLE",
-                message: "El backend no está disponible.",
-              }),
-            );
-          }
-        },
-      },
-    }),
-  );
+  app.use((req, res, next) => {
+    if (!isBackendPath(req.path)) {
+      next();
+      return;
+    }
+    proxyRequest(target, req, res);
+  });
   app.use(
     express.static(resolve(options.distDir ?? "dist"), {
       dotfiles: "deny",

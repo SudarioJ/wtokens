@@ -22,9 +22,11 @@ El contenido previo se conserva bajo `legacy/` para trazabilidad, fuera del buil
 2. `npm test`: dinero con BigInt, validación de API, CSRF/idempotencia, destino fijo del proxy, cookies, cabeceras y exclusión de archivos privados.
 3. `npm run test:e2e`: Chromium escritorio y móvil, filtros, modal y foco, sesión falsificada en localStorage, nombre con payload XSS, estado offline y axe WCAG 2 AA. Estas pruebas utilizan fixtures API, no credenciales reales.
 4. `npm run test:security:local`: comprobaciones HTTP contra frontend/proxy y backend Java reales en loopback. Requiere ambos levantados. Verifica rechazo de sesión/cookie/token falsos, POST sin CSRF, salud/capacidades y ausencia de archivos internos. No realiza fuzzing destructivo ni operaciones financieras.
-5. `npm run audit`: consulta de avisos conocidos en dependencias del árbol activo. Un fallo de red no significa ausencia de vulnerabilidades. `legacy/backend` tiene su propio árbol antiguo, excluido del producto nuevo; debe retirarse definitivamente antes de un despliegue futuro del antiguo sistema.
+5. `npm run audit`: consulta OSV para todas las versiones del lockfile activo; falla ante cualquier aviso o respuesta incompleta. `npm run audit:npm` permite además consultar el registro npm. Un fallo de red no significa ausencia de vulnerabilidades. `legacy/backend` tiene su propio árbol antiguo, excluido del producto nuevo; debe retirarse definitivamente antes de un despliegue futuro del antiguo sistema.
 
-La CI tiene trabajos separados para pruebas y auditoría de dependencias. Nunca interpretar el modo offline de npm audit como una auditoría actualizada. El informe final del trabajo indica si se consiguió consultar la fuente de avisos.
+La CI tiene trabajos separados para pruebas y auditoría OSV. El endpoint de avisos npm agotó su tiempo de conexión tanto localmente como en GitHub Actions; por ello no se usa como única fuente. Nunca interpretar el modo offline de npm audit como una auditoría actualizada.
+
+Durante esta revisión OSV detectó [GHSA-vfj7-8cjw-p6xm](https://osv.dev/vulnerability/GHSA-vfj7-8cjw-p6xm), un riesgo de agotamiento de pila en `braces@3.0.3`, dependencia transitiva de http-proxy-middleware. Se eliminó ese middleware y sus dependencias de matching y se reemplazó por un proxy de destino fijo con HTTP/HTTPS nativo de Node, límite de cuerpo de 1 MiB, timeout, filtrado de cabeceras y validación de rutas. La consulta posterior a OSV de 226 versiones del lockfile no encontró coincidencias conocidas a fecha de esta revisión. Esto no descarta vulnerabilidades no publicadas ni demuestra la seguridad total de la aplicación.
 
 ## Límites y trabajo pendiente
 
