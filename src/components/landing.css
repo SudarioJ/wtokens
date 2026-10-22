@@ -169,6 +169,7 @@
   gap: 9px;
 }
 .lp-avatar {
+  overflow: hidden;
   width: 31px;
   height: 31px;
   display: grid;

@@ -3,7 +3,12 @@ import AxeBuilder from "@axe-core/playwright";
 
 async function mockApi(
   page: Page,
-  options: { signedIn?: boolean; name?: string; offline?: boolean } = {},
+  options: {
+    signedIn?: boolean;
+    name?: string;
+    offline?: boolean;
+    avatar?: string;
+  } = {},
 ) {
   let signedIn = options.signedIn ?? false;
   await page.route("**/actuator/health", (route) =>
@@ -38,6 +43,7 @@ async function mockApi(
       "/v1/me": {
         id: "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4",
         display_name: options.name ?? "Jugador de prueba",
+        avatar_url: options.avatar ?? null,
         eligible: false,
         suspended: false,
       },
@@ -65,6 +71,47 @@ async function nav(page: Page, name: string) {
   if (await menu.isVisible()) await menu.click();
   await page.getByRole("button", { name, exact: true }).first().click();
 }
+
+test("Discord avatar loads on landing and panel, with initials if the image fails", async ({
+  page,
+}) => {
+  const avatar = "https://cdn.discordapp.com/embed/avatars/2.png";
+  await mockApi(page, { signedIn: true, avatar });
+  let imageFails = false;
+  await page.route("https://cdn.discordapp.com/**", (route) =>
+    imageFails
+      ? route.fulfill({ status: 404, body: "" })
+      : route.fulfill({
+          contentType: "image/png",
+          body: Buffer.from(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/k9sAAAAASUVORK5CYII=",
+            "base64",
+          ),
+        }),
+  );
+  await page.goto("/");
+  await expect(page.locator(".lp-avatar img")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator(".lp-avatar img")
+        .evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  await page.goto("/app");
+  await expect(page.locator(".profile-button img")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator(".profile-button img")
+        .evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  imageFails = true;
+  await page.reload();
+  await expect(page.locator(".profile-button img")).toHaveCount(0);
+  await expect(page.locator(".profile-button .avatar")).toHaveText("JU");
+});
 
 test("public landing preserves the original hero and a working carousel", async ({
   page,

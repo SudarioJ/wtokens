@@ -412,6 +412,7 @@ textarea {
   text-overflow: ellipsis;
 }
 .avatar {
+  overflow: hidden;
   height: 32px;
   width: 32px;
   flex-shrink: 0;
@@ -423,6 +424,14 @@ textarea {
   border-radius: 10px;
   font-size: 10px;
   font-weight: 700;
+}
+.avatar img,
+.lp-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 .main {
   max-width: 1600px;

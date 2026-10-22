@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import type { Asset, User } from "../lib/contracts";
+import { UserAvatar } from "./UserAvatar";
 import "./landing.css";
 
 const modes = [
@@ -164,9 +165,7 @@ export function Landing({
             >
               {user ? (
                 <>
-                  <span className="lp-avatar">
-                    {user.display_name.slice(0, 2).toUpperCase()}
-                  </span>
+                  <UserAvatar user={user} className="lp-avatar" />
                   <span>
                     <strong>{user.display_name}</strong>
                     <small>

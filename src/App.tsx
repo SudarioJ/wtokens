@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { Dialog } from "./components/Dialog";
 import { Landing } from "./components/Landing";
+import { UserAvatar } from "./components/UserAvatar";
 import { api, ApiError, friendlyError } from "./lib/api";
 import type {
   Asset,
@@ -535,9 +536,7 @@ export function App() {
                     className="profile-button"
                     onClick={() => navigate("wallet")}
                   >
-                    <span className="avatar">
-                      {user.display_name.slice(0, 2).toUpperCase()}
-                    </span>
+                    <UserAvatar user={user} />
                     <span>{user.display_name}</span>
                   </button>
                 ) : (

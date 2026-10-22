@@ -12,6 +12,13 @@ export type Platform = z.infer<typeof platformSchema>;
 export const userSchema = z.object({
   id: z.uuid(),
   display_name: z.string().max(100),
+  avatar_url: z
+    .string()
+    .regex(
+      /^https:\/\/cdn\.discordapp\.com\/(?:avatars\/[0-9]{1,20}\/(?:a_)?[a-f0-9]{32}\.png\?size=128|embed\/avatars\/[0-5]\.png)$/,
+    )
+    .nullable()
+    .optional(),
   eligible: z.boolean(),
   suspended: z.boolean(),
 });
