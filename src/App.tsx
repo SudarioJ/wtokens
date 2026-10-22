@@ -40,6 +40,7 @@ import { Landing } from "./components/Landing";
 import { UserAvatar } from "./components/UserAvatar";
 import { CurrencyOptions } from "./components/CurrencyOptions";
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
+import { discordCommunityUrl } from "./lib/community";
 import { api, ApiError, friendlyError } from "./lib/api";
 import type {
   Asset,
@@ -450,16 +451,16 @@ export function App() {
             </nav>
             <div className="sidebar-divider" />
             <span className="nav-label">COMUNIDAD</span>
-            <button
+            <a
               className="nav-item"
-              onClick={() => {
-                navigate("help");
-              }}
+              href={discordCommunityUrl}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Users size={19} />
               Discord & comunidad
               <ArrowUpRight size={14} />
-            </button>
+            </a>
             <button
               className={`nav-item ${view === "help" ? "active" : ""}`}
               onClick={() => navigate("help")}
@@ -1388,7 +1389,7 @@ export function App() {
                     },
                     {
                       title: "¿Dónde está la comunidad de Discord?",
-                      text: "El enlace oficial del servidor está pendiente de configurar. El acceso con Discord sirve para identificarte y no te une automáticamente a un servidor.",
+                      text: "Abre Discord & comunidad en el menú para unirte al servidor oficial. El acceso con Discord sirve para identificarte y no te une automáticamente a un servidor.",
                     },
                     {
                       title: "¿Hay apuestas de terceros o monedas digitales?",

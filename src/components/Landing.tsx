@@ -20,6 +20,7 @@ import {
 import type { Asset, User } from "../lib/contracts";
 import { UserAvatar } from "./UserAvatar";
 import { CurrencyOptions } from "./CurrencyOptions";
+import { discordCommunityUrl } from "../lib/community";
 import "./landing.css";
 
 const modes = [
@@ -138,7 +139,12 @@ export function Landing({
             <a href="#sistema" onClick={closeMenu}>
               SISTEMA
             </a>
-            <a href="#comunidad" onClick={closeMenu}>
+            <a
+              href={discordCommunityUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={closeMenu}
+            >
               DISCORD
             </a>
             <a href="#faq" onClick={closeMenu}>
@@ -469,11 +475,16 @@ export function Landing({
                   Tu actividad conectada con tu panel web.
                 </li>
               </ul>
-              <button className="lp-button lp-button-blue" onClick={onEnter}>
+              <a
+                className="lp-button lp-button-blue"
+                href={discordCommunityUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Gamepad2 size={19} />
-                {user ? "Abrir mi panel" : "Conectar con Discord"}
+                Unirme al Discord
                 <ArrowUpRight size={16} />
-              </button>
+              </a>
             </div>
             <div
               className="lp-discord-preview"
@@ -618,7 +629,13 @@ export function Landing({
             <h3>LA ARENA</h3>
             <a href="#modos">Modalidades</a>
             <a href="#sistema">Cómo funciona</a>
-            <a href="#comunidad">Comunidad</a>
+            <a
+              href={discordCommunityUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Comunidad
+            </a>
           </div>
           <div>
             <h3>TU ESPACIO</h3>
