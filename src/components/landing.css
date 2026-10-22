@@ -7,11 +7,11 @@
     format("woff2");
 }
 .landing {
-  --lp-bg: #080f20;
+  --lp-bg: #061020;
   --lp-line: #243655;
   --lp-muted: #a8b8d1;
-  --lp-blue: #8aafff;
-  --lp-cyan: #65d8f2;
+  --lp-blue: #65b7ff;
+  --lp-cyan: #5eeaff;
   color: #f2f6ff;
   background: var(--lp-bg);
   overflow: clip;
@@ -267,7 +267,7 @@
 .lp-hero h1 > span {
   display: inline-block;
   color: #64d1f9;
-  background: linear-gradient(120deg, #6a9fff, #6ce2ec 50%, #447deb);
+  background: linear-gradient(120deg, #65b7ff, #5eeaff 50%, #168bff);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2070,4 +2070,15 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Keep the supplied transparent emblem clear at every brand size. */
+.lp-brand > img,
+.lp-header .lp-brand > img,
+.lp-footer .lp-brand > img {
+  object-fit: contain;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 0 8px #00bfff35);
 }

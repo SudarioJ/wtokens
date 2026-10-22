@@ -420,9 +420,13 @@ export function App() {
               }}
               aria-label="WTOKENS, inicio"
             >
-              <span className="brand-mark">
-                W<span>•</span>
-              </span>
+              <img
+                className="brand-logo"
+                src="/assets/brand.svg"
+                width="48"
+                height="48"
+                alt=""
+              />
               <span>
                 WTOKENS<small>COMPETITIVE ARENA</small>
               </span>
@@ -522,10 +526,6 @@ export function App() {
                 </span>
               </div>
               <div className="topbar-actions">
-                <span className="region">
-                  <span className="region-dot" />
-                  LATAM
-                </span>
                 <div className="currency-select">
                   <label className="sr-only" htmlFor="currency">
                     Moneda de consulta

@@ -125,9 +125,8 @@ export function Landing({
       <header className="lp-header">
         <div className="lp-header-inner">
           <a className="lp-brand" href="/" aria-label="WTOKENS, inicio">
-            <img src="/assets/logo_128.png" width="43" height="43" alt="" />
+            <img src="/assets/brand.svg" width="43" height="43" alt="" />
             <span>WTOKENS</span>
-            <small>LATAM</small>
           </a>
           <nav
             className={`lp-nav ${mobileOpen ? "lp-nav-open" : ""}`}
@@ -204,7 +203,7 @@ export function Landing({
           <div className="lp-hero-copy">
             <span className="lp-kicker">
               <span />
-              FORTNITE ARENA COMPETITIVA · LATAM
+              FORTNITE ARENA COMPETITIVA
             </span>
             <h1 id="landing-title">
               JUEGA Y GANA EN <span>$$$</span>
@@ -491,7 +490,7 @@ export function Landing({
               aria-label="Vista ilustrativa de los canales de la comunidad"
             >
               <div className="lp-discord-title">
-                <img src="/assets/logo_128.png" alt="" width="33" height="33" />
+                <img src="/assets/brand.svg" alt="" width="33" height="33" />
                 <span>
                   WTOKENS<small>FORTNITE COMMUNITY</small>
                 </span>
@@ -542,7 +541,7 @@ export function Landing({
               UNA MISMA PASIÓN. TODA UNA REGIÓN.
             </span>
             <h2 id="region-title">
-              HECHO PARA <span>LATAM.</span>
+              HECHO PARA <span>COMPETIR.</span>
             </h2>
             <p>Distintos acentos. La misma forma de vivir Fortnite.</p>
           </div>
@@ -615,9 +614,8 @@ export function Landing({
         <div className="lp-footer-main">
           <div>
             <a href="/" className="lp-brand">
-              <img src="/assets/logo_128.png" width="40" height="40" alt="" />
+              <img src="/assets/brand.svg" width="40" height="40" alt="" />
               <span>WTOKENS</span>
-              <small>LATAM</small>
             </a>
             <p>
               Una comunidad competitiva.

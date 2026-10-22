@@ -18,19 +18,19 @@
 :root {
   font-family: "Inter Variable", sans-serif;
   color: #e9edf6;
-  background: #0b0e17;
+  background: #061020;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-weight: 400;
   font-size: 14px;
   color-scheme: dark;
-  --bg: #0b0e17;
-  --panel: #111622;
-  --line: #242b3c;
+  --bg: #061020;
+  --panel: #0c1a30;
+  --line: #203855;
   --muted: #9aa5bc;
-  --blue: #6e8fff;
-  --lime: #d1f76b;
+  --blue: #65b7ff;
+  --cyan: #5eeaff;
   --font-display: "Space Grotesk Variable", sans-serif;
 }
 * {
@@ -82,7 +82,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible {
-  outline: 2px solid var(--lime);
+  outline: 2px solid var(--cyan);
 }
 h1,
 h2,
@@ -121,7 +121,7 @@ textarea {
   position: fixed;
   top: -100px;
   left: 20px;
-  background: var(--lime);
+  background: var(--cyan);
   color: #141b0c;
   padding: 16px;
   z-index: 1000;
@@ -154,22 +154,12 @@ textarea {
   font-weight: 800;
   letter-spacing: -1.2px;
 }
-.brand-mark {
-  font-style: italic;
-  font-weight: 900;
-  font-size: 37px;
-  letter-spacing: -9px;
-  line-height: 1;
-  color: #eff4ff;
-  padding-right: 11px;
-  position: relative;
-}
-.brand-mark span {
-  color: var(--lime);
-  font-size: 26px;
-  position: absolute;
-  right: -1px;
-  top: 11px;
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px #00bfff35);
 }
 .brand small {
   display: block;
@@ -254,7 +244,7 @@ textarea {
   position: absolute;
   right: -2px;
   bottom: 0;
-  background: var(--lime);
+  background: var(--cyan);
   border: 2px solid #1b253a;
   border-radius: 50%;
 }
@@ -326,7 +316,7 @@ textarea {
 .region-dot {
   width: 6px;
   height: 6px;
-  background: var(--lime);
+  background: var(--cyan);
   border-radius: 50%;
 }
 .currency-select {
@@ -373,12 +363,12 @@ textarea {
   transform: translateY(-1px);
 }
 .button.primary {
-  background: var(--lime);
+  background: var(--cyan);
   color: #171e0f;
-  border: 1px solid var(--lime);
+  border: 1px solid var(--cyan);
 }
 .button.primary:hover {
-  background: #ddff8c;
+  background: #99f4ff;
 }
 .button.secondary {
   border: 1px solid #39435a;
@@ -389,7 +379,7 @@ textarea {
   background: #253049;
 }
 .button.discord-button {
-  background: #4b5ac9;
+  background: #0961c4;
   color: #fff;
   border: 1px solid #8396ff;
 }
@@ -572,7 +562,7 @@ h1 {
 .hero-chip > span {
   width: 4px;
   height: 4px;
-  background: var(--lime);
+  background: var(--cyan);
   border-radius: 50%;
 }
 .hero h2 {
@@ -584,7 +574,7 @@ h1 {
   margin: 19px 0 13px;
 }
 .hero h2 > span {
-  color: var(--lime);
+  color: var(--cyan);
 }
 .hero p {
   font-size: 11px;
@@ -632,7 +622,7 @@ h1 {
 }
 .hero-index span {
   font-size: 22px;
-  border-bottom: 2px solid var(--lime);
+  border-bottom: 2px solid var(--cyan);
   padding-bottom: 3px;
 }
 .content-columns {
@@ -752,8 +742,8 @@ h1 {
   position: absolute;
   left: 13px;
   top: 12px;
-  background: #d5f774;
-  color: #243014;
+  background: #5eeaff;
+  color: #082339;
   border-radius: 3px;
   padding: 5px 7px;
   font-size: 7px;
@@ -1014,7 +1004,7 @@ h1 {
   margin-top: 25px;
 }
 .fairplay-card > svg {
-  color: #b9d48b;
+  color: #65d6ed;
   margin-bottom: 12px;
 }
 .fairplay-card h3 {
