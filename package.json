@@ -4,7 +4,6 @@
   "private": true,
   "description": "WTOKENS - Plataforma Competitiva de Fortnite",
   "scripts": {
-    "build": "mkdir -p dist && cp -r public/* dist/",
     "start": "node server.js"
   }
 }
