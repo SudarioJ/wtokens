@@ -1268,14 +1268,17 @@
           <!-- Saldo Disponible & Botones -->
           <div class="pt-6 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400">SALDO DISPONIBLE</div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">SALDO DISPONIBLE EXCLUSIVO</span>
+                <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[9px] font-mono font-bold">🔒 INTRANSFERIBLE</span>
+              </div>
               <div class="flex items-baseline gap-2 flex-wrap">
                 <span id="dashBalanceTokens" class="text-3xl font-black font-mono text-white">S/ 93.75 PEN</span>
                 <span id="dashBalanceLocal" class="text-xs font-mono text-emerald-400 font-bold">(25.00 WT)</span>
                 <button id="btnOpenChangeCountry" class="ml-2 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-slate-300 hover:text-white transition-all flex items-center gap-1.5" title="Cambiar país y métodos de pago">
                   <span id="dashCountryFlag">🇵🇪</span>
                   <span id="dashCountryName">Perú</span>
-                  <i class="fa-solid fa-pen-to-square text-[9px] text-amber-400"></i>
+                  <i class="fa-solid fa-pen-to-square text-[9px] text-blue-400"></i>
                 </button>
               </div>
             </div>
@@ -1674,11 +1677,24 @@
           </button>
         </div>
 
+        <!-- Security & Non-transferable Policy Banner -->
+        <div class="p-4 rounded-2xl bg-blue-950/30 border border-blue-500/20 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-cyan-400 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <div class="space-y-0.5 text-xs">
+            <span class="font-bold text-white block">Saldo Exclusivo de Esta Cuenta · Intransferible</span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Cada cuenta de WTOKENS posee su propio balance financiero protegido. Por políticas de seguridad, juego limpio y prevención de fraude, <strong>los fondos no son transferibles entre diferentes cuentas de usuario</strong>. Cada jugador recarga y retira exclusivamente a sus métodos de pago personales.
+            </p>
+          </div>
+        </div>
+
         <!-- Balance Metrics Row -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
-            <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">SALDO ACTUAL</div>
-            <div id="dashFinMainBalance" class="text-2xl font-black font-mono text-amber-500">S/ 93.75 PEN</div>
+            <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">SALDO ACTUAL EXCLUSIVO</div>
+            <div id="dashFinMainBalance" class="text-2xl font-black font-mono text-cyan-400">S/ 93.75 PEN</div>
             <div id="dashFinMainBalanceLocal" class="text-xs font-mono text-slate-400">(25.00 WT)</div>
           </div>
           <div class="p-5 rounded-2xl bg-[#0e1017] border border-white/5 space-y-1">
@@ -2125,51 +2141,105 @@
     </div>
   </div>
 
-  <!-- Modal: Vinculación Oficial de Epic Games (Solo tras iniciar con Discord) -->
-  <div id="epicLinkModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden transition-opacity">
-    <div class="relative w-full max-w-md rounded-2xl bg-obsidian-900 border border-white/10 p-6 shadow-2xl space-y-6">
+  <!-- Modal: Autenticación en 2 Pasos (1: Discord -> 2: Epic Games) -->
+  <div id="twoStepAuthModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden transition-opacity">
+    <div class="relative w-full max-w-lg rounded-3xl bg-obsidian-900 border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-6">
       
-      <button id="closeEpicModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+      <button id="closeTwoStepAuthBtn" class="absolute top-5 right-5 text-slate-400 hover:text-white p-1">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
 
-      <div class="text-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-wpurple-600 to-wcyan-500 mx-auto flex items-center justify-center text-white text-2xl shadow-lg">
-          <i class="fa-brands fa-epic-games"></i>
+      <!-- Stepper Header -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-center gap-3">
+          <!-- Step 1 Pill -->
+          <div id="step1Indicator" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/20 border border-blue-500 text-blue-400 text-xs font-mono font-bold transition-all">
+            <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
+            <span>Discord</span>
+          </div>
+          <i class="fa-solid fa-arrow-right text-xs text-slate-600"></i>
+          <!-- Step 2 Pill -->
+          <div id="step2Indicator" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-xs font-mono font-bold transition-all">
+            <span class="w-5 h-5 rounded-full bg-white/10 text-slate-400 flex items-center justify-center text-[10px]">2</span>
+            <span>Epic Games</span>
+          </div>
         </div>
-        <h3 class="text-xl font-bold text-white">Vincular Epic Games</h3>
-        <p class="text-xs text-slate-400" id="epicModalUserNotice">
-          Sesión iniciada con Discord. Ingresa tu usuario de Fortnite para completar tu perfil competitivo.
-        </p>
-      </div>
 
-      <div class="space-y-4">
-        <!-- Direct Epic Games 1-Click Button (Matches BR Tokens Flow) -->
-        <div class="space-y-2">
-          <button id="btnModalDirectEpicLogin" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.45)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
-            <i class="fa-brands fa-epic-games text-base"></i>
-            <span>VINCULAR CON EPIC GAMES (1-CLIC)</span>
-          </button>
-          <p class="text-[11px] text-slate-400 text-center">
-            Abre la ventana oficial de Epic Games para autorizar en 1 clic automáticamente.
+        <div class="text-center space-y-1">
+          <h3 id="twoStepModalTitle" class="text-2xl font-black text-white">Registro de Jugador · 2 Pasos</h3>
+          <p id="twoStepModalSubtitle" class="text-xs text-slate-300">
+            Conecta tu Discord para autenticarte y tu Epic Games para registrar tus partidas.
           </p>
         </div>
+      </div>
 
-        <div class="relative flex py-1 items-center">
-          <div class="flex-grow border-t border-white/10"></div>
-          <span class="flex-shrink mx-3 text-[10px] font-mono text-slate-500 uppercase">O ingresar nickname manualmente</span>
-          <div class="flex-grow border-t border-white/10"></div>
+      <!-- STEP 1 CONTAINER: DISCORD LOGIN -->
+      <div id="authStep1Container" class="space-y-4">
+        <div class="p-6 rounded-2xl bg-[#080d1a] border border-blue-500/20 space-y-4 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#5865F2] flex items-center justify-center text-2xl mx-auto shadow-lg">
+            <i class="fa-brands fa-discord"></i>
+          </div>
+          <div class="space-y-1">
+            <h4 class="text-sm font-bold text-white">Paso 1: Conectar con Discord</h4>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+              Tu identidad de Discord te permite coordinar salas privadas de voz, validar resultados y acceder al arbitraje 24/7.
+            </p>
+          </div>
+          <button id="btnAuthStep1Discord" class="w-full py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_0_25px_rgba(88,101,242,0.4)] transition-all flex items-center justify-center gap-2.5">
+            <i class="fa-brands fa-discord text-base"></i>
+            <span>Continuar con Discord</span>
+          </button>
         </div>
 
-        <div class="p-4 rounded-xl bg-obsidian-950 border border-white/5 space-y-3">
-          <label class="block text-xs font-semibold text-slate-300">Tu Nickname exacto en Epic Games (Fortnite):</label>
-          <div class="relative">
-            <input type="text" id="inputEpicNick" placeholder="Ej: K1ngFnatic_24" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+        <!-- Demo Accounts for Instant Multi-User Testing -->
+        <div class="pt-2 border-t border-white/10 space-y-2">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-slate-400 block text-center">O probar con cuentas demo separadas:</span>
+          <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+            <button id="btnDemoUser1" type="button" class="py-2.5 px-3 rounded-xl bg-obsidian-950 border border-white/10 hover:border-blue-500 text-slate-300 hover:text-white flex items-center justify-center gap-1.5 transition-all">
+              <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+              <span>@K1ng_Fortnite</span>
+            </button>
+            <button id="btnDemoUser2" type="button" class="py-2.5 px-3 rounded-xl bg-obsidian-950 border border-white/10 hover:border-cyan-500 text-slate-300 hover:text-white flex items-center justify-center gap-1.5 transition-all">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              <span>@Vortex_BR</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 CONTAINER: EPIC GAMES LINKING -->
+      <div id="authStep2Container" class="space-y-4 hidden">
+        <!-- Connected Discord Banner -->
+        <div class="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/20 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img id="authStep2DiscordAvatar" src="assets/logo.png" class="w-9 h-9 rounded-lg object-cover border border-blue-500/30">
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span id="authStep2DiscordName">@usuario</span>
+                <i class="fa-solid fa-circle-check text-blue-400 text-xs"></i>
+              </div>
+              <span class="text-[10px] text-blue-300/80 font-mono">Paso 1 Completado</span>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold">DISCORD OK</span>
+        </div>
+
+        <!-- Epic Nickname Form -->
+        <div class="p-5 rounded-2xl bg-obsidian-950 border border-white/5 space-y-4">
+          <div class="flex items-center gap-2.5 text-white">
+            <i class="fa-brands fa-epic-games text-lg text-cyan-400"></i>
+            <span class="text-xs font-bold uppercase tracking-wider font-mono">Paso 2: Conectar Cuenta de Epic Games</span>
           </div>
 
-          <label class="block text-xs font-semibold text-slate-300 pt-1">Tu País / Moneda de Saldo:</label>
-          <div class="relative">
-            <select id="selectCountryModal" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-300">Tu Nickname exacto en Epic Games (Fortnite):</label>
+            <input type="text" id="inputTwoStepEpicNick" placeholder="Ej: K1ngFnatic_24" class="w-full bg-obsidian-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+            <p class="text-[10px] text-slate-400">Debe coincidir con tu ID de Epic Games para registrar partidas.</p>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-300">Tu País y Moneda de Saldo:</label>
+            <select id="selectTwoStepCountry" class="w-full bg-obsidian-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400">
               <option value="ARS">🇦🇷 Argentina (ARS - Mercado Pago / Alias)</option>
               <option value="CLP">🇨🇱 Chile (CLP - CuentaRUT / MACH)</option>
               <option value="PEN">🇵🇪 Perú (PEN - Yape / Plin / BCP)</option>
@@ -2181,9 +2251,17 @@
           </div>
         </div>
 
-        <button id="btnSaveEpicLink" class="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold text-xs uppercase tracking-wider hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
-          <span>Guardar y Activar Cuenta</span>
-          <i class="fa-solid fa-arrow-right text-xs text-amber-500"></i>
+        <!-- Security & Non-transferable Notice -->
+        <div class="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/25 text-xs text-blue-200 flex items-start gap-2.5">
+          <i class="fa-solid fa-lock text-cyan-400 mt-0.5 shrink-0"></i>
+          <span class="text-[11px] leading-relaxed">
+            <strong>Saldo propio e intransferible:</strong> Cada cuenta gestiona su propio balance financiero individual. Por seguridad y normativas anti-fraude, el saldo <strong>no es transferible entre cuentas de usuario</strong>.
+          </span>
+        </div>
+
+        <button id="btnCompleteTwoStepAuth" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+          <span>Completar Registro y Entrar al Panel</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
       </div>
 

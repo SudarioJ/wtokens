@@ -460,8 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initFAQ();
   initLeaderboardFilter();
-  initDiscordAuth();
-  initEpicLinkModal();
+  initTwoStepAuthModal();
   initEpicVerification();
   initWalletModal();
   initDashboardNavigation();
@@ -493,6 +492,40 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Account-Specific Balance Manager (Strict Non-Transferable Balances)
+function getUserBalance(userId) {
+  if (!userId) return 0.0;
+  const key = `wtokens_balance_${userId}`;
+  const saved = localStorage.getItem(key);
+  if (saved !== null) {
+    return parseFloat(saved) || 0.0;
+  }
+  // Initial demo balance per account ID
+  let initial = 25.0;
+  if (userId === 'user_k1ng_101') initial = 50.0;
+  if (userId === 'user_vortex_202') initial = 15.0;
+  localStorage.setItem(key, initial.toFixed(2));
+  return initial;
+}
+
+function setUserBalance(userId, amount) {
+  if (!userId) return;
+  const safeAmount = Math.max(0, parseFloat(amount) || 0);
+  localStorage.setItem(`wtokens_balance_${userId}`, safeAmount.toFixed(2));
+
+  // Sync session
+  const sessionStr = localStorage.getItem('wtokens_user_session');
+  if (sessionStr) {
+    try {
+      const u = JSON.parse(sessionStr);
+      if (u.id === userId) {
+        u.balance = safeAmount;
+        localStorage.setItem('wtokens_user_session', JSON.stringify(u));
+      }
+    } catch (e) {}
+  }
+}
+
 function updateAllCurrencyDisplays() {
   // Update elements with data-usd attribute
   document.querySelectorAll('[data-usd]').forEach(el => {
@@ -507,13 +540,13 @@ function updateAllCurrencyDisplays() {
     potDisplay.textContent = formatMoney(40);
   }
 
-  // Update Dashboard currency displays
+  // Update Dashboard currency displays (strictly isolated per user account)
   const saved = localStorage.getItem('wtokens_user_session');
   let userBal = 25.0;
   if (saved) {
     try {
       const u = JSON.parse(saved);
-      if (u.balance !== undefined) userBal = u.balance;
+      userBal = getUserBalance(u.id);
     } catch(e) {}
   }
 
@@ -851,7 +884,7 @@ function initDashboardNavigation() {
     });
   }
 
-  // Confirm Deposit from Dashboard Finanzas
+  // Confirm Deposit from Dashboard Finanzas (Strictly isolated to active account)
   const confirmDepositBtn = document.getElementById('btnDashConfirmDeposit');
   if (confirmDepositBtn) {
     confirmDepositBtn.addEventListener('click', () => {
@@ -863,15 +896,16 @@ function initDashboardNavigation() {
         if (saved) {
           try {
             const u = JSON.parse(saved);
-            bal = (u.balance || 25.0) + 10.0;
+            bal = getUserBalance(u.id) + 10.0;
+            setUserBalance(u.id, bal);
             u.balance = bal;
-            localStorage.setItem('wtokens_user_session', JSON.stringify(u));
             renderAuthUser(u);
+            updateAllCurrencyDisplays();
           } catch(e) {}
         }
         confirmDepositBtn.disabled = false;
         confirmDepositBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Confirmar Recarga</span>';
-        alert(`🎉 ¡Recarga de $10.00 USD aprobada y acreditada en tu billetera!\nNuevo saldo: ${bal.toFixed(2)} WT.`);
+        alert(`🎉 ¡Recarga de $10.00 USD aprobada y acreditada en tu cuenta!\nNuevo saldo exclusivo: ${bal.toFixed(2)} WT.\n\n🔒 Nota: Tu saldo es personal y no puede transferirse a otros usuarios.`);
       }, 1500);
     });
   }
@@ -923,12 +957,12 @@ function initDashboardNavigation() {
       if (saved) {
         try {
           userObj = JSON.parse(saved);
-          currentBal = userObj.balance !== undefined ? userObj.balance : 25.0;
+          currentBal = getUserBalance(userObj.id);
         } catch(e) {}
       }
 
       if (amount > currentBal) {
-        alert('Saldo insuficiente en tu billetera.');
+        alert('Saldo insuficiente en tu cuenta personal para retirar ese monto.');
         return;
       }
       if (!dest) {
@@ -939,12 +973,14 @@ function initDashboardNavigation() {
       confirmWithdrawBtn.disabled = true;
       confirmWithdrawBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Solicitando retiro...';
       setTimeout(() => {
-        userObj.balance = currentBal - amount;
-        localStorage.setItem('wtokens_user_session', JSON.stringify(userObj));
+        const newBal = currentBal - amount;
+        setUserBalance(userObj.id, newBal);
+        userObj.balance = newBal;
         renderAuthUser(userObj);
+        updateAllCurrencyDisplays();
         confirmWithdrawBtn.disabled = false;
         confirmWithdrawBtn.innerHTML = '<i class="fa-solid fa-money-bill-transfer"></i> <span>Solicitar Retiro de Fondos</span>';
-        alert(`✅ ¡Retiro de $${amount.toFixed(2)} USD solicitado con éxito hacia ${dest}!\nEl staff procesará la transferencia en menos de 15 minutos.`);
+        alert(`✅ ¡Retiro de $${amount.toFixed(2)} USD solicitado con éxito hacia ${dest}!\nEl staff procesará la transferencia a tu cuenta personal en menos de 15 minutos.`);
       }, 1200);
     });
   }
@@ -1454,6 +1490,7 @@ function checkDiscordOAuthCallback() {
     if (saved) {
       try {
         const u = JSON.parse(saved);
+        u.balance = getUserBalance(u.id);
         renderAuthUser(u);
         const savedCountry = localStorage.getItem('wtokens_user_country') || u.country || 'PER';
         applyUserCountry(savedCountry, false);
@@ -1481,56 +1518,39 @@ function checkDiscordOAuthCallback() {
           ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
           : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-        const existingNick = localStorage.getItem('wtokens_epic_nick');
-        const existingSession = localStorage.getItem('wtokens_user_session');
-        let prevUser = {};
-        if (existingSession) {
-          try { prevUser = JSON.parse(existingSession); } catch (e) {}
-        }
-
-        const savedCountry = localStorage.getItem('wtokens_user_country') || prevUser.country;
-
-        const userObj = {
+        const pendingUser = {
           id: discordUser.id,
           username: discordUser.global_name || discordUser.username,
           discordTag: discordUser.username,
-          avatar: avatarUrl,
-          epicNickname: existingNick || prevUser.epicNickname || '',
-          country: savedCountry || '',
-          balance: prevUser.balance !== undefined ? prevUser.balance : 25.0
+          avatar: avatarUrl
         };
 
-        localStorage.setItem('wtokens_user_session', JSON.stringify(userObj));
-        renderAuthUser(userObj);
-
-        // Open dashboard directly upon login
-        showDashboard(true);
-        if (typeof window.switchDashTab === 'function') {
-          window.switchDashTab('perfil');
-        }
-
-        // Post-Discord onboarding: Ask country FIRST to filter payment methods!
-        if (!savedCountry) {
-          if (!userObj.epicNickname) {
-            localStorage.setItem('wtokens_pending_epic_prompt', 'true');
+        const existingEpic = localStorage.getItem(`wtokens_epic_${discordUser.id}`) || localStorage.getItem('wtokens_epic_nick');
+        if (existingEpic) {
+          const userCountry = localStorage.getItem('wtokens_user_country') || 'PER';
+          const bal = getUserBalance(discordUser.id);
+          const userObj = {
+            id: discordUser.id,
+            username: pendingUser.username,
+            discordTag: pendingUser.discordTag,
+            avatar: avatarUrl,
+            epicNickname: existingEpic,
+            epicAccountId: 'epic_' + discordUser.id.substring(0, 8),
+            epicVerified: true,
+            country: userCountry,
+            balance: bal
+          };
+          localStorage.setItem('wtokens_user_session', JSON.stringify(userObj));
+          renderAuthUser(userObj);
+          updateAllCurrencyDisplays();
+          showDashboard(true);
+          if (typeof window.switchDashTab === 'function') {
+            window.switchDashTab('perfil');
           }
-          setTimeout(() => {
-            if (typeof window.openCountryModal === 'function') {
-              window.openCountryModal();
-            }
-          }, 450);
+          alert(`¡Sesión iniciada con éxito! Bienvenido @${userObj.username} a tu panel de WTOKENS.\n\n💰 Saldo exclusivo: ${bal.toFixed(2)} WT (Intransferible).`);
         } else {
-          applyUserCountry(savedCountry);
-          // If country was already chosen, check Epic Games link
-          if (!userObj.epicNickname) {
-            setTimeout(() => {
-              if (typeof window.openEpicModal === 'function') {
-                window.openEpicModal();
-              }
-            }, 450);
-          } else {
-            alert(`¡Sesión iniciada con éxito! Bienvenido @${userObj.username} a tu panel de WTOKENS.`);
-          }
+          // Advance directly to Step 2 to link Epic Games account!
+          openTwoStepAuthModal(2, pendingUser);
         }
       }
     })
@@ -1577,7 +1597,8 @@ function renderAuthUser(user) {
   const dashLobbyLeaderAvatar = document.getElementById('dashLobbyLeaderAvatar');
   const dashLobbyLeaderName = document.getElementById('dashLobbyLeaderName');
 
-  const currentBal = user.balance !== undefined ? user.balance : 25.0;
+  const currentBal = user.id ? getUserBalance(user.id) : (user.balance !== undefined ? user.balance : 25.0);
+  user.balance = currentBal;
 
   if (dashUserAvatar && user.avatar) dashUserAvatar.src = user.avatar;
   if (dashUsername) dashUsername.textContent = user.username;
@@ -1694,21 +1715,124 @@ function logoutUser() {
   alert('Sesión de Discord cerrada correctamente.');
 }
 
-// Discord Auth Buttons (Exclusively OAuth2, no manual inputs)
-function initDiscordAuth() {
-  const openBtn = document.getElementById('btnOpenDiscordLogin');
-  const mobileOpenBtn = document.getElementById('mobileDiscordBtn');
-  const logoutBtn = document.getElementById('btnUserLogout');
+// Two-Step Authentication Controller (Step 1: Discord -> Step 2: Epic Games)
+let pendingAuthDiscordUser = null;
 
-  if (openBtn) {
-    openBtn.addEventListener('click', (e) => {
+function openTwoStepAuthModal(step = 1, discordUser = null) {
+  const modal = document.getElementById('twoStepAuthModal');
+  if (!modal) return;
+
+  const step1Container = document.getElementById('authStep1Container');
+  const step2Container = document.getElementById('authStep2Container');
+  const step1Indicator = document.getElementById('step1Indicator');
+  const step2Indicator = document.getElementById('step2Indicator');
+  const modalTitle = document.getElementById('twoStepModalTitle');
+  const modalSubtitle = document.getElementById('twoStepModalSubtitle');
+
+  if (discordUser) {
+    pendingAuthDiscordUser = discordUser;
+  } else if (!pendingAuthDiscordUser) {
+    const saved = localStorage.getItem('wtokens_user_session');
+    if (saved) {
+      try { pendingAuthDiscordUser = JSON.parse(saved); } catch (e) {}
+    }
+  }
+
+  if (step === 1) {
+    if (step1Container) step1Container.classList.remove('hidden');
+    if (step2Container) step2Container.classList.add('hidden');
+
+    if (step1Indicator) {
+      step1Indicator.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/20 border border-blue-500 text-blue-400 text-xs font-mono font-bold transition-all';
+      const numSpan = step1Indicator.querySelector('span:first-child');
+      if (numSpan) numSpan.className = 'w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]';
+    }
+    if (step2Indicator) {
+      step2Indicator.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-xs font-mono font-bold transition-all';
+      const numSpan = step2Indicator.querySelector('span:first-child');
+      if (numSpan) numSpan.className = 'w-5 h-5 rounded-full bg-white/10 text-slate-400 flex items-center justify-center text-[10px]';
+    }
+
+    if (modalTitle) modalTitle.textContent = 'Registro de Jugador · Paso 1';
+    if (modalSubtitle) modalSubtitle.textContent = 'Conecta tu cuenta de Discord para iniciar tu identidad competitiva.';
+  } else {
+    // Step 2: Epic Games linking
+    if (step1Container) step1Container.classList.add('hidden');
+    if (step2Container) step2Container.classList.remove('hidden');
+
+    if (step1Indicator) {
+      step1Indicator.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold transition-all';
+      const numSpan = step1Indicator.querySelector('span:first-child');
+      if (numSpan) numSpan.className = 'w-5 h-5 rounded-full bg-emerald-500 text-obsidian-950 flex items-center justify-center text-[10px] font-black';
+    }
+    if (step2Indicator) {
+      step2Indicator.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/20 border border-blue-500 text-blue-400 text-xs font-mono font-bold transition-all';
+      const numSpan = step2Indicator.querySelector('span:first-child');
+      if (numSpan) numSpan.className = 'w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]';
+    }
+
+    if (modalTitle) modalTitle.textContent = 'Registro de Jugador · Paso 2';
+    if (modalSubtitle) modalSubtitle.textContent = 'Vincula tu cuenta de Epic Games para registrar partidas y activar tu saldo exclusivo.';
+
+    // Populate Discord info in step 2
+    const avatarEl = document.getElementById('authStep2DiscordAvatar');
+    const nameEl = document.getElementById('authStep2DiscordName');
+    const inputNick = document.getElementById('inputTwoStepEpicNick');
+    const selectCountry = document.getElementById('selectTwoStepCountry');
+
+    if (pendingAuthDiscordUser) {
+      if (avatarEl && pendingAuthDiscordUser.avatar) avatarEl.src = pendingAuthDiscordUser.avatar;
+      if (nameEl) nameEl.textContent = `@${pendingAuthDiscordUser.username || pendingAuthDiscordUser.discordTag}`;
+      if (inputNick && pendingAuthDiscordUser.epicNickname) {
+        inputNick.value = pendingAuthDiscordUser.epicNickname;
+      }
+      if (selectCountry && pendingAuthDiscordUser.country) {
+        selectCountry.value = pendingAuthDiscordUser.country;
+      }
+    }
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeTwoStepAuthModal() {
+  const modal = document.getElementById('twoStepAuthModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+window.openTwoStepAuthModal = openTwoStepAuthModal;
+window.closeTwoStepAuthModal = closeTwoStepAuthModal;
+window.openEpicModal = () => openTwoStepAuthModal(2);
+
+function initTwoStepAuthModal() {
+  const modal = document.getElementById('twoStepAuthModal');
+  const closeBtn = document.getElementById('closeTwoStepAuthBtn');
+  const openLoginBtn = document.getElementById('btnOpenDiscordLogin');
+  const mobileDiscordBtn = document.getElementById('mobileDiscordBtn');
+  const logoutBtn = document.getElementById('btnUserLogout');
+  const profilePill = document.getElementById('userProfilePill');
+
+  const btnStep1Discord = document.getElementById('btnAuthStep1Discord');
+  const btnDemo1 = document.getElementById('btnDemoUser1');
+  const btnDemo2 = document.getElementById('btnDemoUser2');
+  const btnComplete = document.getElementById('btnCompleteTwoStepAuth');
+
+  // Trigger login modal
+  if (openLoginBtn) {
+    openLoginBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      redirectToDiscordOAuth();
+      const saved = localStorage.getItem('wtokens_user_session');
+      if (saved) {
+        showDashboard(true);
+        if (typeof window.switchDashTab === 'function') window.switchDashTab('perfil');
+      } else {
+        openTwoStepAuthModal(1);
+      }
     });
   }
 
-  if (mobileOpenBtn) {
-    mobileOpenBtn.addEventListener('click', (e) => {
+  if (mobileDiscordBtn) {
+    mobileDiscordBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const saved = localStorage.getItem('wtokens_user_session');
       if (saved) {
@@ -1716,8 +1840,15 @@ function initDiscordAuth() {
         const mobileMenu = document.getElementById('mobileMenu');
         if (mobileMenu) mobileMenu.classList.add('hidden');
       } else {
-        redirectToDiscordOAuth();
+        openTwoStepAuthModal(1);
       }
+    });
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeTwoStepAuthModal);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeTwoStepAuthModal();
     });
   }
 
@@ -1727,61 +1858,63 @@ function initDiscordAuth() {
       logoutUser();
     });
   }
-}
 
-// Epic Games Nickname & Country Link Modal (Shown after Discord login)
-function initEpicLinkModal() {
-  const modal = document.getElementById('epicLinkModal');
-  const closeBtn = document.getElementById('closeEpicModalBtn');
-  const saveBtn = document.getElementById('btnSaveEpicLink');
-  const inputEpicNick = document.getElementById('inputEpicNick');
-  const selectCountry = document.getElementById('selectCountryModal');
-  const profilePill = document.getElementById('userProfilePill');
-
-  if (!modal) return;
-
-  function openEpicModal() {
-    const saved = localStorage.getItem('wtokens_user_session');
-    if (saved) {
-      try {
-        const u = JSON.parse(saved);
-        const notice = document.getElementById('epicModalUserNotice');
-        if (notice) {
-          notice.innerHTML = `Sesión de Discord: <strong class="text-wcyan-400">@${escapeHTML(u.username)}</strong>.<br>Ingresa tu Nickname exacto de Epic Games para completar tu perfil competitivo.`;
-        }
-        if (inputEpicNick && u.epicNickname) {
-          inputEpicNick.value = u.epicNickname;
-        }
-        if (selectCountry && u.country) {
-          selectCountry.value = u.country;
-        }
-      } catch (e) {}
-    }
-    modal.classList.remove('hidden');
-  }
-
-  function closeEpicModal() {
-    modal.classList.add('hidden');
-  }
-
-  if (closeBtn) closeBtn.addEventListener('click', closeEpicModal);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeEpicModal();
-  });
-
-  // Clicking profile pill allows viewing or editing Epic Nickname
   if (profilePill) {
     profilePill.addEventListener('click', (e) => {
       if (e.target.closest('#btnUserLogout')) return;
-      openEpicModal();
+      showDashboard(true);
+      if (typeof window.switchDashTab === 'function') window.switchDashTab('perfil');
     });
     profilePill.style.cursor = 'pointer';
-    profilePill.title = 'Haz clic para vincular o actualizar tu Nick de Epic Games';
   }
 
-  if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      const epicNick = inputEpicNick ? inputEpicNick.value.trim() : '';
+  // Step 1: Discord OAuth button
+  if (btnStep1Discord) {
+    btnStep1Discord.addEventListener('click', () => {
+      redirectToDiscordOAuth();
+    });
+  }
+
+  // Step 1: Demo User 1 (@K1ng_Fortnite)
+  if (btnDemo1) {
+    btnDemo1.addEventListener('click', () => {
+      pendingAuthDiscordUser = {
+        id: 'user_k1ng_101',
+        username: 'K1ng_Fortnite',
+        discordTag: 'k1ng_fortnite',
+        avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80'
+      };
+      const inputNick = document.getElementById('inputTwoStepEpicNick');
+      const selectCountry = document.getElementById('selectTwoStepCountry');
+      if (inputNick) inputNick.value = localStorage.getItem('wtokens_epic_user_k1ng_101') || 'K1ngFnatic_24';
+      if (selectCountry) selectCountry.value = 'ARS';
+      openTwoStepAuthModal(2, pendingAuthDiscordUser);
+    });
+  }
+
+  // Step 1: Demo User 2 (@Vortex_BR)
+  if (btnDemo2) {
+    btnDemo2.addEventListener('click', () => {
+      pendingAuthDiscordUser = {
+        id: 'user_vortex_202',
+        username: 'Vortex_BR',
+        discordTag: 'vortex_br',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+      };
+      const inputNick = document.getElementById('inputTwoStepEpicNick');
+      const selectCountry = document.getElementById('selectTwoStepCountry');
+      if (inputNick) inputNick.value = localStorage.getItem('wtokens_epic_user_vortex_202') || 'Vortex_Sniper';
+      if (selectCountry) selectCountry.value = 'CLP';
+      openTwoStepAuthModal(2, pendingAuthDiscordUser);
+    });
+  }
+
+  // Step 2: Complete registration with Epic Games Link
+  if (btnComplete) {
+    btnComplete.addEventListener('click', () => {
+      const inputNick = document.getElementById('inputTwoStepEpicNick');
+      const selectCountry = document.getElementById('selectTwoStepCountry');
+      const epicNick = inputNick ? inputNick.value.trim() : '';
       const chosenCountry = selectCountry ? selectCountry.value : currentCurrency;
 
       if (!epicNick) {
@@ -1789,16 +1922,34 @@ function initEpicLinkModal() {
         return;
       }
 
-      const saved = localStorage.getItem('wtokens_user_session');
-      let userObj = {};
-      if (saved) {
-        try { userObj = JSON.parse(saved); } catch (e) {}
+      if (!pendingAuthDiscordUser) {
+        pendingAuthDiscordUser = {
+          id: 'user_' + Math.random().toString(36).substring(2, 9),
+          username: 'FortnitePlayer',
+          discordTag: 'fortnite_player',
+          avatar: 'assets/logo.png'
+        };
       }
 
-      userObj.epicNickname = epicNick;
-      userObj.country = chosenCountry;
+      const userId = pendingAuthDiscordUser.id;
+      const userBalance = getUserBalance(userId);
 
+      const userObj = {
+        id: userId,
+        username: pendingAuthDiscordUser.username,
+        discordTag: pendingAuthDiscordUser.discordTag || pendingAuthDiscordUser.username,
+        avatar: pendingAuthDiscordUser.avatar,
+        epicNickname: epicNick,
+        epicAccountId: 'epic_' + userId.replace('user_', ''),
+        epicVerified: true,
+        country: chosenCountry,
+        balance: userBalance
+      };
+
+      localStorage.setItem(`wtokens_epic_${userId}`, epicNick);
       localStorage.setItem('wtokens_epic_nick', epicNick);
+      localStorage.setItem('wtokens_epic_id', userObj.epicAccountId);
+      localStorage.setItem('wtokens_user_country', chosenCountry);
       localStorage.setItem('wtokens_user_session', JSON.stringify(userObj));
 
       // Update currency across app
@@ -1807,24 +1958,24 @@ function initEpicLinkModal() {
       const currencySelectorMobile = document.getElementById('currencySelectorMobile');
       if (currencySelector) currencySelector.value = chosenCountry;
       if (currencySelectorMobile) currencySelectorMobile.value = chosenCountry;
-      updateAllCurrencyDisplays();
 
       renderAuthUser(userObj);
-      closeEpicModal();
+      updateAllCurrencyDisplays();
+      closeTwoStepAuthModal();
 
-      alert(`✅ ¡Cuenta Vinculada con Éxito!\n\nDiscord: @${userObj.username || 'Usuario'}\nEpic Games: ${epicNick}\nMoneda de Saldo: ${CURRENCIES[chosenCountry].name}\n\n¡Ya estás listo para competir en la Arena WTOKENS!`);
+      // Open User Panel
+      showDashboard(true);
+      if (typeof window.switchDashTab === 'function') {
+        window.switchDashTab('perfil');
+      }
+
+      alert(`🎉 ¡Registro en 2 Pasos Completado con Éxito!\n\n` +
+            `1️⃣ Discord: @${userObj.username}\n` +
+            `2️⃣ Epic Games: ${userObj.epicNickname} (Verificado)\n` +
+            `💰 Saldo personal: ${userBalance.toFixed(2)} WT (~${formatMoney(userBalance, chosenCountry)})\n\n` +
+            `🔒 Saldo propio e intransferible entre cuentas.`);
     });
   }
-
-  // Direct Epic Games 1-Click Button in Modal
-  const modalDirectEpicLogin = document.getElementById('btnModalDirectEpicLogin');
-  if (modalDirectEpicLogin) {
-    modalDirectEpicLogin.addEventListener('click', () => {
-      triggerEpicOAuthFlow();
-    });
-  }
-
-  window.openEpicModal = openEpicModal;
 }
 
 // 1-Click Epic Games Official OAuth Flow (Matches BR Tokens)
@@ -1999,22 +2150,20 @@ function initWalletModal() {
   const btnConfirmWithdraw = document.getElementById('btnConfirmWithdraw');
 
   let currentWalletTokens = 25.0;
-  const savedSession = localStorage.getItem('wtokens_user_session');
-  if (savedSession) {
-    try {
-      const u = JSON.parse(savedSession);
-      if (u.balance !== undefined) currentWalletTokens = u.balance;
-    } catch(e) {}
-  }
-
-  function updateWalletDisplays() {
+  function getActiveUid() {
     const saved = localStorage.getItem('wtokens_user_session');
     if (saved) {
       try {
         const u = JSON.parse(saved);
-        if (u.balance !== undefined) currentWalletTokens = u.balance;
+        return u.id || 'guest';
       } catch(e) {}
     }
+    return 'guest';
+  }
+
+  function updateWalletDisplays() {
+    const uid = getActiveUid();
+    currentWalletTokens = getUserBalance(uid);
     const tokensDisplay = document.getElementById('walletModalTokens');
     const localDisplay = document.getElementById('walletModalLocal');
     const navBalance = document.getElementById('navWalletBalance');
@@ -2194,21 +2343,18 @@ function initWalletModal() {
       btnConfirmDeposit.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Validando comprobante...';
 
       setTimeout(() => {
-        currentWalletTokens += 10.0;
-        const saved = localStorage.getItem('wtokens_user_session');
-        if (saved) {
-          try {
-            const u = JSON.parse(saved);
-            u.balance = currentWalletTokens;
-            localStorage.setItem('wtokens_user_session', JSON.stringify(u));
-          } catch(e) {}
-        }
+        const uid = getActiveUid();
+        const newBal = getUserBalance(uid) + 10.0;
+        setUserBalance(uid, newBal);
+        currentWalletTokens = newBal;
+
         updateWalletDisplays();
+        updateAllCurrencyDisplays();
         btnConfirmDeposit.disabled = false;
         btnConfirmDeposit.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> ¡Recarga Confirmada (+10 WT)!';
         setTimeout(() => {
           btnConfirmDeposit.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Confirmar Recarga</span>';
-          alert('¡Tu recarga ha sido acreditada en tu billetera de WTOKENS! Saldo actual: ' + currentWalletTokens.toFixed(2) + ' WT.');
+          alert(`¡Tu recarga ha sido acreditada en tu cuenta personal!\nNuevo saldo exclusivo: ${newBal.toFixed(2)} WT.\n\n🔒 Nota: Tu saldo es propio e intransferible entre cuentas.`);
         }, 1500);
       }, 1500);
     });
@@ -2219,13 +2365,15 @@ function initWalletModal() {
       const amount = parseFloat(withdrawAmountInput ? withdrawAmountInput.value : 0);
       const dest = document.getElementById('withdrawDestination');
       const destination = dest ? dest.value.trim() : '';
+      const uid = getActiveUid();
+      currentWalletTokens = getUserBalance(uid);
 
       if (amount < 5) {
         alert('El monto mínimo de retiro es de $5.00 USD Tokens.');
         return;
       }
       if (amount > currentWalletTokens) {
-        alert('Saldo insuficiente en tu billetera para retirar ese monto.');
+        alert('Saldo insuficiente en tu cuenta personal para retirar ese monto.');
         return;
       }
       if (!destination) {
@@ -2237,22 +2385,18 @@ function initWalletModal() {
       btnConfirmWithdraw.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Procesando solicitud...';
 
       setTimeout(() => {
-        currentWalletTokens -= amount;
-        const saved = localStorage.getItem('wtokens_user_session');
-        if (saved) {
-          try {
-            const u = JSON.parse(saved);
-            u.balance = currentWalletTokens;
-            localStorage.setItem('wtokens_user_session', JSON.stringify(u));
-          } catch(e) {}
-        }
+        const newBal = currentWalletTokens - amount;
+        setUserBalance(uid, newBal);
+        currentWalletTokens = newBal;
+
         updateWalletDisplays();
+        updateAllCurrencyDisplays();
         btnConfirmWithdraw.disabled = false;
         btnConfirmWithdraw.innerHTML = '¡Solicitud Enviada!';
         setTimeout(() => {
           btnConfirmWithdraw.innerHTML = '<i class="fa-solid fa-money-bill-transfer"></i> <span>Solicitar Retiro</span>';
           close();
-          alert(`¡Retiro de $${amount.toFixed(2)} USD solicitado con éxito hacia ${destination}! El staff liberará la transferencia en menos de 15 minutos.`);
+          alert(`¡Retiro de $${amount.toFixed(2)} USD solicitado con éxito hacia ${destination}! El staff liberará la transferencia a tu cuenta personal en menos de 15 minutos.`);
         }, 1200);
       }, 1500);
     });
