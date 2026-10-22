@@ -38,6 +38,8 @@ import {
 import { Dialog } from "./components/Dialog";
 import { Landing } from "./components/Landing";
 import { UserAvatar } from "./components/UserAvatar";
+import { CurrencyOptions } from "./components/CurrencyOptions";
+import { initialCurrency, regionalCurrencies } from "./lib/currencies";
 import { api, ApiError, friendlyError } from "./lib/api";
 import type {
   Asset,
@@ -134,13 +136,14 @@ export function App() {
   const [matchLookup, setMatchLookup] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
-  const [asset, setAsset] = useState("USD");
+  const [asset, setAsset] = useState(initialCurrency);
   const [createMode, setCreateMode] = useState("BOX_FIGHT");
-  const [amount, setAmount] = useState("5.00");
+  const [amount, setAmount] = useState("5");
   const [disputeReason, setDisputeReason] = useState("");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
     () =>
-      new URLSearchParams(window.location.search).get("auth_error") === "discord"
+      new URLSearchParams(window.location.search).get("auth_error") ===
+      "discord"
         ? {
             text: "No se pudo completar el acceso con Discord. Vuelve a intentarlo.",
             error: true,
@@ -258,7 +261,17 @@ export function App() {
     keys.current.set(signature, value);
     return value;
   }
-  const exponent = assets.find((item) => item.code === asset)?.exponent ?? 2;
+  function selectCurrency(code: string) {
+    if (!regionalCurrencies.some((currency) => currency.code === code)) return;
+    setAsset(code);
+    try {
+      localStorage.setItem("wtokens.currency", code);
+    } catch {
+      /* Optional preference. */
+    }
+  }
+  const exponent =
+    regionalCurrencies.find((item) => item.code === asset)?.exponent ?? 2;
   const walletAmount = (kind: Balance["kind"]) =>
     balances?.find((item) => item.asset === asset && item.kind === kind)
       ?.amount_minor;
@@ -377,7 +390,7 @@ export function App() {
           assets={assets}
           asset={asset}
           connection={connection}
-          onAssetChange={setAsset}
+          onAssetChange={selectCurrency}
           onEnter={enterPanel}
           onRules={() => openModal("rules")}
         />
@@ -519,15 +532,9 @@ export function App() {
                   <select
                     id="currency"
                     value={asset}
-                    onChange={(event) => setAsset(event.target.value)}
+                    onChange={(event) => selectCurrency(event.target.value)}
                   >
-                    {(assets.length ? assets : [{ code: "USD" }]).map(
-                      (item) => (
-                        <option key={item.code} value={item.code}>
-                          {item.code}
-                        </option>
-                      ),
-                    )}
+                    <CurrencyOptions assets={assets} />
                   </select>
                   <ChevronDown size={13} />
                 </div>

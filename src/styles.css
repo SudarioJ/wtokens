@@ -337,6 +337,7 @@ textarea {
   font-size: 11px;
 }
 .currency-select select {
+  width: clamp(100px, 18vw, 190px);
   appearance: none;
   border: 0;
   background: transparent;

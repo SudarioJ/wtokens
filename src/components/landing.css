@@ -124,6 +124,7 @@
   border-radius: 7px;
 }
 .lp-currency select {
+  width: clamp(108px, 18vw, 190px);
   appearance: none;
   background: transparent;
   border: 0;

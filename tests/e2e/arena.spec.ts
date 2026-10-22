@@ -37,8 +37,13 @@ async function mockApi(
         { code: "REALISTICS", name: "Realistics 1v1" },
       ],
       "/v1/assets": [
-        { code: "USD", exponent: 2, settlement_enabled: true },
         { code: "PEN", exponent: 2, settlement_enabled: false },
+        { code: "ARS", exponent: 2, settlement_enabled: false },
+        { code: "CLP", exponent: 0, settlement_enabled: false },
+        { code: "BOB", exponent: 2, settlement_enabled: false },
+        { code: "PYG", exponent: 0, settlement_enabled: false },
+        { code: "UYU", exponent: 2, settlement_enabled: false },
+        { code: "BRL", exponent: 2, settlement_enabled: false },
       ],
       "/v1/me": {
         id: "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4",
@@ -48,8 +53,8 @@ async function mockApi(
         suspended: false,
       },
       "/v1/wallets": [
-        { asset: "USD", kind: "AVAILABLE", amount_minor: "12345" },
-        { asset: "USD", kind: "RESERVED", amount_minor: "1000" },
+        { asset: "PEN", kind: "AVAILABLE", amount_minor: "12345" },
+        { asset: "PEN", kind: "RESERVED", amount_minor: "1000" },
       ],
       "/v1/wallets/transactions": [],
       "/v1/matches": [],
@@ -71,6 +76,34 @@ async function nav(page: Page, name: string) {
   if (await menu.isVisible()) await menu.click();
   await page.getByRole("button", { name, exact: true }).first().click();
 }
+
+test("regional currency selection persists between landing, reload and panel", async ({
+  page,
+}) => {
+  await mockApi(page, { signedIn: true });
+  await page.goto("/");
+  const selector = page.getByRole("combobox", { name: "Moneda de consulta" });
+  await expect(selector).toHaveValue("PEN");
+  expect(
+    await selector
+      .locator("option")
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value),
+      ),
+  ).toEqual(["PEN", "ARS", "CLP", "BOB", "PYG", "UYU", "BRL"]);
+  await selector.selectOption("BRL");
+  await page.reload();
+  await expect(selector).toHaveValue("BRL");
+  await page.goto("/app");
+  await expect(page.locator("#currency")).toHaveValue("BRL");
+  await page.locator("#currency").selectOption("PYG");
+  await expect(page.locator("#currency")).toHaveValue("PYG");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
 
 test("Discord avatar loads on landing and panel, with initials if the image fails", async ({
   page,

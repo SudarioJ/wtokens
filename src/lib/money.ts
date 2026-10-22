@@ -1,3 +1,5 @@
+import { regionalCurrencies } from "./currencies";
+
 export function formatMoney(
   minor: string,
   currency = "USD",
@@ -15,7 +17,10 @@ export function formatMoney(
     absolute = value < 0n ? -value : value;
   const base = 10n ** BigInt(exponent);
   const fraction = (absolute % base).toString().padStart(exponent, "0");
-  const parts = new Intl.NumberFormat("es-PE", {
+  const locale =
+    regionalCurrencies.find((item) => item.code === currency)?.locale ??
+    "es-PE";
+  const parts = new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: exponent,

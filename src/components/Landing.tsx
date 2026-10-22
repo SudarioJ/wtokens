@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { Asset, User } from "../lib/contracts";
 import { UserAvatar } from "./UserAvatar";
+import { CurrencyOptions } from "./CurrencyOptions";
 import "./landing.css";
 
 const modes = [
@@ -151,11 +152,7 @@ export function Landing({
                 value={asset}
                 onChange={(event) => onAssetChange(event.target.value)}
               >
-                {(assets.length ? assets : [{ code: "USD" }]).map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.code}
-                  </option>
-                ))}
+                <CurrencyOptions assets={assets} />
               </select>
               <ChevronDown size={12} />
             </label>
