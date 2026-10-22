@@ -40,6 +40,7 @@ import { Landing } from "./components/Landing";
 import { UserAvatar } from "./components/UserAvatar";
 import { CurrencyOptions } from "./components/CurrencyOptions";
 import { RankPanel } from "./components/RankPanel";
+import { HeaderRank } from "./components/HeaderRank";
 import { TeamPanel } from "./components/TeamPanel";
 import { MatchHistory } from "./components/MatchHistory";
 
@@ -144,6 +145,7 @@ export function App() {
   );
   const [view, setView] = useState<View>("arena");
   const [teamMode, setTeamMode] = useState("BOX_FIGHT");
+  const [rankMode, setRankMode] = useState("BOX_FIGHT");
   const [modal, setModal] = useState<Modal>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [connection, setConnection] = useState<
@@ -544,9 +546,17 @@ export function App() {
                   </select>
                   <ChevronDown size={13} />
                 </div>
+                {user?.ranking && (
+                  <HeaderRank
+                    ranking={user.ranking}
+                    mode={rankMode}
+                    onOpen={() => navigate("ranks")}
+                  />
+                )}
                 {user ? (
                   <button
                     className="profile-button"
+                    aria-label={`Billetera de ${user.display_name}`}
                     onClick={() => navigate("wallet")}
                   >
                     <UserAvatar user={user} />
@@ -886,7 +896,11 @@ export function App() {
                 />
               )}
               {view === "ranks" && user?.ranking && (
-                <RankPanel ranking={user.ranking} />
+                <RankPanel
+                  ranking={user.ranking}
+                  mode={rankMode}
+                  onModeChange={setRankMode}
+                />
               )}
               {view === "ranks" && !user?.ranking && (
                 <p className="team-copy">

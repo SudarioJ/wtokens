@@ -1,40 +1,20 @@
-import { useState } from "react";
 import { Trophy } from "lucide-react";
 import type { User } from "../lib/contracts";
+import { badgeSource, rankProgress } from "../lib/ranks";
 import "./ranks.css";
-
-const rankArtwork = [
-  "bronze",
-  "silver",
-  "gold",
-  "platinum",
-  "diamond",
-  "elite",
-  "champion",
-  "master",
-  "grandmaster",
-  "legend",
-];
-const badgeSource = (level: number) =>
-  `/assets/ranks/${rankArtwork[level - 1]}.png`;
 
 export function RankPanel({
   ranking,
+  mode,
+  onModeChange,
 }: {
   ranking: NonNullable<User["ranking"]>;
+  mode: string;
+  onModeChange: (mode: string) => void;
 }) {
-  const [mode, setMode] = useState("BOX_FIGHT");
-  const standing =
-    ranking.modes.find((item) => item.mode === mode) ?? ranking.modes[0];
-  if (!standing) return null;
-  const tier = ranking.tiers.find((item) => item.level === standing.level)!;
-  const next = ranking.tiers.find((item) => item.level === standing.level + 1);
-  const progress = next
-    ? Math.round(
-        (100 * (standing.points - tier.minimumPoints)) /
-          (next.minimumPoints - tier.minimumPoints),
-      )
-    : 100;
+  const rank = rankProgress(ranking, mode);
+  if (!rank) return null;
+  const { standing, tier, next, progress, remaining } = rank;
   return (
     <section className="rank-panel" aria-labelledby="rank-title">
       <div className="rank-summary">
@@ -62,7 +42,7 @@ export function RankPanel({
           <select
             aria-label="Modalidad del rango"
             value={standing.mode}
-            onChange={(event) => setMode(event.target.value)}
+            onChange={(event) => onModeChange(event.target.value)}
           >
             {ranking.modes.map((item) => (
               <option key={item.mode} value={item.mode}>
@@ -75,7 +55,7 @@ export function RankPanel({
       <div className="rank-progress-copy">
         <span>
           {next
-            ? `${next.minimumPoints - standing.points} puntos para ${next.name}`
+            ? `${remaining} puntos para ${next.name}`
             : "Llegaste al rango más alto"}
         </span>
         <span>

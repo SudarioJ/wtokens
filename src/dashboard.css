@@ -64,6 +64,109 @@
   background: #0b0e13;
   border-color: #252c36;
 }
+.app-shell .header-rank {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-align: left;
+  border-radius: 6px;
+  padding: 4px;
+}
+.app-shell .header-rank:hover {
+  background: #151c26;
+}
+.app-shell .header-rank img {
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.app-shell .header-rank-copy {
+  display: grid;
+  gap: 4px;
+  width: 146px;
+}
+.app-shell .header-rank-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.app-shell .header-rank-title strong {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e6edf5;
+}
+.app-shell .header-rank-title small,
+.app-shell .header-rank-remaining {
+  font-size: 9px;
+  color: #a4afbe;
+}
+.app-shell .header-rank progress {
+  display: block;
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  height: 3px;
+  background: #293441;
+}
+.app-shell .header-rank progress::-webkit-progress-bar {
+  background: #293441;
+}
+.app-shell .header-rank progress::-webkit-progress-value {
+  background: #50cde5;
+}
+.app-shell .header-rank progress::-moz-progress-bar {
+  background: #50cde5;
+}
+@media (max-width: 1100px) {
+  .app-shell .topbar-actions {
+    gap: 12px;
+  }
+  .app-shell .topbar .profile-button > span:last-child {
+    display: none;
+  }
+  .app-shell .header-rank-copy {
+    width: 125px;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell .topbar-actions {
+    gap: 8px;
+  }
+  .app-shell .topbar .currency-select select {
+    width: 100px;
+    padding-left: 8px;
+  }
+  .app-shell .header-rank-copy {
+    width: 104px;
+  }
+  .app-shell .header-rank-title {
+    gap: 4px;
+  }
+  .app-shell .header-rank-title strong {
+    font-size: 10px;
+  }
+  .app-shell .header-rank-title small {
+    font-size: 8px;
+  }
+  .app-shell .header-rank-title > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .app-shell .header-rank img {
+    width: 30px;
+    height: 30px;
+  }
+  .app-shell .header-rank {
+    gap: 4px;
+    padding: 3px;
+  }
+  .app-shell .header-rank-remaining {
+    font-size: 8px;
+  }
+}
 .app-shell .main {
   max-width: 1470px;
 }

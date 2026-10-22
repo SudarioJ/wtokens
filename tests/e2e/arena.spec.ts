@@ -294,7 +294,10 @@ test("ten ranks show server progress independently for each mode", async ({
 }, info) => {
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
-  await nav(page, "Rangos");
+  const headerRank = page.locator(".header-rank");
+  await expect(headerRank).toContainText("Bronce");
+  await expect(headerRank).toContainText("100 pts para Plata");
+  await headerRank.click();
   const ranks = page.getByRole("region", { name: "Bronce", exact: true });
   await expect(ranks).toBeVisible();
   await expect(ranks.getByRole("listitem")).toHaveCount(10);
@@ -323,7 +326,18 @@ test("ten ranks show server progress independently for each mode", async ({
   await expect(
     page.getByRole("heading", { name: "Oro", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("progressbar")).toHaveAttribute("value", "10");
+  await expect(
+    page.locator(".rank-panel").getByRole("progressbar"),
+  ).toHaveAttribute("value", "10");
+  await expect(headerRank).toContainText("Oro");
+  await expect(headerRank).toContainText("180 pts para Platino");
+  await expect(headerRank.getByRole("progressbar")).toHaveAttribute(
+    "value",
+    "10",
+  );
+  await nav(page, "Arena");
+  await expect(headerRank).toContainText("Build Fight");
+  await headerRank.click();
   await expect(
     page.getByRole("img", { name: "Insignia de Oro", exact: true }),
   ).toBeVisible();
@@ -342,6 +356,9 @@ test("ten ranks show server progress independently for each mode", async ({
     path: `test-results/ranks-${info.project.name}.png`,
     fullPage: true,
   });
+  await page
+    .locator(".topbar")
+    .screenshot({ path: `test-results/header-rank-${info.project.name}.png` });
   await page
     .locator(".rank-panel")
     .screenshot({ path: `test-results/rank-artwork-${info.project.name}.png` });
