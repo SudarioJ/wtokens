@@ -106,6 +106,27 @@ export type Balance = z.infer<typeof balanceSchema>;
 export type Transaction = z.infer<typeof transactionSchema>;
 export type LobbyMatch = z.infer<typeof lobbySchema>;
 export type Match = z.infer<typeof matchSchema>;
+export const matchHistorySchema = z.object({
+  items: z.array(
+    matchSchema
+      .pick({
+        id: true,
+        mode: true,
+        asset: true,
+        stakeMinor: true,
+        state: true,
+      })
+      .extend({
+        createdAt: z.iso.datetime(),
+        opponentName: z.string().max(100).nullable(),
+        outcome: z.enum(["WIN", "LOSS", "NONE"]),
+      }),
+  ),
+  nextCursor: z.string().max(150).nullable(),
+});
+export type MatchHistoryItem = z.infer<
+  typeof matchHistorySchema
+>["items"][number];
 export const teamSchema = z.object({
   id: z.uuid(),
   captainId: z.uuid(),

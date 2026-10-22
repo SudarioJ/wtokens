@@ -8,6 +8,7 @@ import {
   transactionSchema,
   lobbySchema,
   matchSchema,
+  matchHistorySchema,
   currentTeamSchema,
   teamInvitationSchema,
 } from "./contracts";
@@ -145,6 +146,11 @@ export const api = {
     request("/v1/wallets/transactions", z.array(transactionSchema)),
   lobby: () => request("/v1/matches", z.array(lobbySchema)),
   match: (id: string) => request(`/v1/matches/${uuid(id)}`, matchSchema),
+  matchHistory: (cursor?: string) =>
+    request(
+      `/v1/matches/history${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+      matchHistorySchema,
+    ),
   create: (
     data: { mode: string; asset: string; stakeMinor: string },
     key: string,

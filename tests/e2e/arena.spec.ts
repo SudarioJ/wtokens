@@ -60,6 +60,7 @@ async function mockApi(
     }
     const values: Record<string, unknown> = {
       "/v1/teams": { team },
+      "/v1/matches/history": { items: [], nextCursor: null },
       "/v1/platform": {
         discordEnabled: true,
         wageringEnabled: false,
@@ -150,6 +151,88 @@ async function nav(page: Page, name: string) {
   if (await menu.isVisible()) await menu.click();
   await page.getByRole("button", { name, exact: true }).first().click();
 }
+
+test("history lists all pages and opens a selected match without requiring its ID", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  const first = {
+    id: "77d15014-3ebc-4bc8-b80c-a096ad89f8d8",
+    mode: "BOX_FIGHT",
+    asset: "PEN",
+    stakeMinor: "500",
+    state: "SETTLED",
+    createdAt: "2026-10-22T12:00:00Z",
+    opponentName: "Rival uno",
+    outcome: "WIN",
+  };
+  const second = {
+    ...first,
+    id: "c660777e-b0b7-427f-bc9e-a640b88bdd89",
+    state: "CANCELLED",
+    opponentName: null,
+    outcome: "NONE",
+  };
+  await page.route("**/v1/matches/history*", (route) =>
+    route.fulfill({
+      json: new URL(route.request().url()).searchParams.has("cursor")
+        ? { items: [second], nextCursor: null }
+        : { items: [first], nextCursor: "next-page" },
+    }),
+  );
+  await page.route(`**/v1/matches/${first.id}`, (route) =>
+    route.fulfill({
+      json: {
+        ...first,
+        creatorId: "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4",
+        opponentId: "2b7a32cf-0cd9-4827-87c0-25162a0ba9de",
+        feeBps: 500,
+        rulesVersion: "draft-v1",
+        winnerId: "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4",
+        expiresAt: "2026-10-22T13:00:00Z",
+      },
+    }),
+  );
+  await page.goto("/app");
+  await nav(page, "Historial");
+  await expect(
+    page.getByRole("heading", { name: "Historial", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Victoria", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Cargar más", exact: true }).click();
+  await expect(
+    page.getByRole("cell", { name: "Cancelada", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("2 partidas cargadas · Historial completo"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cargar más", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: /Ver detalle de Box Fight/ })
+    .first()
+    .click();
+  await expect(page.locator(".match-detail")).toContainText(first.id);
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `test-results/history-${info.project.name}.png`,
+    fullPage: true,
+  });
+});
 
 test("captain can form a 4v4 team, generate an invitation and close it", async ({
   page,

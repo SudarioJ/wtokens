@@ -18,6 +18,7 @@ import {
   Crosshair,
   Gamepad2,
   Headphones,
+  History,
   LayoutGrid,
   LoaderCircle,
   LogOut,
@@ -40,6 +41,7 @@ import { UserAvatar } from "./components/UserAvatar";
 import { CurrencyOptions } from "./components/CurrencyOptions";
 import { RankPanel } from "./components/RankPanel";
 import { TeamPanel } from "./components/TeamPanel";
+import { MatchHistory } from "./components/MatchHistory";
 
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
 import { discordCommunityUrl } from "./lib/community";
@@ -62,7 +64,7 @@ const viewLabels: Record<View, string> = {
   teams: "Equipo",
   ranks: "Rangos",
   wallet: "Billetera",
-  matches: "Mi partida",
+  matches: "Historial",
   help: "Ayuda",
 };
 const viewDescriptions: Record<View, string> = {
@@ -70,7 +72,7 @@ const viewDescriptions: Record<View, string> = {
   teams: "Reúne a tus compañeros y gestiona tu formación.",
   ranks: "Tu progreso en cada modalidad.",
   wallet: "Saldo y movimientos de tu cuenta.",
-  matches: "Consulta el estado y el resultado de tus duelos.",
+  matches: "Todas tus partidas y sus resultados.",
   help: "Reglas, cuenta y soporte.",
 };
 type Modal = "login" | "create" | "payments" | "rules" | "dispute" | null;
@@ -131,7 +133,7 @@ const modeName = (code: string) =>
 const navigation = [
   { view: "arena" as const, name: "Arena", icon: LayoutGrid },
   { view: "teams" as const, name: "Equipo", icon: Users },
-  { view: "matches" as const, name: "Mi partida", icon: Swords },
+  { view: "matches" as const, name: "Historial", icon: History },
   { view: "ranks" as const, name: "Rangos", icon: Trophy },
   { view: "wallet" as const, name: "Billetera", icon: Wallet },
 ];
@@ -155,7 +157,12 @@ export function App() {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
   const [lobby, setLobby] = useState<LobbyMatch[] | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [matchLookup, setMatchLookup] = useState("");
+  const detailRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selectedMatch && view === "matches")
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedMatch?.id, view]);
+
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [asset, setAsset] = useState(initialCurrency);
@@ -1024,37 +1031,18 @@ export function App() {
                     />
                   ) : (
                     <>
-                      <form
-                        className="lookup-form"
-                        onSubmit={(event) => {
-                          event.preventDefault();
+                      <MatchHistory
+                        assets={assets}
+                        refreshKey={refreshVersion.current}
+                        detailBusy={busy}
+                        onSelect={(id) => {
                           void run(async () => {
-                            const match = await api.match(matchLookup.trim());
-                            setSelectedMatch(match);
+                            setSelectedMatch(await api.match(id));
                           });
                         }}
-                      >
-                        <label htmlFor="match-id">
-                          Consultar partida por su ID
-                        </label>
-                        <div>
-                          <input
-                            id="match-id"
-                            value={matchLookup}
-                            onChange={(event) =>
-                              setMatchLookup(event.target.value)
-                            }
-                            placeholder="ID de la partida"
-                            required
-                          />
-                          <button className="button secondary" disabled={busy}>
-                            Consultar
-                            <ArrowRight size={15} />
-                          </button>
-                        </div>
-                      </form>
+                      />
                       {selectedMatch ? (
-                        <div className="match-detail">
+                        <div className="match-detail" ref={detailRef}>
                           <div className="section-heading">
                             <h2>{modeName(selectedMatch.mode)} · 1v1</h2>
                             <span className="status-chip">
@@ -1240,23 +1228,7 @@ export function App() {
                             )}
                           </div>
                         </div>
-                      ) : (
-                        <div className="empty-state">
-                          <Swords size={32} />
-                          <h3>Cada gran duelo tiene un comienzo.</h3>
-                          <p>
-                            Crea un desafío o consulta una partida con su
-                            identificador.
-                          </p>
-                          <button
-                            className="button primary"
-                            onClick={() => challenge()}
-                          >
-                            Explorar desafíos
-                            <ArrowRight size={16} />
-                          </button>
-                        </div>
-                      )}
+                      ) : null}{" "}
                     </>
                   )}
                 </section>
