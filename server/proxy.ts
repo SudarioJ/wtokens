@@ -55,7 +55,8 @@ export function proxyRequest(
       path: req.url ?? "/",
       method: req.method ?? "GET",
       headers: { ...headers(req.headers), host: target.host },
-      timeout: 8000,
+      // Allow the scale-to-zero Java service to start before failing the request.
+      timeout: 30000,
     },
     (response) => {
       for (const [name, value] of Object.entries(headers(response.headers))) {

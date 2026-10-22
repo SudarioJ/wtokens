@@ -57,7 +57,7 @@ async function request<T>(
   const response = await fetch(path, {
     credentials: "same-origin",
     cache: "no-store",
-    signal: AbortSignal.timeout(10000),
+    signal: AbortSignal.timeout(35000),
     ...init,
     headers: { Accept: "application/json", ...init?.headers },
   });
@@ -138,7 +138,7 @@ export const api = {
       method: "POST",
       credentials: "same-origin",
       headers: { [csrf.headerName]: csrf.token },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(35000),
     });
     if (!response.ok) throw new ApiError(response.status, "LOGOUT_FAILED");
   },
