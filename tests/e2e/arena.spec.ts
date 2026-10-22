@@ -51,6 +51,44 @@ async function mockApi(
         avatar_url: options.avatar ?? null,
         eligible: false,
         suspended: false,
+        ranking: {
+          tiers: [
+            ["Bronce", 0],
+            ["Plata", 100],
+            ["Oro", 250],
+            ["Platino", 450],
+            ["Diamante", 700],
+            ["Élite", 1000],
+            ["Campeón", 1350],
+            ["Maestro", 1750],
+            ["Gran Maestro", 2200],
+            ["Leyenda", 2700],
+          ].map(([name, minimumPoints], index) => ({
+            level: index + 1,
+            name,
+            minimumPoints,
+          })),
+          modes: [
+            {
+              mode: "BOX_FIGHT",
+              name: "Box Fight 1v1",
+              points: 0,
+              wins: 0,
+              losses: 0,
+              level: 1,
+              placementGamesRemaining: 10,
+            },
+            {
+              mode: "BUILD_FIGHT",
+              name: "Build Fight 1v1",
+              points: 270,
+              wins: 15,
+              losses: 5,
+              level: 3,
+              placementGamesRemaining: 0,
+            },
+          ],
+        },
       },
       "/v1/wallets": [
         { asset: "PEN", kind: "AVAILABLE", amount_minor: "12345" },
@@ -76,6 +114,39 @@ async function nav(page: Page, name: string) {
   if (await menu.isVisible()) await menu.click();
   await page.getByRole("button", { name, exact: true }).first().click();
 }
+
+test("ten ranks show server progress independently for each mode", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  await page.goto("/app");
+  const ranks = page.getByRole("region", { name: "Bronce", exact: true });
+  await expect(ranks).toBeVisible();
+  await expect(ranks.getByRole("listitem")).toHaveCount(10);
+  await expect(ranks.getByRole("progressbar")).toHaveAttribute("value", "0");
+  await page
+    .getByRole("combobox", { name: "Modalidad del rango", exact: true })
+    .selectOption("BUILD_FIGHT");
+  await expect(
+    page.getByRole("heading", { name: "Oro", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("progressbar")).toHaveAttribute("value", "10");
+  await page
+    .getByRole("combobox", { name: "Modalidad del rango", exact: true })
+    .selectOption("BOX_FIGHT");
+  await expect(
+    page.getByRole("heading", { name: "Bronce", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `test-results/ranks-${info.project.name}.png`,
+    fullPage: true,
+  });
+});
 
 test("regional currency selection persists between landing, reload and panel", async ({
   page,

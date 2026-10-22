@@ -21,6 +21,30 @@ export const userSchema = z.object({
     .optional(),
   eligible: z.boolean(),
   suspended: z.boolean(),
+  ranking: z
+    .object({
+      tiers: z
+        .array(
+          z.object({
+            level: z.number().int().min(1).max(10),
+            name: z.string().max(40),
+            minimumPoints: z.number().int().nonnegative(),
+          }),
+        )
+        .length(10),
+      modes: z.array(
+        z.object({
+          mode: z.string(),
+          name: z.string(),
+          points: z.number().int().nonnegative(),
+          wins: z.number().int().nonnegative(),
+          losses: z.number().int().nonnegative(),
+          level: z.number().int().min(1).max(10),
+          placementGamesRemaining: z.number().int().min(0).max(10),
+        }),
+      ),
+    })
+    .optional(),
 });
 export const modeSchema = z.object({
   code: z.string().regex(/^[A-Z_]+$/),
