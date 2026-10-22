@@ -1,7 +1,7 @@
 import express from "express";
-import { proxyRequest } from "./proxy";
+import { proxyRequest } from "./proxy.js";
 import { resolve } from "node:path";
-import { backendOrigin, isBackendPath, securityHeaders } from "./security";
+import { backendOrigin, isBackendPath, securityHeaders } from "./security.js";
 
 export function createApp(options: {
   backendUrl: string;

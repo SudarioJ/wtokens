@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createApp } from "../server/app";
-import { isBackendPath } from "../server/security";
+import { createApp } from "../server/app.js";
+import { isBackendPath } from "../server/security.js";
 
 // Vercel entry point. BACKEND_URL is read on the server and never shipped to browsers.
 export default function handler(req: IncomingMessage, res: ServerResponse) {
