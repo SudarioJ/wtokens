@@ -7,12 +7,14 @@ import "./teams.css";
 export function TeamPanel({
   userId,
   modes,
+  initialMode = "BOX_FIGHT",
 }: {
   userId: string;
   modes: Mode[];
+  initialMode?: string;
 }) {
   const [team, setTeam] = useState<Team | null>();
-  const [mode, setMode] = useState("BOX_FIGHT");
+  const [mode, setMode] = useState(initialMode);
   const [size, setSize] = useState(2);
   const [code, setCode] = useState("");
   const [invitation, setInvitation] = useState("");
@@ -298,8 +300,7 @@ export function TeamPanel({
         </>
       )}
       <p className="team-footnote">
-        Preparar un equipo no reserva dinero ni inicia un duelo. El matchmaking
-        se incorporará en el siguiente paso.
+        Crear o unirte a un equipo no reserva saldo.
       </p>
     </section>
   );

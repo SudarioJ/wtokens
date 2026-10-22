@@ -1,0 +1,358 @@
+/* Private workspace. Public landing retains its own visual language. */
+.app-shell {
+  background: #0b0e13;
+  color: #e9edf2;
+  --bg: #0b0e13;
+  --panel: #12171f;
+  --line: #29303a;
+  --muted: #a3acba;
+}
+.app-shell h1,
+.app-shell h2,
+.app-shell h3 {
+  font-family: "Inter Variable", sans-serif;
+  letter-spacing: -0.025em;
+}
+.app-shell .sidebar {
+  background: #10141b;
+  border-color: #252c36;
+  padding-top: 26px;
+}
+.app-shell .brand {
+  font-size: 21px;
+  gap: 8px;
+  margin-bottom: 38px;
+  padding: 0 5px;
+}
+.app-shell .brand-logo {
+  width: 39px;
+  height: 39px;
+  filter: none;
+}
+.app-shell .brand small {
+  font-size: 7px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.app-shell .nav-label {
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  color: #8f9aa9;
+}
+.app-shell .nav-item {
+  font-size: 13px;
+  padding: 12px;
+  border-radius: 5px;
+  gap: 11px;
+  color: #aab3c0;
+}
+.app-shell .nav-item.active {
+  color: #e8faff;
+  background: #1a2832;
+}
+.app-shell .nav-item.active:before {
+  display: none;
+}
+.app-shell .nav-item:hover {
+  background: #1c222c;
+}
+.app-shell .sidebar-divider {
+  background: #29303a;
+  margin: 20px 12px;
+}
+.app-shell .topbar {
+  background: #0b0e13;
+  border-color: #252c36;
+}
+.app-shell .main {
+  max-width: 1470px;
+}
+.app-shell .page-heading {
+  margin-bottom: 26px;
+  align-items: center;
+}
+.app-shell .page-heading h1 {
+  font-size: 29px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.app-shell .page-heading p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #9ca8b8;
+  margin-top: 8px;
+}
+.app-shell .connection {
+  border: 0;
+  padding: 0;
+  font-size: 10px;
+  color: #99a8b7;
+  background: transparent;
+}
+.app-shell .button {
+  border-radius: 5px;
+  font-weight: 550;
+}
+.app-shell .button.primary {
+  background: #58d5e8;
+  border-color: #58d5e8;
+  color: #09212c;
+}
+.app-shell .button.primary:hover {
+  background: #90e8f4;
+}
+.app-shell .button.secondary {
+  background: #1a2029;
+  border-color: #35404d;
+  color: #e0e7ee;
+}
+.app-shell .content-columns {
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 30px;
+}
+.app-shell .section-heading {
+  margin-bottom: 18px;
+}
+.app-shell .section-heading h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.app-shell .section-meta {
+  font-size: 11px;
+  color: #97a4b3;
+  letter-spacing: 0;
+}
+.app-shell .filter-tabs > button {
+  font-size: 11px;
+}
+.app-shell .filter-bar {
+  margin-bottom: 18px;
+}
+.app-shell .search {
+  max-width: 180px;
+}
+.app-shell .search input {
+  font-size: 11px;
+}
+.app-shell .mode-grid {
+  gap: 16px;
+}
+.app-shell .mode-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+.app-shell .mode-card:hover {
+  transform: none;
+}
+.app-shell .mode-image-button {
+  height: 152px;
+  border: 1px solid #303946;
+  border-radius: 7px;
+}
+.app-shell .mode-card:hover .mode-image-button > img {
+  transform: none;
+}
+.app-shell .mode-body {
+  padding: 12px 0 0;
+}
+.app-shell .mode-title h3 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.app-shell .mode-title svg {
+  width: 16px;
+  height: 16px;
+  color: #91a4b9;
+}
+.app-shell .mode-body > p {
+  font-size: 12px;
+  margin-top: 5px;
+  min-height: 0;
+  max-width: none;
+  line-height: 1.6;
+  color: #a4afbd;
+}
+.app-shell .image-caption {
+  display: none;
+}
+.app-shell .mode-tag {
+  font-size: 9px;
+  letter-spacing: 0;
+  font-weight: 600;
+  background: #e5edf5;
+  color: #172331;
+}
+.app-shell .mode-footer {
+  margin-top: 10px;
+  padding: 0 0 14px;
+  border-top: 0;
+  border-bottom: 1px solid #29303a;
+  font-size: 10px;
+}
+.app-shell .mode-status {
+  font-size: 10px;
+}
+.app-shell .mode-status.available {
+  color: #9cdbc3;
+}
+.app-shell .wallet-card {
+  background: #12171f;
+  border: 1px solid #303946;
+  border-radius: 7px;
+  padding: 20px;
+}
+.app-shell .card-topline > span:first-child {
+  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 500;
+}
+.app-shell .balance-label {
+  margin-top: 24px;
+  font-size: 12px;
+}
+.app-shell .balance-value {
+  font:
+    600 29px "Inter Variable",
+    sans-serif;
+  line-height: 1.8;
+  letter-spacing: -1px;
+}
+.app-shell .wallet-card .button.primary {
+  background: transparent;
+  color: #d0e6ef;
+  border-color: #35404d;
+}
+.app-shell .wallet-caption {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.app-shell .lobby-section {
+  margin-top: 32px;
+}
+.app-shell .lobby-empty {
+  border: 1px solid #29303a;
+  background: transparent;
+  border-radius: 6px;
+  padding: 22px;
+}
+.app-shell .lobby-empty .empty-graphic {
+  display: none;
+}
+.app-shell .lobby-empty h3 {
+  font-size: 14px;
+}
+.app-shell .lobby-empty p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.app-shell .rank-panel,
+.app-shell .team-panel {
+  background: #12171f;
+  border-color: #303946;
+  border-radius: 7px;
+}
+.app-shell .team-panel h2,
+.app-shell .rank-identity h2 {
+  font-family: "Inter Variable", sans-serif;
+}
+.app-shell .team-panel .eyebrow {
+  display: none;
+}
+.app-shell .team-heading h2 {
+  margin-top: 0;
+}
+.app-shell .panel-page {
+  background: #12171f;
+  border-color: #303946;
+  border-radius: 7px;
+}
+.app-shell .help-intro {
+  text-align: left;
+}
+.app-shell .help-intro > svg {
+  display: none;
+}
+.app-shell .page-footer {
+  margin-top: 40px;
+  padding-top: 22px;
+}
+@media (max-width: 1100px) {
+  .app-shell .content-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-shell .right-rail {
+    max-width: 440px;
+  }
+  .app-shell .mode-image-button {
+    height: 175px;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell .page-heading h1 {
+    font-size: 25px;
+  }
+  .app-shell .mode-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .app-shell .mode-image-button {
+    height: 112px;
+  }
+  .app-shell .mode-title h3 {
+    font-size: 14px;
+  }
+  .app-shell .mode-body > p {
+    font-size: 11px;
+  }
+  .app-shell .mode-footer {
+    align-items: flex-start;
+    gap: 4px;
+    flex-direction: column;
+  }
+  .app-shell .mode-tag {
+    font-size: 8px;
+    left: 8px;
+    top: 8px;
+  }
+  .app-shell .mode-play {
+    width: 23px;
+    height: 23px;
+    right: 8px;
+    top: 8px;
+  }
+  .app-shell .connection {
+    font-size: 9px;
+  }
+  .app-shell .filter-bar {
+    gap: 12px;
+  }
+  .app-shell .lobby-empty {
+    padding: 18px;
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .app-shell .lobby-empty .button {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+  .app-shell .right-rail {
+    max-width: none;
+  }
+}
+
+.app-shell .page-tools {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+@media (max-width: 700px) {
+  .app-shell .page-tools {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+}

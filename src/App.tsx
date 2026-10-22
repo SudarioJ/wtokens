@@ -16,7 +16,6 @@ import {
   CircleHelp,
   CreditCard,
   Crosshair,
-  ExternalLink,
   Gamepad2,
   Headphones,
   LayoutGrid,
@@ -41,6 +40,7 @@ import { UserAvatar } from "./components/UserAvatar";
 import { CurrencyOptions } from "./components/CurrencyOptions";
 import { RankPanel } from "./components/RankPanel";
 import { TeamPanel } from "./components/TeamPanel";
+
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
 import { discordCommunityUrl } from "./lib/community";
 import { api, ApiError, friendlyError } from "./lib/api";
@@ -56,7 +56,23 @@ import type {
 } from "./lib/contracts";
 import { formatMoney, inputToMinor, prize } from "./lib/money";
 
-type View = "arena" | "wallet" | "matches" | "help";
+type View = "arena" | "teams" | "ranks" | "wallet" | "matches" | "help";
+const viewLabels: Record<View, string> = {
+  arena: "Arena",
+  teams: "Equipo",
+  ranks: "Rangos",
+  wallet: "Billetera",
+  matches: "Mi partida",
+  help: "Ayuda",
+};
+const viewDescriptions: Record<View, string> = {
+  arena: "Modalidades y desafíos disponibles.",
+  teams: "Reúne a tus compañeros y gestiona tu formación.",
+  ranks: "Tu progreso en cada modalidad.",
+  wallet: "Saldo y movimientos de tu cuenta.",
+  matches: "Consulta el estado y el resultado de tus duelos.",
+  help: "Reglas, cuenta y soporte.",
+};
 type Modal = "login" | "create" | "payments" | "rules" | "dispute" | null;
 const visualModes = [
   {
@@ -64,7 +80,7 @@ const visualModes = [
     name: "Box Fight",
     label: "REFLEJOS. PRECISIÓN. VICTORIA.",
     image: "boxfight",
-    description: "Cada pared cuenta. Domina el combate a corta distancia.",
+    description: "Combates a corta distancia.",
     difficulty: "Táctico",
     tag: "EL CLÁSICO",
     icon: Crosshair,
@@ -74,7 +90,7 @@ const visualModes = [
     name: "Build Fight",
     label: "CONSTRUYE TU VENTAJA.",
     image: "buildfight",
-    description: "Toma la altura y lleva tus mecánicas al siguiente nivel.",
+    description: "Construcción y combate.",
     difficulty: "Mecánico",
     tag: "1V1",
     icon: Swords,
@@ -84,7 +100,7 @@ const visualModes = [
     name: "Realistics",
     label: "TU INSTINTO, A PRUEBA.",
     image: "realistic",
-    description: "Situaciones reales. Decisiones rápidas. Tu mejor versión.",
+    description: "Escenarios de combate.",
     difficulty: "Estratégico",
     tag: "1V1",
     icon: Target,
@@ -94,7 +110,7 @@ const visualModes = [
     name: "Zone Wars",
     label: "NO HAY SEGUNDAS OPORTUNIDADES.",
     image: "zonewars",
-    description: "Rotaciones, presión y una tormenta que no espera.",
+    description: "Rondas de Zone Wars.",
     difficulty: "Endgame",
     tag: "PRÓXIMAMENTE",
     icon: Trophy,
@@ -114,7 +130,9 @@ const modeName = (code: string) =>
   visualModes.find((mode) => mode.code === code)?.name ?? code;
 const navigation = [
   { view: "arena" as const, name: "Arena", icon: LayoutGrid },
+  { view: "teams" as const, name: "Equipo", icon: Users },
   { view: "matches" as const, name: "Mi partida", icon: Swords },
+  { view: "ranks" as const, name: "Rangos", icon: Trophy },
   { view: "wallet" as const, name: "Billetera", icon: Wallet },
 ];
 
@@ -123,6 +141,7 @@ export function App() {
     window.location.pathname === "/app",
   );
   const [view, setView] = useState<View>("arena");
+  const [teamMode, setTeamMode] = useState("BOX_FIGHT");
   const [modal, setModal] = useState<Modal>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [connection, setConnection] = useState<
@@ -440,7 +459,7 @@ export function App() {
             >
               <X />
             </button>
-            <span className="nav-label">TU ZONA DE JUEGO</span>
+            <span className="nav-label">JUGAR</span>
             <nav>
               {navigation.map((item) => (
                 <button
@@ -479,21 +498,6 @@ export function App() {
                 <ArrowUpRight size={18} />
                 Volver al sitio
               </button>
-              <div className="sidebar-card">
-                <div className="support-avatar">
-                  <Headphones size={21} />
-                  <span />
-                </div>
-                <strong>Juega con respaldo.</strong>
-                <p>Consulta las reglas y conoce el proceso de mediación.</p>
-                <button onClick={() => openModal("rules")}>
-                  Ver cómo funciona <ArrowRight size={15} />
-                </button>
-              </div>
-              <div className="sidebar-foot">
-                <ShieldCheck size={15} />
-                <span>Tu partida. Tus reglas claras.</span>
-              </div>
             </div>
           </aside>
           {mobileNav && (
@@ -516,15 +520,7 @@ export function App() {
                 </button>
                 <span className="breadcrumb">
                   Plataforma <ChevronRight size={13} />
-                  <strong>
-                    {view === "arena"
-                      ? "Arena"
-                      : view === "wallet"
-                        ? "Billetera"
-                        : view === "matches"
-                          ? "Mi partida"
-                          : "Ayuda"}
-                  </strong>
+                  <strong>{viewLabels[view]}</strong>
                 </span>
               </div>
               <div className="topbar-actions">
@@ -564,121 +560,47 @@ export function App() {
             <main id="main" className="main" tabIndex={-1}>
               <div className="page-heading">
                 <div>
-                  <div className="eyebrow">
-                    <span />
-                    FORTNITE COMPETITIVO
-                  </div>
-                  <h1>
-                    {view === "arena"
-                      ? "Bienvenido a la arena."
-                      : view === "wallet"
-                        ? "Tu billetera, sin vueltas."
-                        : view === "matches"
-                          ? "Cada partida cuenta."
-                          : "Estamos en tu equipo."}
-                  </h1>
-                  <p>
-                    {view === "arena"
-                      ? "Elige tu modo. Encuentra a tu rival. Lleva tu juego más lejos."
-                      : view === "wallet"
-                        ? "Consulta tu saldo y los movimientos registrados por la plataforma."
-                        : view === "matches"
-                          ? "Sigue el estado de tu desafío y confirma cada paso."
-                          : "Reglas claras y respuestas para tu próxima partida."}
-                  </p>
+                  <h1>{viewLabels[view]}</h1>
+                  <p>{viewDescriptions[view]}</p>
                 </div>
-                <div className={`connection ${connection}`} role="status">
-                  {connection === "offline" ? (
-                    <WifiOff size={14} />
-                  ) : connection === "loading" ? (
-                    <LoaderCircle size={14} className="spin" />
-                  ) : (
-                    <span />
+                <div className="page-tools">
+                  <div className={`connection ${connection}`} role="status">
+                    {connection === "offline" ? (
+                      <WifiOff size={14} />
+                    ) : connection === "loading" ? (
+                      <LoaderCircle size={14} className="spin" />
+                    ) : (
+                      <span />
+                    )}
+                    <span>
+                      {connection === "online"
+                        ? "Plataforma conectada"
+                        : connection === "loading"
+                          ? "Conectando"
+                          : "Servicio sin conexión"}
+                    </span>
+                    <button
+                      aria-label="Actualizar conexión"
+                      onClick={() => void refresh()}
+                      disabled={connection === "loading"}
+                    >
+                      <RefreshCw size={13} />
+                    </button>
+                  </div>
+                  {view === "arena" && (
+                    <button
+                      className="button primary"
+                      onClick={() => navigate("teams")}
+                    >
+                      <Users size={16} />
+                      Preparar equipo
+                    </button>
                   )}
-                  <span>
-                    {connection === "online"
-                      ? "Plataforma conectada"
-                      : connection === "loading"
-                        ? "Conectando"
-                        : "Servicio sin conexión"}
-                  </span>
-                  <button
-                    aria-label="Actualizar conexión"
-                    onClick={() => void refresh()}
-                    disabled={connection === "loading"}
-                  >
-                    <RefreshCw size={13} />
-                  </button>
                 </div>
               </div>
 
               {view === "arena" && (
                 <>
-                  {user?.ranking && <RankPanel ranking={user.ranking} />}
-                  {user && (
-                    <TeamPanel key={user.id} userId={user.id} modes={modes} />
-                  )}
-                  <section className="hero" aria-labelledby="hero-title">
-                    <img
-                      src="/assets/modes/boxfight.jpg"
-                      alt="Duelo de Fortnite en una arena de construcción"
-                      className="hero-image"
-                    />
-                    <div className="hero-shade" />
-                    <div className="hero-content">
-                      <div className="hero-chip">
-                        <span />
-                        TU SIGUIENTE NIVEL ESTÁ AQUÍ
-                      </div>
-                      <h2 id="hero-title">
-                        Menos espera.
-                        <br />
-                        Más <span>competencia.</span>
-                      </h2>
-                      <p>
-                        Una comunidad que juega en serio.
-                        <br />
-                        Desafíos 1v1, reglas claras y toda tu actividad en un
-                        solo lugar.
-                      </p>
-                      <div className="hero-actions">
-                        <button
-                          className="button primary"
-                          onClick={() =>
-                            document.getElementById("modes")?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            })
-                          }
-                        >
-                          Explorar modalidades <ArrowRight size={18} />
-                        </button>
-                        <button
-                          className="hero-secondary"
-                          onClick={() => openModal("rules")}
-                        >
-                          Cómo funciona <ExternalLink size={14} />
-                        </button>
-                      </div>
-                      <div className="hero-footer">
-                        <span>
-                          <Crosshair size={14} />
-                          FORTNITE
-                        </span>
-                        <span>
-                          <Users size={14} />
-                          DUELOS 1V1
-                        </span>
-                        <span>
-                          <ShieldCheck size={14} />
-                          MEDIACIÓN
-                        </span>
-                      </div>
-                    </div>
-                    <div className="hero-index">
-                      <span>01</span> / ARENA BOX FIGHT
-                    </div>
-                  </section>
                   <div className="content-columns">
                     <div className="arena-content">
                       <section
@@ -688,14 +610,9 @@ export function App() {
                       >
                         <div className="section-heading">
                           <div>
-                            <span className="eyebrow">
-                              ENCUENTRA TU TERRENO
-                            </span>
-                            <h2 id="modes-title">¿Cuál es tu modo?</h2>
+                            <h2 id="modes-title">Modalidades</h2>
                           </div>
-                          <span className="section-meta">
-                            4 formas de competir
-                          </span>
+                          <span className="section-meta">Fortnite</span>
                         </div>
                         <div className="filter-bar">
                           <div
@@ -748,7 +665,10 @@ export function App() {
                               <article className="mode-card" key={mode.code}>
                                 <button
                                   className="mode-image-button"
-                                  onClick={() => challenge(mode.code)}
+                                  onClick={() => {
+                                    setTeamMode(mode.code);
+                                    navigate("teams");
+                                  }}
                                   aria-label={`Seleccionar ${mode.name}`}
                                   disabled={
                                     mode.code === "ZONE_WARS" ||
@@ -760,11 +680,13 @@ export function App() {
                                     alt={`Arena ${mode.name} de Fortnite`}
                                     loading="lazy"
                                   />
-                                  <span
-                                    className={`mode-tag ${mode.code === "ZONE_WARS" ? "muted" : ""}`}
-                                  >
-                                    {mode.tag}
-                                  </span>
+                                  {mode.code === "ZONE_WARS" && (
+                                    <span
+                                      className={`mode-tag ${mode.code === "ZONE_WARS" ? "muted" : ""}`}
+                                    >
+                                      {mode.tag}
+                                    </span>
+                                  )}
                                   <span className="mode-play">
                                     <ArrowUpRight size={20} />
                                   </span>
@@ -781,14 +703,13 @@ export function App() {
                                   <div className="mode-footer">
                                     <span>
                                       <Users size={12} />
-                                      1v1 <i />
-                                      {mode.difficulty}
+                                      1v1 – 4v4
                                     </span>
                                     <span
                                       className={`mode-status ${enabled ? "available" : ""}`}
                                     >
                                       {enabled
-                                        ? "En catálogo"
+                                        ? "Preparar equipo"
                                         : connection === "online"
                                           ? "Próximamente"
                                           : "Vista previa"}
@@ -825,7 +746,6 @@ export function App() {
                       >
                         <div className="section-heading">
                           <div>
-                            <span className="eyebrow">EL PRÓXIMO DUELO</span>
                             <h2 id="lobby-title">Desafíos abiertos</h2>
                           </div>
                           <button
@@ -880,14 +800,14 @@ export function App() {
                             <div>
                               <h3>
                                 {user
-                                  ? "Tu rival podría ser el próximo."
-                                  : "Tu próxima partida empieza contigo."}
+                                  ? "No hay desafíos abiertos"
+                                  : "Sin desafíos"}
                               </h3>
                               <p>
                                 {user
                                   ? lobby === null
                                     ? "No pudimos consultar los desafíos. Actualiza la conexión."
-                                    : "Aún no hay desafíos abiertos. Crea uno cuando tu cuenta esté habilitada."
+                                    : "Los desafíos aparecerán aquí cuando estén disponibles."
                                   : "Entra con Discord para consultar los desafíos de la comunidad."}
                               </p>
                             </div>
@@ -904,7 +824,10 @@ export function App() {
                         )}
                       </section>
                     </div>
-                    <aside className="right-rail" aria-label="Tu cuenta y guía">
+                    <aside
+                      className="right-rail"
+                      aria-label="Resumen de tu cuenta"
+                    >
                       <section className="wallet-card">
                         <div className="card-topline">
                           <span>
@@ -938,58 +861,31 @@ export function App() {
                         </button>
                         <p className="wallet-caption">
                           {user
-                            ? "El saldo se consulta directamente en la plataforma."
+                            ? "Disponible en la moneda seleccionada."
                             : "Tu saldo aparecerá después de iniciar sesión."}
                         </p>
-                      </section>
-                      <section className="steps-card">
-                        <span className="eyebrow">ASÍ DE SIMPLE</span>
-                        <h3>Del lobby a la partida.</h3>
-                        <ol>
-                          <li>
-                            <span>01</span>
-                            <div>
-                              <strong>Conecta tu Discord</strong>
-                              <p>Una cuenta para toda tu actividad.</p>
-                            </div>
-                          </li>
-                          <li>
-                            <span>02</span>
-                            <div>
-                              <strong>Elige tu desafío</strong>
-                              <p>Consulta reglas, aporte y comisión.</p>
-                            </div>
-                          </li>
-                          <li>
-                            <span>03</span>
-                            <div>
-                              <strong>Compite y confirma</strong>
-                              <p>Reporta el resultado de tu partida.</p>
-                            </div>
-                          </li>
-                        </ol>
-                        <button
-                          className="text-button"
-                          onClick={() => openModal("rules")}
-                        >
-                          Conocer el proceso
-                          <ArrowRight size={14} />
-                        </button>
-                      </section>
-                      <section className="fairplay-card">
-                        <ShieldCheck size={25} />
-                        <h3>El respeto también juega.</h3>
-                        <p>
-                          Competimos con reglas claras. Si hay un desacuerdo, el
-                          resultado pasa a mediación.
-                        </p>
-                        <button onClick={() => openModal("rules")}>
-                          Leer las reglas <ArrowUpRight size={13} />
-                        </button>
                       </section>
                     </aside>
                   </div>
                 </>
+              )}
+
+              {view === "teams" && user && (
+                <TeamPanel
+                  key={user.id}
+                  userId={user.id}
+                  modes={modes}
+                  initialMode={teamMode}
+                />
+              )}
+              {view === "ranks" && user?.ranking && (
+                <RankPanel ranking={user.ranking} />
+              )}
+              {view === "ranks" && !user?.ranking && (
+                <p className="team-copy">
+                  No pudimos cargar tus rangos. Actualiza la conexión para
+                  reintentar.
+                </p>
               )}
 
               {view === "wallet" && (
@@ -1370,10 +1266,10 @@ export function App() {
                 <section className="panel-page help-page">
                   <div className="help-intro">
                     <Headphones size={34} />
-                    <h2>Reglas claras. Mejor juego.</h2>
+                    <h2>Preguntas frecuentes</h2>
                     <p>
-                      Tu comunidad merece una experiencia transparente desde el
-                      primer clic.
+                      Consulta las reglas y el funcionamiento de tu cuenta desde
+                      el primer clic.
                     </p>
                   </div>
                   {[

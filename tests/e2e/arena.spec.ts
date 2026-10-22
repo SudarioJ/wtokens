@@ -156,10 +156,19 @@ test("captain can form a 4v4 team, generate an invitation and close it", async (
 }, info) => {
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
+  await page
+    .getByRole("button", { name: "Seleccionar Build Fight", exact: true })
+    .click();
   const panel = page.getByRole("region", { name: "Tu formación", exact: true });
   await expect(
     panel.getByRole("heading", { name: "Crea tu equipo" }),
   ).toBeVisible();
+  await expect(
+    panel.getByRole("combobox", { name: /Modalidad del equipo/ }),
+  ).toHaveValue("BUILD_FIGHT");
+  await panel
+    .getByRole("combobox", { name: /Modalidad del equipo/ })
+    .selectOption("BOX_FIGHT");
   await panel.getByRole("combobox", { name: /Formato/ }).selectOption("4");
   await panel
     .getByRole("button", { name: "Crear equipo", exact: true })
@@ -202,6 +211,7 @@ test("ten ranks show server progress independently for each mode", async ({
 }, info) => {
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
+  await nav(page, "Rangos");
   const ranks = page.getByRole("region", { name: "Bronce", exact: true });
   await expect(ranks).toBeVisible();
   await expect(ranks.getByRole("listitem")).toHaveCount(10);
@@ -416,7 +426,7 @@ test("signed-in users can move between the public site and private panel", async
     .click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
-    page.getByRole("heading", { name: "Bienvenido a la arena." }),
+    page.getByRole("heading", { name: "Arena", exact: true }),
   ).toBeVisible();
   await nav(page, "Volver al sitio");
   await expect(page).toHaveURL(/\/$/);
@@ -426,7 +436,7 @@ test("signed-in users can move between the public site and private panel", async
   await page.goBack();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
-    page.getByRole("heading", { name: "Bienvenido a la arena." }),
+    page.getByRole("heading", { name: "Arena", exact: true }),
   ).toBeVisible();
 });
 
@@ -436,7 +446,7 @@ test("private dashboard keeps filters and its original design after sign-in", as
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
   await expect(
-    page.getByRole("heading", { name: "Bienvenido a la arena." }),
+    page.getByRole("heading", { name: "Arena", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".landing")).toHaveCount(0);
   await page
@@ -558,7 +568,7 @@ test("landing, login dialog and private panel pass automated WCAG 2 AA checks", 
   await mockApi(page, { signedIn: true });
   await page.goto("/app");
   await expect(
-    page.getByRole("heading", { name: "Bienvenido a la arena." }),
+    page.getByRole("heading", { name: "Arena", exact: true }),
   ).toBeVisible();
   const panel = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
