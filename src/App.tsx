@@ -138,7 +138,13 @@ export function App() {
   const [amount, setAmount] = useState("5.00");
   const [disputeReason, setDisputeReason] = useState("");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
-    null,
+    () =>
+      new URLSearchParams(window.location.search).get("auth_error") === "discord"
+        ? {
+            text: "No se pudo completar el acceso con Discord. Vuelve a intentarlo.",
+            error: true,
+          }
+        : null,
   );
   const [busy, setBusy] = useState(false);
   const keys = useRef(new Map<string, string>());
