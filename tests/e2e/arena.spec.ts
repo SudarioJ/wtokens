@@ -1290,3 +1290,158 @@ test("confirmed outcome requires captain agreement for double, tied rematch and 
     page.getByRole("button", { name: "Buscar otro duelo", exact: true }),
   ).toBeVisible();
 });
+
+for (const muted of [false, true]) {
+  test(`match found modal ${muted ? "stays silent and can decline" : "chimes once and waits for every acceptance"}`, async ({
+    page,
+  }, info) => {
+    await page.addInitScript(() => {
+      const state = window as unknown as { __matchTones: number };
+      state.__matchTones = 0;
+      const create = AudioContext.prototype.createOscillator;
+      AudioContext.prototype.createOscillator = function () {
+        const node = create.call(this);
+        const start = node.start.bind(node);
+        node.start = (when?: number) => {
+          state.__matchTones++;
+          start(when);
+        };
+        return node;
+      };
+    });
+    await mockApi(page, { signedIn: true });
+    let duel: ReturnType<typeof fixtureDuel> | null = null;
+    let queued = false,
+      polls = 0,
+      declined = false;
+    await page.route("**/v1/arena**", (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === "/v1/arena/solo") queued = true;
+      if (path.endsWith("/confirm") && duel) duel.players[0]!.confirmed = true;
+      if (path.endsWith("/decline") && duel) {
+        declined = true;
+        duel.state = "CANCELLED";
+      }
+      if (path.includes("/duels/")) return route.fulfill({ json: duel });
+      polls++;
+      return route.fulfill({
+        json: {
+          queue:
+            queued && !duel
+              ? {
+                  mode: "BUILD_FIGHT",
+                  size: 1,
+                  asset: "PEN",
+                  stakeMinor: "0",
+                  paymentMode: "INDIVIDUAL",
+                  createdAt: new Date().toISOString(),
+                  expiresAt: new Date(Date.now() + 900000).toISOString(),
+                }
+              : null,
+          duel,
+          roomsConfigured: false,
+        },
+      });
+    });
+    await page.goto("/app");
+    await page
+      .getByRole("button", { name: "Seleccionar Build Fight", exact: true })
+      .click();
+    if (muted)
+      await page
+        .getByRole("button", {
+          name: "Sonido de partida activado",
+          exact: true,
+        })
+        .click();
+    await page
+      .getByRole("button", { name: "Buscar rival 1v1", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", {
+        name: "Buscando tu próximo rival",
+        exact: true,
+      }),
+    ).toBeVisible();
+    duel = fixtureDuel();
+    duel.mode = "BUILD_FIGHT";
+    duel.size = 1;
+    duel.players = duel.players
+      .filter((p) => p.captain)
+      .map((p) => ({ ...p, confirmed: false }));
+    await page
+      .getByRole("button", { name: "Actualizar duelo", exact: true })
+      .click();
+    const modal = page.getByRole("dialog", {
+      name: "Partida encontrada",
+      exact: true,
+    });
+    await expect(modal).toBeVisible();
+    await expect(
+      modal.getByText("Build Fight · 1v1", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      modal.getByRole("button", {
+        name: "Confirmar participación",
+        exact: true,
+      }),
+    ).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(modal).toBeVisible();
+    const a11y = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(a11y.violations).toEqual([]);
+    if (!muted)
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => (window as unknown as { __matchTones: number }).__matchTones,
+          ),
+        )
+        .toBe(3);
+    const before = polls;
+    await expect.poll(() => polls, { timeout: 8000 }).toBeGreaterThan(before);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __matchTones: number }).__matchTones,
+      ),
+    ).toBe(muted ? 0 : 3);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `test-results/match-found-${muted ? "muted" : "sound"}-${info.project.name}.png`,
+      fullPage: true,
+    });
+    if (muted) {
+      await modal
+        .getByRole("button", { name: "No participar", exact: true })
+        .click();
+      await expect(modal).toHaveCount(0);
+      expect(declined).toBe(true);
+      expect(
+        await page.evaluate(() => localStorage.getItem("wtokens_match_sound")),
+      ).toBe("off");
+    } else {
+      await modal
+        .getByRole("button", { name: "Confirmar participación", exact: true })
+        .click();
+      await expect(
+        modal.getByRole("button", { name: "Ya confirmaste", exact: true }),
+      ).toBeDisabled();
+      await expect(
+        modal.getByText("1 de 2 jugadores aceptaron", { exact: true }),
+      ).toBeVisible();
+      duel.state = "IN_PROGRESS";
+      duel.players.forEach((p) => (p.confirmed = true));
+      await expect(modal).toHaveCount(0, { timeout: 8000 });
+      await expect(
+        page.getByRole("button", { name: "Gané", exact: true }),
+      ).toBeVisible();
+      await expect(page).not.toHaveTitle("Partida encontrada · WTOKENS");
+    }
+  });
+}

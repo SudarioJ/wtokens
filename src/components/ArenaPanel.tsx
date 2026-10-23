@@ -9,6 +9,14 @@ import {
   type Duel,
 } from "../lib/arena";
 import { MatchSearch } from "./MatchSearch";
+import { MatchFound } from "./MatchFound";
+import { Volume2, VolumeX } from "lucide-react";
+import {
+  matchSoundEnabled,
+  saveMatchSound,
+  primeMatchSound,
+  stopMatchSound,
+} from "../lib/matchSound";
 import type { Mode, Team } from "../lib/contracts";
 import { DuelOutcome } from "./DuelOutcome";
 import { Deadline } from "./Deadline";
@@ -130,6 +138,18 @@ export function ArenaPanel({
   onTeam: (mode: string) => void;
 }) {
   const [arena, setArena] = useState<Arena>();
+  const [sound, setSound] = useState(matchSoundEnabled);
+  const searching = useRef(false);
+  useEffect(() => {
+    searching.current = !!arena?.queue || arena?.duel?.state === "CONFIRMING";
+  }, [arena]);
+  function toggleSound() {
+    const next = !sound;
+    setSound(next);
+    saveMatchSound(next);
+    if (next) primeMatchSound();
+    else stopMatchSound();
+  }
   const [team, setTeam] = useState<Team | null>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -166,7 +186,8 @@ export function ArenaPanel({
     mounted.current = true;
     void load();
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void load();
+      if (document.visibilityState === "visible" || searching.current)
+        void load();
     }, 5000);
     return () => {
       mounted.current = false;
@@ -176,6 +197,7 @@ export function ArenaPanel({
   }, [load]);
   async function act(task: () => Promise<Arena | Duel>) {
     if (busyRef.current) return;
+    if (sound) primeMatchSound();
     busyRef.current = true;
     setBusy(true);
     setError("");
@@ -225,6 +247,15 @@ export function ArenaPanel({
           Actualizar duelo
         </button>
       </div>
+      <button
+        type="button"
+        className="match-sound-toggle"
+        onClick={toggleSound}
+        aria-pressed={sound}
+      >
+        {sound ? <Volume2 size={14} /> : <VolumeX size={14} />}{" "}
+        {sound ? "Sonido de partida activado" : "Sonido de partida desactivado"}
+      </button>
       <p className="duel-test-label">
         Modo de prueba · Sin dinero ni cambios de rango
       </p>
@@ -238,44 +269,18 @@ export function ArenaPanel({
       ) : d ? (
         <>
           <DuelDetails duel={d} />
-          {d.state === "CONFIRMING" && (
-            <>
-              <Deadline
-                date={d.confirmationDeadline}
-                label="Tiempo para confirmar"
-              />
-              <p>
-                {d.size === 1
-                  ? "Ambos jugadores deben confirmar para empezar."
-                  : "Todos los jugadores deben aceptar, aunque pague el capitán."}
-              </p>
-              <div className="duel-buttons">
-                <button
-                  className="button primary"
-                  disabled={
-                    busy ||
-                    player?.confirmed ||
-                    Date.parse(d.confirmationDeadline) <= Date.now()
-                  }
-                  onClick={() =>
-                    void act(() => arenaApi.action(d.id, "confirm"))
-                  }
-                >
-                  {player?.confirmed
-                    ? "Ya confirmaste"
-                    : "Confirmar participación"}
-                </button>
-                <button
-                  className="button secondary"
-                  disabled={busy}
-                  onClick={() =>
-                    void act(() => arenaApi.action(d.id, "decline"))
-                  }
-                >
-                  No participar
-                </button>
-              </div>
-            </>
+          {d.state === "CONFIRMING" && player && (
+            <MatchFound
+              key={d.id}
+              duel={d}
+              userId={userId}
+              busy={busy}
+              error={error}
+              sound={sound}
+              onSound={toggleSound}
+              onAccept={() => void act(() => arenaApi.action(d.id, "confirm"))}
+              onDecline={() => void act(() => arenaApi.action(d.id, "decline"))}
+            />
           )}
           {playing && (
             <>
