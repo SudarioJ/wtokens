@@ -60,6 +60,8 @@ async function mockApi(
     }
     const values: Record<string, unknown> = {
       "/v1/teams": { team },
+      "/v1/arena": { queue: null, duel: null, roomsConfigured: false },
+      "/v1/arena/history": { items: [], nextCursor: null },
       "/v1/matches/history": { items: [], nextCursor: null },
       "/v1/platform": {
         discordEnabled: true,
@@ -761,4 +763,265 @@ test("landing, login dialog and private panel pass automated WCAG 2 AA checks", 
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
   expect(panel.violations).toEqual([]);
+});
+
+const duelUserId = "a5ea7f18-b114-4f91-91bf-f3dfba4ef8f4";
+function fixtureDuel() {
+  return {
+    id: "92938a11-c78b-4fd5-95cf-05b2382d6a33",
+    mode: "BOX_FIGHT",
+    size: 2,
+    asset: "PEN",
+    stakeMinor: "0",
+    state: "CONFIRMING",
+    winnerSide: null,
+    rounds: null,
+    createdAt: new Date().toISOString(),
+    confirmationDeadline: new Date(Date.now() + 120000).toISOString(),
+    startedAt: null,
+    finishedAt: null,
+    reportDeadline: null,
+    absentUser: null,
+    absenceDeadline: null,
+    mapCode: "2355-0939-8965",
+    roomStatus: "UNCONFIGURED",
+    roomUrl: null,
+    players: [
+      {
+        id: duelUserId,
+        name: "Jugador de prueba",
+        side: "A",
+        captain: true,
+        confirmed: false,
+        paymentMode: "CAPTAIN",
+      },
+      {
+        id: "9b5a59a0-492b-4635-855d-827bfde02d52",
+        name: "Compañero",
+        side: "A",
+        captain: false,
+        confirmed: true,
+        paymentMode: "CAPTAIN",
+      },
+      {
+        id: "9b5a59a0-492b-4635-855d-827bfde02d53",
+        name: "Capitán rival",
+        side: "B",
+        captain: true,
+        confirmed: true,
+        paymentMode: "INDIVIDUAL",
+      },
+      {
+        id: "9b5a59a0-492b-4635-855d-827bfde02d54",
+        name: "Rival",
+        side: "B",
+        captain: false,
+        confirmed: true,
+        paymentMode: "INDIVIDUAL",
+      },
+    ],
+    reports: [],
+    events: [
+      {
+        type: "MATCH_FOUND",
+        detail: "Duelo de prueba encontrado",
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  } as import("../../src/lib/arena").Duel;
+}
+
+test("team matchmaking searches, confirms everyone, reports rounds and keeps history", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  let currentDuel: ReturnType<typeof fixtureDuel> | null = null;
+  let queue: Record<string, unknown> | null = null;
+  const duel = fixtureDuel();
+  await page.route("**/v1/teams", (route) =>
+    route.fulfill({
+      json: {
+        team: {
+          id: "9585cba1-c01d-4b3b-acb9-3e825f93c977",
+          captainId: duelUserId,
+          mode: "BOX_FIGHT",
+          size: 2,
+          level: 1,
+          points: 0,
+          complete: true,
+          state: "FORMING",
+          members: duel.players
+            .slice(0, 2)
+            .map((p) => ({ id: p.id, name: p.name, points: 0, level: 1 })),
+        },
+      },
+    }),
+  );
+  await page.route("**/v1/arena**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === "/v1/arena/queue") {
+      expect(route.request().postDataJSON()).toEqual({
+        asset: "PEN",
+        stakeMinor: "0",
+        paymentMode: "CAPTAIN",
+      });
+      queue = {
+        mode: "BOX_FIGHT",
+        size: 2,
+        asset: "PEN",
+        stakeMinor: "0",
+        paymentMode: "CAPTAIN",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 900000).toISOString(),
+      };
+      return route.fulfill({
+        json: { queue, duel: null, roomsConfigured: false },
+      });
+    }
+    if (path.endsWith("/confirm")) {
+      duel.players[0]!.confirmed = true;
+      duel.state = "IN_PROGRESS";
+      duel.startedAt = new Date().toISOString();
+      return route.fulfill({ json: duel });
+    }
+    if (path.endsWith("/report")) {
+      expect(route.request().postDataJSON().rounds).toBe("AAA");
+      duel.state = "RESULT_PENDING";
+      duel.finishedAt = new Date().toISOString();
+      duel.reportDeadline = new Date(Date.now() + 1800000).toISOString();
+      duel.reports = [
+        {
+          captainId: duelUserId,
+          rounds: "AAA",
+          evidence: null,
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      return route.fulfill({ json: duel });
+    }
+    if (path === "/v1/arena/history")
+      return route.fulfill({ json: { items: [duel], nextCursor: null } });
+    if (path.includes("/duels/")) return route.fulfill({ json: duel });
+    return route.fulfill({
+      json: {
+        queue,
+        duel: duel.state === "COMPLETED" ? null : currentDuel,
+        roomsConfigured: false,
+      },
+    });
+  });
+  await page.goto("/app");
+  await nav(page, "Duelos");
+  await page
+    .getByLabel("Forma de aporte para el equipo")
+    .selectOption("CAPTAIN");
+  await page
+    .getByRole("button", { name: "Buscar rival de prueba", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Buscando rival", exact: true }),
+  ).toBeVisible();
+  queue = null;
+  currentDuel = duel;
+  await page
+    .getByRole("button", { name: "Actualizar duelo", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Tu duelo", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Confirmar participación", exact: true })
+    .click();
+  await expect(page.getByText("En juego", { exact: true })).toBeVisible();
+  const a = page.getByRole("button", { name: "+ Equipo A", exact: true });
+  await a.click();
+  await a.click();
+  await a.click();
+  await expect(a).toBeDisabled();
+  await expect(
+    page.getByText("Marcador válido. Gana el equipo A.", { exact: true }),
+  ).toBeVisible();
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo(0, 0);
+  });
+  await page.screenshot({
+    path: `test-results/matchmaking-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Enviar resultado definitivo", exact: true })
+    .click();
+  await expect(
+    page.getByText("Esperando reportes", { exact: true }),
+  ).toBeVisible();
+  duel.state = "COMPLETED";
+  duel.winnerSide = "A";
+  duel.rounds = "AAA";
+  await page
+    .getByRole("button", { name: "Actualizar duelo", exact: true })
+    .click();
+  await expect(page.getByText("Finalizado", { exact: true })).toBeVisible();
+  await nav(page, "Historial");
+  const history = page.getByRole("region", {
+    name: "Duelos de equipo",
+    exact: true,
+  });
+  await history.locator("summary").first().click();
+  await expect(
+    history.getByText("Resultado: Equipo A 3 — 0 Equipo B. Gana el equipo A.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("moderation requires a reason and records an explicit cancellation", async ({
+  page,
+}) => {
+  await mockApi(page, { signedIn: true });
+  await page.route("**/v1/me", (route) =>
+    route.fulfill({
+      json: {
+        id: "d0b715e2-21f3-40b5-b04a-711d7279156b",
+        display_name: "Moderador de prueba",
+        eligible: false,
+        suspended: false,
+        moderator: true,
+      },
+    }),
+  );
+  const duel = fixtureDuel();
+  duel.state = "MODERATION";
+  let resolved = false;
+  await page.route("**/v1/arena/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/resolve")) {
+      const body = route.request().postDataJSON();
+      expect(body.cancel).toBe(true);
+      expect(body.reason).toContain("Evidencia revisada");
+      resolved = true;
+      return route.fulfill({ json: { ...duel, state: "CANCELLED" } });
+    }
+    return route.fulfill({ json: resolved ? [] : [duel] });
+  });
+  await page.goto("/app");
+  await nav(page, "Moderación");
+  await page.getByRole("button", { name: /Box Fight · 2v2/ }).click();
+  await page.getByLabel("Cancelar sin declarar ganador").check();
+  const submit = page.getByRole("button", {
+    name: "Registrar resolución definitiva",
+    exact: true,
+  });
+  await expect(submit).toBeDisabled();
+  await page
+    .getByLabel("Motivo de resolución y evidencia revisada")
+    .fill("Evidencia revisada: cancelación por incidencia técnica.");
+  await submit.click();
+  await expect(
+    page.getByText("No hay casos pendientes.", { exact: true }),
+  ).toBeVisible();
 });

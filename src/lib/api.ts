@@ -26,6 +26,16 @@ export function friendlyError(error: unknown): string {
     const messages: Record<string, string> = {
       ALREADY_IN_TEAM:
         "Ya perteneces a un equipo. Sal de él antes de unirte a otro.",
+      NO_TEAM: "Crea o únete a un equipo primero.",
+      TEAM_INCOMPLETE: "Completa tu equipo antes de buscar rival.",
+      INVALID_ROUNDS:
+        "Revisa las rondas: 3–0 termina; en los demás casos, mínimo cinco con diferencia de dos.",
+      STATE_CONFLICT: "El duelo cambió de estado. Actualiza para continuar.",
+      REPORT_IMMUTABLE:
+        "Ya enviaste tu reporte. Pide revisión si necesitas corregirlo.",
+      MODERATOR_REQUIRED: "Esta sección requiere permisos de moderador.",
+      CONFLICT_OF_INTEREST:
+        "Otro moderador debe revisar un duelo en el que participaste.",
       TEAM_FULL: "El equipo ya está completo.",
       INVALID_INVITE: "El código de invitación no es válido o ya venció.",
       INVALID_MODE: "Esta modalidad todavía no está disponible.",
@@ -36,8 +46,6 @@ export function friendlyError(error: unknown): string {
       WAGERING_DISABLED:
         "Los desafíos con dinero están deshabilitados en este entorno.",
       NOT_ELIGIBLE: "Tu cuenta aún no está habilitada para participar.",
-      STATE_CONFLICT:
-        "La partida cambió o el saldo no es suficiente. Actualiza e inténtalo de nuevo.",
       CONFLICT:
         "Esta acción ya se procesó o la partida cambió. Actualiza el estado.",
       NOT_PARTICIPANT: "Solo los participantes pueden consultar esta partida.",
@@ -60,7 +68,7 @@ export function friendlyError(error: unknown): string {
   return "No hay conexión con el servicio. Tus datos no se han modificado.";
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   schema: z.ZodType<T>,
   init?: RequestInit,
@@ -86,7 +94,7 @@ async function request<T>(
   return result.data;
 }
 
-async function write<T>(
+export async function write<T>(
   path: string,
   schema: z.ZodType<T>,
   data: unknown,

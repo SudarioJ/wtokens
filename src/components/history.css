@@ -9,6 +9,7 @@
   font-size: 18px;
 }
 .history-scroll {
+  position: relative;
   overflow: auto;
   border: 1px solid #303946;
   border-radius: 6px;

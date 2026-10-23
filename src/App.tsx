@@ -42,6 +42,8 @@ import { RankPanel } from "./components/RankPanel";
 import { useScrollReveal } from "./lib/useScrollReveal";
 import { HeaderRank } from "./components/HeaderRank";
 import { TeamPanel } from "./components/TeamPanel";
+import { ArenaPanel } from "./components/ArenaPanel";
+import { ArenaHistory, ModerationPanel } from "./components/ArenaHistory";
 import { MatchHistory } from "./components/MatchHistory";
 
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
@@ -59,8 +61,18 @@ import type {
 } from "./lib/contracts";
 import { formatMoney, inputToMinor, prize } from "./lib/money";
 
-type View = "arena" | "teams" | "ranks" | "wallet" | "matches" | "help";
+type View =
+  | "duels"
+  | "moderation"
+  | "arena"
+  | "teams"
+  | "ranks"
+  | "wallet"
+  | "matches"
+  | "help";
 const viewLabels: Record<View, string> = {
+  duels: "Duelos",
+  moderation: "Moderación",
   arena: "Tokens",
   teams: "Equipo",
   ranks: "Rangos",
@@ -69,6 +81,8 @@ const viewLabels: Record<View, string> = {
   help: "Ayuda",
 };
 const viewDescriptions: Record<View, string> = {
+  duels: "Encuentra rival y sigue tu duelo de equipo.",
+  moderation: "Revisa reportes y resuelve los casos pendientes.",
   arena: "Modalidades y desafíos disponibles.",
   teams: "Reúne a tus compañeros y gestiona tu formación.",
   ranks: "Tu progreso en cada modalidad.",
@@ -134,6 +148,7 @@ const modeName = (code: string) =>
 const navigation = [
   { view: "arena" as const, name: "Tokens", icon: LayoutGrid },
   { view: "teams" as const, name: "Equipo", icon: Users },
+  { view: "duels" as const, name: "Duelos", icon: Swords },
   { view: "matches" as const, name: "Historial", icon: History },
   { view: "ranks" as const, name: "Rangos", icon: Trophy },
   { view: "wallet" as const, name: "Billetera", icon: Wallet },
@@ -477,6 +492,15 @@ export function App() {
                 </button>
               ))}
             </nav>
+            {user?.moderator && (
+              <button
+                className="nav-item"
+                onClick={() => navigate("moderation")}
+              >
+                <ShieldCheck size={18} />
+                Moderación
+              </button>
+            )}
             <div className="sidebar-divider" />
             <span className="nav-label">COMUNIDAD</span>
             <a
@@ -810,12 +834,22 @@ export function App() {
                 </>
               )}
 
+              {view === "duels" && user && (
+                <ArenaPanel
+                  key={user.id}
+                  userId={user.id}
+                  asset={asset}
+                  onTeam={() => navigate("teams")}
+                />
+              )}
+              {view === "moderation" && user?.moderator && <ModerationPanel />}
               {view === "teams" && user && (
                 <TeamPanel
                   key={user.id}
                   userId={user.id}
                   modes={modes}
                   initialMode={teamMode}
+                  onFind={() => navigate("duels")}
                 />
               )}
               {view === "ranks" && user?.ranking && (
@@ -968,6 +1002,7 @@ export function App() {
                     />
                   ) : (
                     <>
+                      <ArenaHistory key={`arena-history-${user?.id}`} />
                       <MatchHistory
                         assets={assets}
                         refreshKey={refreshVersion.current}

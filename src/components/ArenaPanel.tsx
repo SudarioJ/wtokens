@@ -1,0 +1,490 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, friendlyError } from "../lib/api";
+import {
+  arenaApi,
+  duelState,
+  modeTitle,
+  roundScore,
+  type Arena,
+  type Duel,
+} from "../lib/arena";
+import type { Team } from "../lib/contracts";
+import { RoundEditor } from "./RoundEditor";
+import { Deadline } from "./Deadline";
+import "./duels.css";
+export function DuelDetails({ duel }: { duel: Duel }) {
+  return (
+    <>
+      <div className="duel-summary">
+        <strong>
+          {modeTitle(duel.mode)} · {duel.size}v{duel.size}
+        </strong>
+        <span>{duelState(duel.state)}</span>
+        <span>Prueba sin dinero · No modifica tu rango</span>
+      </div>
+      <div className="duel-rosters">
+        {(["A", "B"] as const).map((side) => (
+          <div key={side}>
+            <h3>Equipo {side}</h3>
+            <ul>
+              {duel.players
+                .filter((p) => p.side === side)
+                .map((p) => (
+                  <li key={p.id}>
+                    <span>
+                      {p.name}
+                      {p.captain ? " · Capitán" : ""}
+                    </span>
+                    <small>
+                      {p.confirmed ? "Confirmado" : "Por confirmar"}
+                    </small>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <p>
+        Mapa configurado: <strong>{duel.mapCode}</strong>
+      </p>
+      <p className="duel-note">
+        3–0 es zapatero. En los demás casos: mínimo cinco rondas ganadas con
+        diferencia de dos; se continúa hasta lograrla.
+      </p>
+      {duel.rounds && (
+        <p>
+          Resultado: Equipo A {roundScore(duel.rounds).a} —{" "}
+          {roundScore(duel.rounds).b} Equipo B.{" "}
+          {duel.winnerSide && `Gana el equipo ${duel.winnerSide}.`}
+        </p>
+      )}
+      {duel.roomUrl ? (
+        <a
+          className="button secondary"
+          href={duel.roomUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Abrir sala privada de Discord
+        </a>
+      ) : (
+        <p className="duel-note">
+          {duel.roomStatus === "UNCONFIGURED"
+            ? "La sala automática de Discord aún no está configurada. Puedes probar este duelo desde la web."
+            : duel.roomStatus === "RETRY"
+              ? "No se pudo crear la sala. Un moderador debe revisar la configuración; el duelo sigue disponible aquí."
+              : "Preparando la sala privada de texto…"}
+        </p>
+      )}
+      {duel.reports.length > 0 && (
+        <div className="duel-reports">
+          <h3>Reportes de capitanes</h3>
+          {duel.reports.map((r) => (
+            <p key={r.captainId}>
+              {duel.players.find((p) => p.id === r.captainId)?.name}: A{" "}
+              {roundScore(r.rounds).a} — {roundScore(r.rounds).b} B{" "}
+              {r.evidence && (
+                <a href={r.evidence} target="_blank" rel="noopener noreferrer">
+                  Ver evidencia
+                </a>
+              )}
+            </p>
+          ))}
+        </div>
+      )}
+      <details className="duel-audit">
+        <summary>Actividad del duelo</summary>
+        <ol>
+          {duel.events.map((event, index) => (
+            <li key={`${event.createdAt}:${index}`}>
+              <time dateTime={event.createdAt}>
+                {new Date(event.createdAt).toLocaleString("es-PE")}
+              </time>{" "}
+              {event.detail}
+            </li>
+          ))}
+        </ol>
+      </details>
+    </>
+  );
+}
+export function ArenaPanel({
+  userId,
+  asset,
+  onTeam,
+}: {
+  userId: string;
+  asset: string;
+  onTeam: () => void;
+}) {
+  const [arena, setArena] = useState<Arena>();
+  const [team, setTeam] = useState<Team | null>();
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [rounds, setRounds] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const [reason, setReason] = useState("");
+  const [payment, setPayment] = useState("INDIVIDUAL");
+  const mounted = useRef(false),
+    busyRef = useRef(false),
+    version = useRef(0),
+    last = useRef<Duel | null>(null);
+  const load = useCallback(async () => {
+    if (busyRef.current) return;
+    const stamp = ++version.current;
+    try {
+      const [current, formation] = await Promise.all([
+        arenaApi.current(),
+        api.team(),
+      ]);
+      if (!current.duel && last.current) {
+        current.duel = await arenaApi.get(last.current.id);
+      }
+      if (mounted.current && stamp === version.current) {
+        last.current = current.duel;
+        setArena(current);
+        setTeam(formation.team);
+        setError("");
+      }
+    } catch (e) {
+      if (mounted.current && stamp === version.current)
+        setError(friendlyError(e));
+    }
+  }, []);
+  useEffect(() => {
+    mounted.current = true;
+    void load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 5000);
+    return () => {
+      mounted.current = false;
+      version.current++;
+      window.clearInterval(timer);
+    };
+  }, [load]);
+  async function act(task: () => Promise<Arena | Duel>) {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError("");
+    version.current++;
+    try {
+      const result = await task();
+      if (!mounted.current) return;
+      if ("players" in result) {
+        last.current = result;
+        setArena((previous) => ({
+          ...previous,
+          queue: null,
+          roomsConfigured: previous?.roomsConfigured ?? false,
+          duel: result,
+        }));
+      } else {
+        last.current = result.duel;
+        setArena(result);
+      }
+      setRounds("");
+      setEvidence("");
+    } catch (e) {
+      if (mounted.current) setError(friendlyError(e));
+    } finally {
+      busyRef.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  }
+  const d = arena?.duel,
+    player = d?.players.find((p) => p.id === userId),
+    captain = !!player?.captain,
+    terminal = d?.state === "COMPLETED" || d?.state === "CANCELLED",
+    playing = d?.state === "IN_PROGRESS" || d?.state === "RESULT_PENDING";
+  return (
+    <section
+      className="duel-panel"
+      aria-labelledby="duel-title"
+      aria-busy={busy}
+    >
+      <div className="team-heading">
+        <h2 id="duel-title">
+          {d ? "Tu duelo" : arena?.queue ? "Buscando rival" : "Matchmaking"}
+        </h2>
+        <button
+          className="button secondary small"
+          disabled={busy}
+          onClick={() => void load()}
+        >
+          Actualizar duelo
+        </button>
+      </div>
+      <p className="duel-test-label">
+        Modo de prueba · Aporte por jugador: 0 · Total por equipo: 0
+      </p>
+      {error && (
+        <p role="alert" className="team-error">
+          {error}
+        </p>
+      )}
+      {!arena ? (
+        <p>Cargando matchmaking…</p>
+      ) : d ? (
+        <>
+          <DuelDetails duel={d} />
+          {d.state === "CONFIRMING" && (
+            <>
+              <Deadline
+                date={d.confirmationDeadline}
+                label="Tiempo para confirmar"
+              />
+              <p>Todos los jugadores deben aceptar, aunque pague el capitán.</p>
+              <div className="duel-buttons">
+                <button
+                  className="button primary"
+                  disabled={
+                    busy ||
+                    player?.confirmed ||
+                    Date.parse(d.confirmationDeadline) <= Date.now()
+                  }
+                  onClick={() =>
+                    void act(() => arenaApi.action(d.id, "confirm"))
+                  }
+                >
+                  {player?.confirmed
+                    ? "Ya confirmaste"
+                    : "Confirmar participación"}
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    void act(() => arenaApi.action(d.id, "decline"))
+                  }
+                >
+                  No participar
+                </button>
+              </div>
+            </>
+          )}
+          {playing && (
+            <>
+              {d.absenceDeadline && (
+                <>
+                  <Deadline
+                    date={d.absenceDeadline}
+                    label="Plazo para regresar"
+                  />
+                  {d.absentUser === userId && (
+                    <button
+                      className="button secondary"
+                      disabled={busy}
+                      onClick={() =>
+                        void act(() => arenaApi.action(d.id, "return"))
+                      }
+                    >
+                      Ya regresé
+                    </button>
+                  )}
+                </>
+              )}
+              {d.reportDeadline && (
+                <Deadline date={d.reportDeadline} label="Plazo para reportar" />
+              )}
+              {captain && !d.finishedAt && (
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    void act(() => arenaApi.action(d.id, "finish"))
+                  }
+                >
+                  Marcar fin de partida
+                </button>
+              )}
+              {captain && !d.reports.some((r) => r.captainId === userId) && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void act(() => arenaApi.report(d.id, rounds, evidence));
+                  }}
+                >
+                  <RoundEditor
+                    rounds={rounds}
+                    onChange={setRounds}
+                    disabled={busy}
+                  />
+                  <label>
+                    Evidencia (enlace HTTPS, opcional)
+                    <input
+                      type="url"
+                      value={evidence}
+                      maxLength={1000}
+                      onChange={(e) => setEvidence(e.target.value)}
+                      placeholder="https://…"
+                    />
+                  </label>
+                  <button
+                    className="button primary"
+                    disabled={busy || !roundScore(rounds).winner}
+                  >
+                    Enviar resultado definitivo
+                  </button>
+                </form>
+              )}
+              {!captain && (
+                <p>El capitán de tu equipo reportará el resultado.</p>
+              )}
+              <details>
+                <summary>Ausencia o problema con la partida</summary>
+                {!d.absentUser && (
+                  <div className="duel-buttons">
+                    {d.players
+                      .filter((p) => p.id !== userId)
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          className="button secondary small"
+                          disabled={busy}
+                          onClick={() =>
+                            void act(() => arenaApi.absence(d.id, p.id))
+                          }
+                        >
+                          Reportar ausencia de {p.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void act(() => arenaApi.dispute(d.id, reason));
+                  }}
+                >
+                  <label>
+                    Motivo de revisión
+                    <textarea
+                      minLength={5}
+                      maxLength={1000}
+                      required
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                    />
+                  </label>
+                  <button
+                    className="button secondary"
+                    disabled={busy || reason.trim().length < 5}
+                  >
+                    Solicitar moderación
+                  </button>
+                </form>
+              </details>
+            </>
+          )}
+          {d.state === "MODERATION" && (
+            <p role="status">
+              El caso está en revisión. No se declara ganador ni se mueve saldo
+              automáticamente.
+            </p>
+          )}
+          {captain && (playing || d.state === "MODERATION") && (
+            <div>
+              <p className="duel-note">
+                Si ambos capitanes están de acuerdo, pueden cancelar esta prueba
+                sin declarar ganador.
+              </p>
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() =>
+                  void act(() => arenaApi.action(d.id, "cancel-request"))
+                }
+              >
+                Solicitar o aceptar cancelación
+              </button>
+            </div>
+          )}
+          {terminal && (
+            <button
+              className="button primary"
+              onClick={() => {
+                last.current = null;
+                setArena({ ...arena, duel: null });
+                void load();
+              }}
+            >
+              Buscar otro duelo
+            </button>
+          )}
+        </>
+      ) : arena.queue ? (
+        <>
+          <p>
+            {modeTitle(arena.queue.mode)} · {arena.queue.size}v
+            {arena.queue.size} · {arena.queue.asset}
+          </p>
+          <p role="status">
+            Esperando un equipo completo compatible. Mismo modo y formato; rango
+            igual o adyacente. Desde Élite, todos entre sí.
+          </p>
+          <Deadline date={arena.queue.expiresAt} label="La búsqueda vence en" />
+          {team?.captainId === userId ? (
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => void act(arenaApi.leave)}
+            >
+              Cancelar búsqueda
+            </button>
+          ) : (
+            <p>El capitán puede cancelar la búsqueda.</p>
+          )}
+        </>
+      ) : !team ? (
+        <>
+          <p>Primero crea o completa tu equipo, de 1v1 a 4v4.</p>
+          <button className="button primary" onClick={onTeam}>
+            Preparar equipo
+          </button>
+        </>
+      ) : (
+        <>
+          <p>
+            {modeTitle(team.mode)} · {team.size}v{team.size} · Nivel del equipo:{" "}
+            {team.level}
+          </p>
+          <p>
+            {team.complete
+              ? "Equipo completo. Se usará el rango del integrante con mayor nivel."
+              : "Faltan compañeros. Completa tu equipo antes de buscar."}
+          </p>
+          <label>
+            Forma de aporte para el equipo
+            <select
+              value={payment}
+              onChange={(e) => setPayment(e.target.value)}
+              disabled={busy}
+            >
+              <option value="INDIVIDUAL">
+                Cada integrante aporta su parte
+              </option>
+              <option value="CAPTAIN">El capitán cubre todo</option>
+            </select>
+          </label>
+          <p className="duel-note">
+            Esta elección se guarda con el duelo. En las pruebas ambas opciones
+            cuestan cero; no reservan ni reparten dinero. Las partidas de prueba
+            no suben ni bajan rangos.
+          </p>
+          <button
+            className="button primary"
+            disabled={busy || !team.complete || team.captainId !== userId}
+            onClick={() => void act(() => arenaApi.enter(asset, payment))}
+          >
+            Buscar rival de prueba
+          </button>
+          {team.captainId !== userId && (
+            <p>El capitán debe iniciar la búsqueda.</p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}

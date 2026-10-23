@@ -1,0 +1,196 @@
+.app-shell .duel-panel {
+  background: #0b0d10;
+  border: 1px solid #293441;
+  border-radius: 7px;
+  padding: 24px;
+  margin-bottom: 22px;
+}
+.duel-panel h2 {
+  font-size: 21px;
+  margin: 0 0 14px;
+}
+.duel-panel h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.duel-panel p {
+  color: #b8c2d1;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 14px 0;
+}
+.duel-panel .duel-test-label {
+  color: #c3d6f5;
+  border-left: 2px solid #4897ff;
+  padding-left: 12px;
+}
+.duel-panel .duel-note {
+  font-size: 12px;
+  color: #a7b4c6;
+}
+.duel-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  font-size: 13px;
+}
+.duel-summary > span:last-child {
+  width: 100%;
+  color: #a7b4c6;
+  font-size: 11px;
+}
+.duel-rosters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 18px 0;
+  border-top: 1px solid #27313e;
+  border-bottom: 1px solid #27313e;
+}
+.duel-rosters ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.duel-rosters li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 5px;
+  font-size: 12px;
+}
+.duel-rosters small {
+  color: #9fb5d5;
+}
+.duel-deadline {
+  display: block;
+  color: #b7d1f7;
+  margin: 18px 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.duel-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0;
+}
+.duel-panel form {
+  margin: 24px 0;
+  display: grid;
+  gap: 15px;
+  justify-items: start;
+  width: 100%;
+}
+.duel-panel label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  max-width: 100%;
+}
+.duel-panel input:not([type="checkbox"]),
+.duel-panel textarea,
+.duel-panel select {
+  min-width: min(100%, 280px);
+  width: 100%;
+  border: 1px solid #3d4d63;
+  border-radius: 5px;
+  padding: 10px;
+  background: #080b10;
+  color: #e9edf2;
+}
+.duel-panel textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.duel-panel .duel-checkbox {
+  display: flex;
+  align-items: center;
+}
+.round-editor {
+  border: 1px solid #2d3c50;
+  border-radius: 6px;
+  padding: 16px;
+  width: 100%;
+  min-width: 0;
+}
+.round-editor legend {
+  font-size: 13px;
+  padding: 0 6px;
+}
+.round-editor output {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 12px;
+}
+.round-editor output strong {
+  font-size: 24px;
+  color: #dce9ff;
+}
+.round-sequence {
+  overflow-wrap: anywhere;
+  max-height: 140px;
+  overflow: auto;
+}
+.duel-panel details {
+  margin: 18px 0;
+}
+.duel-panel summary {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.duel-audit ol {
+  padding-left: 20px;
+  color: #a7b4c6;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.duel-audit time {
+  color: #8ca5c9;
+}
+.duel-reports a {
+  color: #9fc4ff;
+  text-decoration: underline;
+  margin-left: 10px;
+}
+.duel-history-item {
+  border-top: 1px solid #283544;
+  padding-top: 15px;
+}
+.duel-history-item summary time {
+  float: right;
+  color: #9aaec9;
+}
+.moderation-cases {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+@media (max-width: 700px) {
+  .app-shell .duel-panel {
+    padding: 18px;
+  }
+  .duel-rosters {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .duel-history-item summary time {
+    float: none;
+    display: block;
+  }
+  .duel-panel input:not([type="checkbox"]),
+  .duel-panel textarea,
+  .duel-panel select {
+    min-width: 0;
+  }
+}

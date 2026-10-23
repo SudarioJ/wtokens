@@ -21,6 +21,7 @@ export const userSchema = z.object({
     .optional(),
   eligible: z.boolean(),
   suspended: z.boolean(),
+  moderator: z.boolean().optional(),
   ranking: z
     .object({
       tiers: z
@@ -146,6 +147,7 @@ export const teamSchema = z.object({
   level: z.number().int().min(1).max(10),
   points: z.number().int().nonnegative(),
   complete: z.boolean(),
+  state: z.enum(["FORMING", "QUEUED", "DUEL", "CLOSED"]).optional(),
 });
 export const currentTeamSchema = z.object({ team: teamSchema.nullable() });
 export const teamInvitationSchema = z.object({

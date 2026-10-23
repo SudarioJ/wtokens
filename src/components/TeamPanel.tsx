@@ -8,10 +8,12 @@ export function TeamPanel({
   userId,
   modes,
   initialMode = "BOX_FIGHT",
+  onFind,
 }: {
   userId: string;
   modes: Mode[];
   initialMode?: string;
+  onFind?: () => void;
 }) {
   const [team, setTeam] = useState<Team | null>();
   const [mode, setMode] = useState(initialMode);
@@ -73,6 +75,7 @@ export function TeamPanel({
     }
   }
   const captain = team?.captainId === userId;
+  const locked = !!team?.state && team.state !== "FORMING";
   return (
     <section
       className="team-panel"
@@ -217,7 +220,7 @@ export function TeamPanel({
                         : "Pendiente de invitación"}
                     </small>
                   </div>
-                  {captain && member && member.id !== userId && (
+                  {!locked && captain && member && member.id !== userId && (
                     <button
                       className="button secondary"
                       type="button"
@@ -236,33 +239,48 @@ export function TeamPanel({
           </ul>
           <p className="team-copy">
             {team.complete
-              ? "Formación completa. El siguiente paso será buscar un rival."
+              ? "Formación completa. Ya puedes buscar un rival."
               : "Faltan compañeros para completar tu equipo."}{" "}
             El rango del grupo corresponde al integrante de mayor nivel.
           </p>
-          <div className="team-actions">
-            {captain && !team.complete && (
+          {!locked && (
+            <div className="team-actions">
+              {captain && !team.complete && (
+                <button
+                  type="button"
+                  className="button primary"
+                  disabled={busy}
+                  onClick={() => void act(() => api.inviteTeam())}
+                >
+                  Generar código de invitación
+                </button>
+              )}
               <button
                 type="button"
-                className="button primary"
+                className="button secondary"
                 disabled={busy}
-                onClick={() => void act(() => api.inviteTeam())}
+                onClick={() =>
+                  void act(() =>
+                    captain ? api.disbandTeam() : api.leaveTeam(),
+                  )
+                }
               >
-                Generar código de invitación
+                {captain ? "Cerrar equipo" : "Salir del equipo"}
               </button>
-            )}
-            <button
-              type="button"
-              className="button secondary"
-              disabled={busy}
-              onClick={() =>
-                void act(() => (captain ? api.disbandTeam() : api.leaveTeam()))
-              }
-            >
-              {captain ? "Cerrar equipo" : "Salir del equipo"}
+            </div>
+          )}
+          {onFind && (
+            <button className="button primary" onClick={onFind}>
+              {locked ? "Ver búsqueda o duelo" : "Buscar rival"}
             </button>
-          </div>
-          {captain && invitation && !team.complete && (
+          )}
+          {locked && (
+            <p className="team-copy">
+              La formación está bloqueada mientras buscas o participas en un
+              duelo.
+            </p>
+          )}
+          {!locked && captain && invitation && !team.complete && (
             <div className="team-invitation">
               <label>
                 Código para tus compañeros
