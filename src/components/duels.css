@@ -242,39 +242,95 @@
   place-items: center;
   justify-self: center;
 }
-.match-search-orbit {
+.match-search-rim,
+.match-search-segment,
+.match-search-sweep,
+.match-search-node {
   position: absolute;
-  inset: 0;
-  border: 1px solid #2c5686;
   border-radius: 50%;
-  border-top: 2px solid #66b4ff;
+  pointer-events: none;
 }
-.match-search-orbit::after {
+.match-search-rim {
+  inset: 0;
+  border: 1px solid #28446480;
+}
+.match-search-segment {
+  inset: 8%;
+  border: 2px solid transparent;
+  border-top-color: #70b5ef;
+  border-right-color: #397cb480;
+}
+.match-search-inner {
+  inset: 21%;
+  border-top-color: #407fb4;
+  border-right-color: transparent;
+  border-bottom-color: #70b5ef80;
+}
+.match-search-sweep {
+  inset: 12%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 290deg,
+    #4f9cde08 310deg,
+    #4f9cde24 359deg,
+    transparent 360deg
+  );
+}
+.match-search-node {
+  inset: 3%;
+}
+.match-search-node::after {
   content: "";
   position: absolute;
-  top: 19px;
-  right: 12px;
-  width: 7px;
-  height: 7px;
+  left: 50%;
+  top: 0;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: #8dcbff;
-  box-shadow: 0 0 13px #3699ff;
+  background: #80bff1;
+  box-shadow: 0 0 5px #3699ff60;
 }
-.match-search-wave {
-  position: absolute;
-  inset: 20px;
-  border: 1px solid #416c9a;
-  border-radius: 50%;
+.match-search-node-two {
+  inset: 17%;
+  transform: rotate(155deg);
 }
+.match-search-node-two::after {
+  width: 4px;
+  height: 4px;
+  background: #4e91c7;
+}
+/* This center slot can later host player avatars without changing the scanner layout. */
 .match-search-core {
-  width: 65px;
-  height: 65px;
+  z-index: 1;
+  width: 45px;
+  height: 45px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #102b4a;
-  color: #9bcfff;
-  border: 1px solid #315d8d;
+  background: #0c1c2e;
+  color: #b4d7f5;
+  border: 1px solid #315473;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+}
+.match-search-dots {
+  display: inline-block;
+  width: 1em;
+  white-space: nowrap;
+}
+.match-search-dots > span {
+  opacity: 0;
+}
+.match-search-messages {
+  display: grid;
+}
+.match-search-messages > span {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+.match-search-messages > span:first-child {
+  opacity: 1;
 }
 .match-search-copy .match-search-mode {
   color: #9dc4ff;
@@ -324,28 +380,89 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .match-search-orbit {
-    animation: match-search-orbit 3.8s linear infinite;
+    animation: match-search-rotate 4s linear infinite;
   }
-  .match-search-wave {
-    animation: match-search-pulse 2.6s ease-out infinite;
+  .match-search-inner {
+    animation: match-search-rotate 6s linear infinite reverse;
   }
-  .match-search-paused .match-search-orbit,
-  .match-search-paused .match-search-wave {
+  .match-search-node-one {
+    animation: match-search-rotate 3.8s linear infinite;
+  }
+  .match-search-node-two {
+    animation: match-search-counter 5s linear infinite;
+  }
+  .match-search-sweep {
+    animation: match-search-rotate 2.8s linear infinite;
+  }
+  .match-search-core {
+    animation: match-search-breathe 2.2s ease-in-out infinite;
+  }
+  .match-search-dots > span {
+    animation: match-search-dot 1.8s steps(1, end) infinite;
+  }
+  .match-search-dots > span:last-child {
+    animation-name: match-search-dot-last;
+  }
+  .match-search-messages > span {
+    animation: match-search-message 24s linear infinite;
+  }
+  .match-search-messages > span:first-child {
+    opacity: 0;
+  }
+  .match-search.match-search-paused *,
+  .match-search.match-search-paused *::after {
     animation-play-state: paused;
   }
-  @keyframes match-search-orbit {
+  @keyframes match-search-rotate {
     to {
       transform: rotate(360deg);
     }
   }
-  @keyframes match-search-pulse {
-    0% {
-      transform: scale(0.7);
-      opacity: 0.8;
+  @keyframes match-search-counter {
+    from {
+      transform: rotate(155deg);
+    }
+    to {
+      transform: rotate(-205deg);
+    }
+  }
+  @keyframes match-search-breathe {
+    50% {
+      transform: scale(1.045);
+      opacity: 0.88;
+    }
+  }
+  @keyframes match-search-dot {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    33.333%,
+    99.999% {
+      opacity: 1;
+    }
+  }
+  @keyframes match-search-dot-last {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    66.666%,
+    99.999% {
+      opacity: 1;
+    }
+  }
+  @keyframes match-search-message {
+    0%,
+    24% {
+      opacity: 1;
+    }
+    25%,
+    99% {
+      opacity: 0;
     }
     100% {
-      transform: scale(1.32);
-      opacity: 0;
+      opacity: 1;
     }
   }
 }
@@ -362,8 +479,8 @@
     text-align: center;
   }
   .match-search-visual {
-    width: 126px;
-    height: 126px;
+    width: 120px;
+    height: 120px;
   }
   .match-search-copy h3 {
     font-size: 21px;

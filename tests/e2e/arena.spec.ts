@@ -1091,6 +1091,24 @@ test("solo enters 1v1 directly and animated search can pause and cancel", async 
     "animation-play-state",
     "paused",
   );
+  for (const selector of [
+    ".match-search-inner",
+    ".match-search-node-one",
+    ".match-search-node-two",
+    ".match-search-sweep",
+    ".match-search-core",
+    ".match-search-messages > span:first-child",
+  ]) {
+    await expect(page.locator(selector)).toHaveCSS(
+      "animation-play-state",
+      "paused",
+    );
+  }
+  await expect(page.locator(".match-search-core")).toHaveText("VS");
+  await expect(page.locator(".match-search-visual")).toHaveCSS(
+    "width",
+    info.project.name === "mobile" ? "120px" : "150px",
+  );
   await page
     .getByRole("button", { name: "Reanudar animación", exact: true })
     .click();
@@ -1115,6 +1133,13 @@ test("solo enters 1v1 directly and animated search can pause and cancel", async 
     "animation-name",
     "none",
   );
+  await expect(page.locator(".match-search-core")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await expect(
+    page.locator(".match-search-messages > span:first-child"),
+  ).toHaveCSS("opacity", "1");
   await expect(
     page.getByRole("button", { name: "Pausar animación", exact: true }),
   ).toHaveCount(0);

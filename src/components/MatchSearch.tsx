@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crosshair, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { modeTitle, type Arena } from "../lib/arena";
 import { Deadline } from "./Deadline";
 export function MatchSearch({
@@ -27,20 +27,46 @@ export function MatchSearch({
   return (
     <div className={`match-search ${paused ? "match-search-paused" : ""}`}>
       <div className="match-search-visual" aria-hidden="true">
-        <span className="match-search-orbit" />
-        <span className="match-search-wave" />
-        <span className="match-search-core">
-          <Crosshair size={34} strokeWidth={1.4} />
-        </span>
+        <span className="match-search-rim" />
+        <span className="match-search-orbit match-search-segment" />
+        <span className="match-search-inner match-search-segment" />
+        <span className="match-search-sweep" />
+        <span className="match-search-node match-search-node-one" />
+        <span className="match-search-node match-search-node-two" />
+        <span className="match-search-core">VS</span>
       </div>
       <div className="match-search-copy">
         <span className="match-search-mode">
           {modeTitle(queue.mode)} · {queue.size}v{queue.size}
         </span>
-        <h3>Buscando tu próximo rival</h3>
-        <p role="status">
-          Buscando {queue.size === 1 ? "un jugador" : "un equipo completo"} de
-          rango compatible.
+        <h3 aria-label="Buscando tu próximo rival">
+          <span aria-hidden="true">
+            Buscando tu próximo rival
+            <span className="match-search-dots">
+              .<span>.</span>
+              <span>.</span>
+            </span>
+          </span>
+        </h3>
+        <p
+          className="match-search-messages"
+          role="status"
+          aria-label={`Buscando ${queue.size === 1 ? "un jugador" : "un equipo completo"} de rango compatible.`}
+        >
+          {[
+            `Buscando ${queue.size === 1 ? "un jugador" : "un equipo completo"} de rango compatible.`,
+            "Comparando nivel y formato...",
+            "Buscando jugadores disponibles...",
+            "Comprobando coincidencias...",
+          ].map((message, index) => (
+            <span
+              key={message}
+              aria-hidden="true"
+              style={{ animationDelay: `${index * 6}s` }}
+            >
+              {message}
+            </span>
+          ))}
         </p>
         <div className="match-search-time">
           <span>Tiempo de búsqueda</span>
