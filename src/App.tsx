@@ -81,7 +81,7 @@ const viewLabels: Record<View, string> = {
   help: "Ayuda",
 };
 const viewDescriptions: Record<View, string> = {
-  duels: "Encuentra rival y sigue tu duelo de equipo.",
+  duels: "Elige modalidad, encuentra rival y juega.",
   moderation: "Revisa reportes y resuelve los casos pendientes.",
   arena: "Modalidades y desafíos disponibles.",
   teams: "Reúne a tus compañeros y gestiona tu formación.",

@@ -223,7 +223,7 @@ export function ArenaPanel({
         </button>
       </div>
       <p className="duel-test-label">
-        Modo de prueba · Aporte por jugador: 0 · Total por equipo: 0
+        Modo de prueba · Sin dinero ni cambios de rango
       </p>
       {error && (
         <p role="alert" className="team-error">
@@ -241,7 +241,11 @@ export function ArenaPanel({
                 date={d.confirmationDeadline}
                 label="Tiempo para confirmar"
               />
-              <p>Todos los jugadores deben aceptar, aunque pague el capitán.</p>
+              <p>
+                {d.size === 1
+                  ? "Ambos jugadores deben confirmar para empezar."
+                  : "Todos los jugadores deben aceptar, aunque pague el capitán."}
+              </p>
               <div className="duel-buttons">
                 <button
                   className="button primary"
