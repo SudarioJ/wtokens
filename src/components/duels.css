@@ -708,3 +708,268 @@
     gap: 16px;
   }
 }
+
+/* Match-found art direction: floating WTokens coins behind the acceptance flow. */
+.match-found {
+  width: min(680px, calc(100vw - 32px));
+  padding: 26px 30px 18px;
+  border: 1px solid #1689ff;
+  border-radius: 16px;
+  isolation: isolate;
+  background: radial-gradient(
+    ellipse at 50% 0,
+    #082f65 0,
+    #07101d 52%,
+    #080d15 85%
+  );
+  box-shadow:
+    0 0 0 1px #1174df40,
+    0 18px 90px #000b,
+    0 0 45px #096cff15;
+}
+.match-found-content {
+  position: relative;
+  z-index: 1;
+}
+.match-found-scene {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 430px;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: 15px 15px 0 0;
+  mask-image: linear-gradient(#000 0%, #000 65%, transparent 100%);
+  background: radial-gradient(ellipse at 62% 22%, #0877f050, transparent 65%);
+}
+.match-found-streaks {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background:
+    repeating-linear-gradient(
+      146deg,
+      transparent 0 65px,
+      #287bce12 66px,
+      transparent 68px 130px
+    ),
+    radial-gradient(circle at 25% 20%, #6cc8ff 0 1px, transparent 3px),
+    radial-gradient(circle at 76% 51%, #3594eb 0 1px, transparent 3px),
+    radial-gradient(circle at 53% 13%, #86d5ff 0 1px, transparent 4px);
+}
+.match-found-coin {
+  position: absolute;
+  display: block;
+  width: var(--coin-size);
+  opacity: var(--coin-opacity, 0.55);
+}
+.match-found-coin img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: perspective(600px) rotateY(var(--coin-tilt, -18deg))
+    rotate(var(--coin-angle, -20deg));
+  filter: brightness(0.7) saturate(1.15);
+}
+.match-found-coin-1 {
+  --coin-size: 245px;
+  --coin-angle: -28deg;
+  --coin-tilt: 28deg;
+  left: -70px;
+  top: 65px;
+}
+.match-found-coin-2 {
+  --coin-size: 205px;
+  --coin-angle: 20deg;
+  --coin-tilt: -23deg;
+  --coin-opacity: 0.7;
+  right: -5px;
+  top: 10px;
+}
+.match-found-coin-3 {
+  --coin-size: 95px;
+  --coin-angle: -35deg;
+  --coin-opacity: 0.35;
+  left: 30%;
+  top: 12px;
+  filter: blur(1px);
+}
+.match-found-coin-4 {
+  --coin-size: 115px;
+  --coin-angle: 32deg;
+  --coin-tilt: -35deg;
+  right: 7%;
+  top: 235px;
+}
+.match-found-coin-5 {
+  --coin-size: 110px;
+  --coin-opacity: 0.3;
+  right: -55px;
+  top: 185px;
+  filter: blur(2px);
+}
+.match-found-coin-6 {
+  --coin-size: 145px;
+  --coin-opacity: 0.22;
+  --coin-angle: 12deg;
+  left: -75px;
+  top: 300px;
+  filter: blur(3px);
+}
+.match-found-top {
+  position: relative;
+  z-index: 2;
+  color: #b5d4fa;
+}
+.match-found-sound {
+  border: 1px solid #315376;
+  background: #07111dbb;
+  color: #c5e1ff;
+}
+.match-found-emblem {
+  width: 116px;
+  height: 116px;
+  margin: 48px auto 26px;
+  background: radial-gradient(circle, #07111efa 60%, #081629db);
+  border-color: #168bff;
+  color: #a1d0ff;
+  box-shadow:
+    0 0 0 12px #051020c9,
+    0 0 34px #0a84ff18;
+}
+.match-found-emblem > span {
+  inset: -14px;
+  border-width: 2px;
+  border-top-color: #77dcff;
+  border-bottom-color: #359fff;
+}
+.match-found-emblem > span::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  right: 9px;
+  top: 18px;
+  background: #8ce5ff;
+  box-shadow: 0 0 8px #399fff66;
+}
+.match-found h2 {
+  font-size: clamp(26px, 4.5vw, 36px);
+  font-weight: 700;
+  text-shadow: 0 2px 12px #000a;
+}
+.match-found #match-found-description {
+  color: #bad0eb;
+  text-shadow: 0 1px 5px #000;
+}
+.match-found-mode {
+  color: #a4d3ff;
+}
+.match-found-teams {
+  gap: 0;
+  padding: 0;
+  border: 1px solid #2b4c70;
+  border-radius: 9px;
+  background: #070e18b3;
+}
+.match-found-teams > div {
+  padding: 16px;
+}
+.match-found-teams > div + div {
+  border-left: 1px solid #2b4c70;
+}
+.match-found-teams h3 {
+  color: #b0cff5;
+}
+.match-found-teams li > span:last-child::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #4d709b;
+}
+.match-found-teams li > span.is-ready::before {
+  background: #8dccff;
+}
+.app-shell .match-found .button.match-found-accept {
+  border: 1px solid #3b9fff;
+  background: linear-gradient(110deg, #0868dc, #0757d5);
+  color: #fff;
+  font-weight: 600;
+}
+.app-shell .match-found .button.match-found-accept:disabled {
+  background: #163b64;
+  color: #bfd6ef;
+  border-color: #315a85;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .match-found-coin {
+    animation: match-found-coin-drift 11s ease-in-out infinite alternate;
+  }
+  .match-found-coin-2 {
+    animation-duration: 13s;
+    animation-delay: -4s;
+  }
+  .match-found-coin-3 {
+    animation-duration: 15s;
+    animation-delay: -7s;
+  }
+  .match-found-coin-4 {
+    animation-duration: 12s;
+    animation-delay: -3s;
+  }
+  .match-found-coin-5 {
+    animation-duration: 16s;
+    animation-delay: -6s;
+  }
+  .match-found-coin-6 {
+    animation-duration: 14s;
+    animation-delay: -9s;
+  }
+  @keyframes match-found-coin-drift {
+    from {
+      transform: translate3d(0, 0, 0) rotate(-1deg);
+    }
+    to {
+      transform: translate3d(4px, -9px, 0) rotate(2deg);
+    }
+  }
+}
+@media (max-width: 480px) {
+  .match-found {
+    padding: 18px 18px 12px;
+  }
+  .match-found-emblem {
+    width: 96px;
+    height: 96px;
+    margin-top: 32px;
+  }
+  .match-found-scene {
+    height: 350px;
+  }
+  .match-found-coin-1 {
+    --coin-size: 150px;
+    left: -65px;
+    top: 85px;
+  }
+  .match-found-coin-2 {
+    --coin-size: 145px;
+    right: -45px;
+    top: 32px;
+  }
+  .match-found-coin-3 {
+    --coin-size: 65px;
+    left: 28%;
+    top: 20px;
+  }
+  .match-found-coin-4 {
+    --coin-size: 78px;
+    right: 0;
+    top: 215px;
+  }
+  .match-found-teams > div {
+    padding: 13px 10px;
+  }
+}

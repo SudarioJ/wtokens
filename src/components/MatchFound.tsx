@@ -81,109 +81,125 @@ export function MatchFound({
       aria-describedby="match-found-description"
       onCancel={(event) => event.preventDefault()}
     >
-      <div className="match-found-top">
-        <span>WTOKENS / MATCHMAKING</span>
-        <button
-          type="button"
-          className="match-found-sound"
-          onClick={onSound}
-          aria-label={
-            sound ? "Silenciar aviso de partida" : "Activar aviso de partida"
-          }
-          aria-pressed={sound}
-        >
-          {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
-      </div>
-      <div
-        className={`match-found-emblem ${accepted ? "is-accepted" : ""}`}
-        aria-hidden="true"
-      >
-        <span />
-        {accepted ? (
-          <Check size={40} strokeWidth={1.6} />
-        ) : (
-          <Crosshair size={40} strokeWidth={1.4} />
-        )}
-      </div>
-      <p className="match-found-mode">
-        {modeTitle(duel.mode)} · {duel.size}v{duel.size}
-      </p>
-      <h2 id="match-found-title">Partida encontrada</h2>
-      <p id="match-found-description">
-        {expired
-          ? "Se agotó el tiempo. Actualizando el estado de la partida…"
-          : accepted
-            ? "Ya aceptaste. Esperando a los demás jugadores."
-            : "Tu rival está listo. Acepta para entrar a la partida."}
-      </p>
-      <div className="match-found-teams">
-        {(["A", "B"] as const).map((side) => (
-          <div key={side}>
-            <h3>Equipo {side}</h3>
-            <ul>
-              {duel.players
-                .filter((p) => p.side === side)
-                .map((p) => (
-                  <li key={p.id}>
-                    <span>
-                      {p.name}
-                      {p.id === userId ? " (tú)" : ""}
-                    </span>
-                    <span className={p.confirmed ? "is-ready" : ""}>
-                      {p.confirmed ? "Listo" : "Esperando"}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          </div>
+      <div className="match-found-scene" aria-hidden="true">
+        <div className="match-found-streaks" />
+        {[1, 2, 3, 4, 5, 6].map((coin) => (
+          <span
+            key={coin}
+            className={`match-found-coin match-found-coin-${coin}`}
+          >
+            <img src="/assets/brand.svg" alt="" draggable={false} />
+          </span>
         ))}
       </div>
-      <p className="match-found-ready" role="status">
-        {duel.players.filter((p) => p.confirmed).length} de{" "}
-        {duel.players.length} jugadores aceptaron
-      </p>
-      <Deadline date={duel.confirmationDeadline} label="Tiempo para aceptar" />
-      {error && (
-        <p role="alert" className="match-found-error">
-          {error}
-        </p>
-      )}
-      <button
-        type="button"
-        className="button primary match-found-accept"
-        autoFocus
-        disabled={busy || accepted || expired}
-        onClick={onAccept}
-      >
-        {expired
-          ? "Tiempo agotado"
-          : accepted
-            ? "Ya confirmaste"
-            : busy
-              ? "Confirmando…"
-              : "Confirmar participación"}
-      </button>
-      <button
-        type="button"
-        className="match-found-decline"
-        disabled={busy || expired}
-        onClick={onDecline}
-      >
-        No participar
-      </button>
-      {sound && blocked && (
-        <button
-          className="match-found-audio-help"
-          type="button"
-          onClick={() => {
-            primeMatchSound();
-            void playMatchSound().then((played) => setBlocked(!played));
-          }}
+      <div className="match-found-content">
+        <div className="match-found-top">
+          <span>WTOKENS / MATCHMAKING</span>
+          <button
+            type="button"
+            className="match-found-sound"
+            onClick={onSound}
+            aria-label={
+              sound ? "Silenciar aviso de partida" : "Activar aviso de partida"
+            }
+            aria-pressed={sound}
+          >
+            {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+        </div>
+        <div
+          className={`match-found-emblem ${accepted ? "is-accepted" : ""}`}
+          aria-hidden="true"
         >
-          Activar sonido en este navegador
+          <span />
+          {accepted ? (
+            <Check size={40} strokeWidth={1.6} />
+          ) : (
+            <Crosshair size={40} strokeWidth={1.4} />
+          )}
+        </div>
+        <p className="match-found-mode">
+          {modeTitle(duel.mode)} · {duel.size}v{duel.size}
+        </p>
+        <h2 id="match-found-title">Partida encontrada</h2>
+        <p id="match-found-description">
+          {expired
+            ? "Se agotó el tiempo. Actualizando el estado de la partida…"
+            : accepted
+              ? "Ya aceptaste. Esperando a los demás jugadores."
+              : "Tu rival está listo. Acepta para entrar a la partida."}
+        </p>
+        <div className="match-found-teams">
+          {(["A", "B"] as const).map((side) => (
+            <div key={side}>
+              <h3>Equipo {side}</h3>
+              <ul>
+                {duel.players
+                  .filter((p) => p.side === side)
+                  .map((p) => (
+                    <li key={p.id}>
+                      <span>
+                        {p.name}
+                        {p.id === userId ? " (tú)" : ""}
+                      </span>
+                      <span className={p.confirmed ? "is-ready" : ""}>
+                        {p.confirmed ? "Listo" : "Esperando"}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="match-found-ready" role="status">
+          {duel.players.filter((p) => p.confirmed).length} de{" "}
+          {duel.players.length} jugadores aceptaron
+        </p>
+        <Deadline
+          date={duel.confirmationDeadline}
+          label="Tiempo para aceptar"
+        />
+        {error && (
+          <p role="alert" className="match-found-error">
+            {error}
+          </p>
+        )}
+        <button
+          type="button"
+          className="button primary match-found-accept"
+          autoFocus
+          disabled={busy || accepted || expired}
+          onClick={onAccept}
+        >
+          {expired
+            ? "Tiempo agotado"
+            : accepted
+              ? "Ya confirmaste"
+              : busy
+                ? "Confirmando…"
+                : "Confirmar participación"}
         </button>
-      )}
+        <button
+          type="button"
+          className="match-found-decline"
+          disabled={busy || expired}
+          onClick={onDecline}
+        >
+          No participar
+        </button>
+        {sound && blocked && (
+          <button
+            className="match-found-audio-help"
+            type="button"
+            onClick={() => {
+              primeMatchSound();
+              void playMatchSound().then((played) => setBlocked(!played));
+            }}
+          >
+            Activar sonido en este navegador
+          </button>
+        )}
+      </div>
     </dialog>
   );
 }

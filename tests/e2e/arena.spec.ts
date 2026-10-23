@@ -1377,6 +1377,16 @@ for (const muted of [false, true]) {
       exact: true,
     });
     await expect(modal).toBeVisible();
+    await expect(modal.locator(".match-found-coin")).toHaveCount(6);
+    await expect(modal.locator(".match-found-coin").first()).toHaveCSS(
+      "animation-name",
+      "match-found-coin-drift",
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(modal.locator(".match-found-coin").first()).toHaveCSS(
+      "animation-name",
+      "none",
+    );
     await expect(
       modal.getByText("Build Fight · 1v1", { exact: true }),
     ).toBeVisible();
@@ -1392,6 +1402,7 @@ for (const muted of [false, true]) {
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze();
     expect(a11y.violations).toEqual([]);
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     if (!muted)
       await expect
         .poll(() =>
