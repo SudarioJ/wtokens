@@ -82,6 +82,19 @@ export const duelSchema = z.object({
         .max(2),
     })
     .optional(),
+  review: z
+    .object({
+      correctionsAllowed: z.boolean(),
+      noticeStatus: z.enum([
+        "NOT_REQUESTED",
+        "PENDING",
+        "RETRY",
+        "SENT",
+        "UNCONFIGURED",
+        "CANCELLED",
+      ]),
+    })
+    .optional(),
 });
 export const arenaSchema = z.object({
   queue: z
@@ -130,6 +143,17 @@ export const arenaApi = {
     }),
   outcome: (id: string, outcome: "WIN" | "LOSS") =>
     send(`${duelPath(id)}/outcome`, duelSchema, { outcome }),
+  correctOutcome: (
+    id: string,
+    outcome: "WIN" | "LOSS",
+    previousWinnerSide: "A" | "B",
+  ) =>
+    send(`${duelPath(id)}/outcome/correct`, duelSchema, {
+      outcome,
+      previousWinnerSide,
+    }),
+  requestModerator: (id: string) =>
+    send(`${duelPath(id)}/moderator`, duelSchema),
   continuation: (id: string, choice: "DOUBLE" | "REMATCH" | "FINISH") =>
     send(`${duelPath(id)}/continue`, duelSchema, { choice }),
   dispute: (id: string, reason: string) =>

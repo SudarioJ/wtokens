@@ -19,6 +19,7 @@ import {
 } from "../lib/matchSound";
 import type { Mode, Team } from "../lib/contracts";
 import { DuelOutcome } from "./DuelOutcome";
+import { DuelReview } from "./DuelReview";
 import { Deadline } from "./Deadline";
 import "./duels.css";
 export function DuelDetails({ duel }: { duel: Duel }) {
@@ -196,7 +197,7 @@ export function ArenaPanel({
     };
   }, [load]);
   async function act(task: () => Promise<Arena | Duel>) {
-    if (busyRef.current) return;
+    if (busyRef.current) return false;
     if (sound) primeMatchSound();
     busyRef.current = true;
     setBusy(true);
@@ -204,7 +205,7 @@ export function ArenaPanel({
     version.current++;
     try {
       const result = await task();
-      if (!mounted.current) return;
+      if (!mounted.current) return false;
       if ("players" in result) {
         last.current = result;
         setArena((previous) => ({
@@ -217,8 +218,10 @@ export function ArenaPanel({
         last.current = result.duel;
         setArena(result);
       }
+      return true;
     } catch (e) {
       if (mounted.current) setError(friendlyError(e));
+      return false;
     } finally {
       busyRef.current = false;
       if (mounted.current) setBusy(false);
@@ -395,11 +398,23 @@ export function ArenaPanel({
               </details>
             </>
           )}
-          {d.state === "MODERATION" && (
-            <p role="status">
-              El caso está en revisión. No se declara ganador ni se mueve saldo
-              automáticamente.
-            </p>
+          {(d.state === "MODERATION" ||
+            (d.state === "RESULT_PENDING" &&
+              d.reports.some((r) => r.captainId === userId))) && (
+            <DuelReview
+              key={d.id}
+              duel={d}
+              userId={userId}
+              busy={busy}
+              onCorrect={async (outcome, previous) => {
+                return act(() =>
+                  arenaApi.correctOutcome(d.id, outcome, previous),
+                );
+              }}
+              onModerator={() =>
+                void act(() => arenaApi.requestModerator(d.id))
+              }
+            />
           )}
           {captain && (playing || d.state === "MODERATION") && (
             <div>

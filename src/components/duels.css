@@ -973,3 +973,23 @@
     padding: 13px 10px;
   }
 }
+
+.duel-correction-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  border: 1px solid #2b4c70;
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+.duel-correction-options label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #c5d6eb;
+}
+.duel-correction-options input {
+  width: auto;
+  accent-color: #3b9fff;
+}

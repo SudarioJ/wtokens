@@ -1456,3 +1456,90 @@ for (const muted of [false, true]) {
     }
   });
 }
+
+test("conflicting wins can request a moderator once and correct only own result", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  const duel = fixtureDuel();
+  duel.state = "MODERATION";
+  duel.players.forEach((p) => (p.confirmed = true));
+  duel.review = { correctionsAllowed: true, noticeStatus: "NOT_REQUESTED" };
+  duel.reports = duel.players
+    .filter((p) => p.captain)
+    .map((p) => ({
+      captainId: p.id,
+      winnerSide: p.side,
+      rounds: null,
+      evidence: null,
+      createdAt: new Date().toISOString(),
+    }));
+  let requests = 0;
+  await page.route("**/v1/arena**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/moderator")) {
+      requests++;
+      duel.review!.noticeStatus = "UNCONFIGURED";
+    }
+    if (path.endsWith("/outcome/correct")) {
+      expect(route.request().postDataJSON()).toEqual({
+        outcome: "LOSS",
+        previousWinnerSide: "A",
+      });
+      duel.reports[0]!.winnerSide = "B";
+      duel.state = "POST_GAME";
+      duel.winnerSide = "B";
+      duel.review = { correctionsAllowed: false, noticeStatus: "CANCELLED" };
+      duel.series = {
+        id: duel.id,
+        winsA: 0,
+        winsB: 1,
+        referenceUsdMinor: "50",
+        nextDuelId: null,
+        votes: [],
+      };
+    }
+    return route.fulfill({
+      json: path.includes("/duels/")
+        ? duel
+        : { queue: null, duel, roomsConfigured: false },
+    });
+  });
+  await page.goto("/app");
+  await nav(page, "Duelos");
+  await page
+    .getByRole("button", { name: "Llamar a un moderador", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Moderador solicitado", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByText(/no se envió ninguna mención/)).toBeVisible();
+  expect(requests).toBe(1);
+  await page
+    .getByRole("button", { name: "Corregir mi resultado", exact: true })
+    .click();
+  await page.getByRole("radio", { name: "Perdimos", exact: true }).check();
+  await expect(
+    page.getByRole("button", { name: "Guardar corrección", exact: true }),
+  ).toBeEnabled();
+  const a11y = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(a11y.violations).toEqual([]);
+  await page.screenshot({
+    path: `test-results/correct-outcome-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Guardar corrección", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Derrota confirmada", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Doble", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Corregir mi resultado", exact: true }),
+  ).toHaveCount(0);
+});

@@ -40,6 +40,12 @@ export function friendlyError(error: unknown): string {
       STATE_CONFLICT: "El duelo cambió de estado. Actualiza para continuar.",
       REPORT_IMMUTABLE:
         "Ya enviaste tu reporte. Pide revisión si necesitas corregirlo.",
+      CORRECTION_LOCKED:
+        "Ese resultado ya fue acordado o requiere revisión del moderador. Actualiza el duelo.",
+      STALE_REPORT:
+        "Tu reporte cambió. Actualiza antes de guardar otra corrección.",
+      NO_OUTCOME_REPORT:
+        "No tienes un reporte de victoria o derrota que puedas corregir.",
       MODERATOR_REQUIRED: "Esta sección requiere permisos de moderador.",
       CONFLICT_OF_INTEREST:
         "Otro moderador debe revisar un duelo en el que participaste.",
