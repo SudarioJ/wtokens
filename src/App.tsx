@@ -162,6 +162,7 @@ export function App() {
   const [teamMode, setTeamMode] = useState("BOX_FIGHT");
   const [rankMode, setRankMode] = useState("BOX_FIGHT");
   const [modal, setModal] = useState<Modal>(null);
+  const [rememberLogin, setRememberLogin] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [connection, setConnection] = useState<
     "loading" | "online" | "offline"
@@ -1331,14 +1332,26 @@ export function App() {
                 </span>
               </div>
               {connection === "online" && platform?.discordEnabled ? (
-                <a
-                  className="button primary full"
-                  href="/oauth2/authorization/discord"
-                >
-                  <Gamepad2 size={20} />
-                  Continuar con Discord
-                  <ArrowUpRight size={17} />
-                </a>
+                <>
+                  <label className="remember-login">
+                    <input
+                      type="checkbox"
+                      checked={rememberLogin}
+                      onChange={(event) =>
+                        setRememberLogin(event.target.checked)
+                      }
+                    />
+                    <span>Recordarme durante 15 días</span>
+                  </label>
+                  <a
+                    className="button primary full"
+                    href={`/oauth2/authorization/discord?remember=${rememberLogin}`}
+                  >
+                    <Gamepad2 size={20} />
+                    Continuar con Discord
+                    <ArrowUpRight size={17} />
+                  </a>
+                </>
               ) : (
                 <div className="info-note">
                   <CircleHelp size={17} />

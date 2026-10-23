@@ -587,7 +587,19 @@ test("public play button requests Discord before entering the private panel", as
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Continuar con Discord" }),
-  ).toHaveAttribute("href", "/oauth2/authorization/discord");
+  ).toHaveAttribute("href", "/oauth2/authorization/discord?remember=true");
+  const remember = page.getByRole("checkbox", {
+    name: "Recordarme durante 15 días",
+  });
+  await expect(remember).toBeChecked();
+  await remember.uncheck();
+  await expect(
+    page.getByRole("link", { name: "Continuar con Discord" }),
+  ).toHaveAttribute("href", "/oauth2/authorization/discord?remember=false");
+  await remember.check();
+  await expect(
+    page.getByRole("link", { name: "Continuar con Discord" }),
+  ).toHaveAttribute("href", "/oauth2/authorization/discord?remember=true");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page).toHaveURL(/\/$/);
