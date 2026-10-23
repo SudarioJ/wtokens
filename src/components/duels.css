@@ -504,3 +504,16 @@
     font-size: 18px;
   }
 }
+
+.duel-outcome {
+  padding: 22px 0;
+  border-top: 1px solid #24364f;
+  margin-top: 18px;
+}
+.duel-outcome h3 {
+  margin: 0 0 12px;
+}
+.duel-votes {
+  padding-left: 20px;
+  color: #a7b4c6;
+}

@@ -30,6 +30,11 @@ export function friendlyError(error: unknown): string {
       LEAVE_TEAM_FIRST:
         "Sal de tu equipo antes de buscar un 1v1 por tu cuenta.",
       TEAM_INCOMPLETE: "Completa tu equipo antes de buscar rival.",
+      SERIES_TIED:
+        "La serie está igualada. Pueden empezar una revancha o finalizar.",
+      SERIES_NOT_TIED: "Pueden elegir doble o finalizar esta serie.",
+      DOUBLE_LIMIT:
+        "Se alcanzó el límite de esta simulación. Finalicen la serie.",
       INVALID_ROUNDS:
         "Revisa las rondas: 3–0 termina; en los demás casos, mínimo cinco con diferencia de dos.",
       STATE_CONFLICT: "El duelo cambió de estado. Actualiza para continuar.",

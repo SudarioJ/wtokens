@@ -10,7 +10,7 @@ import {
 } from "../lib/arena";
 import { MatchSearch } from "./MatchSearch";
 import type { Mode, Team } from "../lib/contracts";
-import { RoundEditor } from "./RoundEditor";
+import { DuelOutcome } from "./DuelOutcome";
 import { Deadline } from "./Deadline";
 import "./duels.css";
 export function DuelDetails({ duel }: { duel: Duel }) {
@@ -52,6 +52,11 @@ export function DuelDetails({ duel }: { duel: Duel }) {
         3–0 es zapatero. En los demás casos: mínimo cinco rondas ganadas con
         diferencia de dos; se continúa hasta lograrla.
       </p>
+      {!duel.rounds && duel.winnerSide && (
+        <p>
+          Ganador confirmado: <strong>Equipo {duel.winnerSide}</strong>.
+        </p>
+      )}
       {duel.rounds && (
         <p>
           Resultado: Equipo A {roundScore(duel.rounds).a} —{" "}
@@ -82,8 +87,10 @@ export function DuelDetails({ duel }: { duel: Duel }) {
           <h3>Reportes de capitanes</h3>
           {duel.reports.map((r) => (
             <p key={r.captainId}>
-              {duel.players.find((p) => p.id === r.captainId)?.name}: A{" "}
-              {roundScore(r.rounds).a} — {roundScore(r.rounds).b} B{" "}
+              {duel.players.find((p) => p.id === r.captainId)?.name}:{" "}
+              {r.winnerSide
+                ? `Ganador: Equipo ${r.winnerSide}`
+                : `Equipo A ${roundScore(r.rounds ?? "").a} — ${roundScore(r.rounds ?? "").b} Equipo B`}{" "}
               {r.evidence && (
                 <a href={r.evidence} target="_blank" rel="noopener noreferrer">
                   Ver evidencia
@@ -126,8 +133,6 @@ export function ArenaPanel({
   const [team, setTeam] = useState<Team | null>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [rounds, setRounds] = useState("");
-  const [evidence, setEvidence] = useState("");
   const [reason, setReason] = useState("");
   const [mode, setMode] = useState(initialMode);
   const [payment, setPayment] = useState("INDIVIDUAL");
@@ -190,8 +195,6 @@ export function ArenaPanel({
         last.current = result.duel;
         setArena(result);
       }
-      setRounds("");
-      setEvidence("");
     } catch (e) {
       if (mounted.current) setError(friendlyError(e));
     } finally {
@@ -298,50 +301,17 @@ export function ArenaPanel({
               {d.reportDeadline && (
                 <Deadline date={d.reportDeadline} label="Plazo para reportar" />
               )}
-              {captain && !d.finishedAt && (
-                <button
-                  className="button secondary"
-                  disabled={busy}
-                  onClick={() =>
-                    void act(() => arenaApi.action(d.id, "finish"))
-                  }
-                >
-                  Marcar fin de partida
-                </button>
-              )}
-              {captain && !d.reports.some((r) => r.captainId === userId) && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void act(() => arenaApi.report(d.id, rounds, evidence));
-                  }}
-                >
-                  <RoundEditor
-                    rounds={rounds}
-                    onChange={setRounds}
-                    disabled={busy}
-                  />
-                  <label>
-                    Evidencia (enlace HTTPS, opcional)
-                    <input
-                      type="url"
-                      value={evidence}
-                      maxLength={1000}
-                      onChange={(e) => setEvidence(e.target.value)}
-                      placeholder="https://…"
-                    />
-                  </label>
-                  <button
-                    className="button primary"
-                    disabled={busy || !roundScore(rounds).winner}
-                  >
-                    Enviar resultado definitivo
-                  </button>
-                </form>
-              )}
-              {!captain && (
-                <p>El capitán de tu equipo reportará el resultado.</p>
-              )}
+              <DuelOutcome
+                duel={d}
+                userId={userId}
+                busy={busy}
+                onReport={(outcome) =>
+                  void act(() => arenaApi.outcome(d.id, outcome))
+                }
+                onContinue={(choice) =>
+                  void act(() => arenaApi.continuation(d.id, choice))
+                }
+              />
               <details>
                 <summary>Ausencia o problema con la partida</summary>
                 {!d.absentUser && (
@@ -385,6 +355,38 @@ export function ArenaPanel({
                     Solicitar moderación
                   </button>
                 </form>
+              </details>
+            </>
+          )}
+          {d.state === "POST_GAME" && (
+            <>
+              <DuelOutcome
+                duel={d}
+                userId={userId}
+                busy={busy}
+                onReport={(outcome) =>
+                  void act(() => arenaApi.outcome(d.id, outcome))
+                }
+                onContinue={(choice) =>
+                  void act(() => arenaApi.continuation(d.id, choice))
+                }
+              />
+              <details>
+                <summary>¿No se ponen de acuerdo?</summary>
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    void act(() =>
+                      arenaApi.dispute(
+                        d.id,
+                        "Los capitanes no acuerdan cómo continuar o finalizar la serie.",
+                      ),
+                    )
+                  }
+                >
+                  Solicitar moderación
+                </button>
               </details>
             </>
           )}

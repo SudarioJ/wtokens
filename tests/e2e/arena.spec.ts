@@ -834,7 +834,7 @@ function fixtureDuel() {
   } as import("../../src/lib/arena").Duel;
 }
 
-test("team matchmaking searches, confirms everyone, reports rounds and keeps history", async ({
+test("team matchmaking searches, confirms everyone, reports outcome and keeps history", async ({
   page,
 }, info) => {
   await mockApi(page, { signedIn: true });
@@ -887,15 +887,16 @@ test("team matchmaking searches, confirms everyone, reports rounds and keeps his
       duel.startedAt = new Date().toISOString();
       return route.fulfill({ json: duel });
     }
-    if (path.endsWith("/report")) {
-      expect(route.request().postDataJSON().rounds).toBe("AAA");
+    if (path.endsWith("/outcome")) {
+      expect(route.request().postDataJSON()).toEqual({ outcome: "WIN" });
       duel.state = "RESULT_PENDING";
       duel.finishedAt = new Date().toISOString();
       duel.reportDeadline = new Date(Date.now() + 1800000).toISOString();
       duel.reports = [
         {
           captainId: duelUserId,
-          rounds: "AAA",
+          rounds: null,
+          winnerSide: "A",
           evidence: null,
           createdAt: new Date().toISOString(),
         },
@@ -936,14 +937,15 @@ test("team matchmaking searches, confirms everyone, reports rounds and keeps his
     .getByRole("button", { name: "Confirmar participación", exact: true })
     .click();
   await expect(page.getByText("En juego", { exact: true })).toBeVisible();
-  const a = page.getByRole("button", { name: "+ Equipo A", exact: true });
-  await a.click();
-  await a.click();
-  await a.click();
-  await expect(a).toBeDisabled();
   await expect(
-    page.getByText("Marcador válido. Gana el equipo A.", { exact: true }),
+    page.getByRole("button", { name: "Ganamos", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Perdimos", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Rondas, en orden de juego", { exact: true }),
+  ).toHaveCount(0);
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
@@ -956,9 +958,7 @@ test("team matchmaking searches, confirms everyone, reports rounds and keeps his
     path: `test-results/matchmaking-${info.project.name}.png`,
     fullPage: true,
   });
-  await page
-    .getByRole("button", { name: "Enviar resultado definitivo", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Ganamos", exact: true }).click();
   await expect(
     page.getByText("Esperando reportes", { exact: true }),
   ).toBeVisible();
@@ -1182,5 +1182,111 @@ test("Equipo offers multiplayer formats and handles an old solo formation withou
   await expect(page.locator(".team-roster")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Crea tu equipo", exact: true }),
+  ).toBeVisible();
+});
+
+test("confirmed outcome requires captain agreement for double, tied rematch and finalization", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  let duel = fixtureDuel();
+  duel.state = "POST_GAME";
+  duel.winnerSide = "A";
+  duel.rounds = null;
+  duel.players.forEach((p) => (p.confirmed = true));
+  duel.series = {
+    id: duel.id,
+    winsA: 1,
+    winsB: 0,
+    referenceUsdMinor: "50",
+    nextDuelId: null,
+    votes: [],
+  };
+  duel.reports = [
+    {
+      captainId: duelUserId,
+      winnerSide: "A",
+      rounds: null,
+      evidence: null,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  await page.route("**/v1/arena**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/continue")) {
+      const { choice } = route.request().postDataJSON();
+      duel.series!.votes = [{ captainId: duelUserId, choice }];
+      return route.fulfill({ json: duel });
+    }
+    return route.fulfill({
+      json: path.includes("/duels/")
+        ? duel
+        : { queue: null, duel, roomsConfigured: false },
+    });
+  });
+  await page.goto("/app");
+  await nav(page, "Duelos");
+  await expect(
+    page.getByText("Victoria confirmada", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Gané", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Doble", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Doble", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByText(/Decisión enviada/)).toBeVisible();
+  // The other captain agrees: the server returns a new, already accepted practice leg.
+  duel = {
+    ...duel,
+    id: "92938a11-c78b-4fd5-95cf-05b2382d6a34",
+    state: "IN_PROGRESS",
+    winnerSide: null,
+    reports: [],
+    series: { ...duel.series!, referenceUsdMinor: "100", votes: [] },
+  };
+  await page
+    .getByRole("button", { name: "Actualizar duelo", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Ganamos", exact: true }),
+  ).toBeVisible();
+  // Opposite winner makes this series 1–1. Only a fresh rematch or finish is offered.
+  duel.state = "POST_GAME";
+  duel.winnerSide = "B";
+  duel.series!.winsB = 1;
+  await page
+    .getByRole("button", { name: "Actualizar duelo", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Doble", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Empezar revancha", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/Revancha:.*0[,.]50/)).toBeVisible();
+  const a11y = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(a11y.violations).toEqual([]);
+  await page.screenshot({
+    path: `test-results/duel-rematch-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Empezar revancha", exact: true })
+    .click();
+  await expect(page.getByText(/Decisión enviada/)).toBeVisible();
+  await page.getByRole("button", { name: "Finalizar", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Finalizar", exact: true }),
+  ).toBeDisabled();
+  duel.state = "COMPLETED";
+  await page
+    .getByRole("button", { name: "Actualizar duelo", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Buscar otro duelo", exact: true }),
   ).toBeVisible();
 });

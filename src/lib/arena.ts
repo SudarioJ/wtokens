@@ -11,6 +11,7 @@ export const duelSchema = z.object({
     "CONFIRMING",
     "IN_PROGRESS",
     "RESULT_PENDING",
+    "POST_GAME",
     "MODERATION",
     "COMPLETED",
     "CANCELLED",
@@ -47,7 +48,8 @@ export const duelSchema = z.object({
     .array(
       z.object({
         captainId: z.uuid(),
-        rounds: z.string(),
+        rounds: z.string().nullable(),
+        winnerSide: z.enum(["A", "B"]).nullable().optional(),
         evidence: z
           .url()
           .regex(/^https:\/\//)
@@ -63,6 +65,23 @@ export const duelSchema = z.object({
       createdAt: z.iso.datetime(),
     }),
   ),
+  series: z
+    .object({
+      id: z.uuid(),
+      winsA: z.number().int().nonnegative(),
+      winsB: z.number().int().nonnegative(),
+      referenceUsdMinor: z.string().regex(/^\d+$/),
+      nextDuelId: z.uuid().nullable(),
+      votes: z
+        .array(
+          z.object({
+            captainId: z.uuid(),
+            choice: z.enum(["DOUBLE", "REMATCH", "FINISH"]),
+          }),
+        )
+        .max(2),
+    })
+    .optional(),
 });
 export const arenaSchema = z.object({
   queue: z
@@ -109,6 +128,10 @@ export const arenaApi = {
       rounds,
       evidence: evidence || null,
     }),
+  outcome: (id: string, outcome: "WIN" | "LOSS") =>
+    send(`${duelPath(id)}/outcome`, duelSchema, { outcome }),
+  continuation: (id: string, choice: "DOUBLE" | "REMATCH" | "FINISH") =>
+    send(`${duelPath(id)}/continue`, duelSchema, { choice }),
   dispute: (id: string, reason: string) =>
     send(`${duelPath(id)}/dispute`, duelSchema, { reason }),
   absence: (id: string, userId: string) =>
@@ -134,6 +157,7 @@ export const duelState = (state: Duel["state"]) =>
     CONFIRMING: "Esperando confirmaciones",
     IN_PROGRESS: "En juego",
     RESULT_PENDING: "Esperando reportes",
+    POST_GAME: "Resultado confirmado",
     MODERATION: "En revisión",
     COMPLETED: "Finalizado",
     CANCELLED: "Cancelado",
