@@ -8,7 +8,8 @@ import {
   type Arena,
   type Duel,
 } from "../lib/arena";
-import type { Team } from "../lib/contracts";
+import { MatchSearch } from "./MatchSearch";
+import type { Mode, Team } from "../lib/contracts";
 import { RoundEditor } from "./RoundEditor";
 import { Deadline } from "./Deadline";
 import "./duels.css";
@@ -111,11 +112,15 @@ export function DuelDetails({ duel }: { duel: Duel }) {
 export function ArenaPanel({
   userId,
   asset,
+  modes,
+  initialMode = "BOX_FIGHT",
   onTeam,
 }: {
   userId: string;
   asset: string;
-  onTeam: () => void;
+  modes: Mode[];
+  initialMode?: string;
+  onTeam: (mode: string) => void;
 }) {
   const [arena, setArena] = useState<Arena>();
   const [team, setTeam] = useState<Team | null>();
@@ -124,6 +129,7 @@ export function ArenaPanel({
   const [rounds, setRounds] = useState("");
   const [evidence, setEvidence] = useState("");
   const [reason, setReason] = useState("");
+  const [mode, setMode] = useState(initialMode);
   const [payment, setPayment] = useState("INDIVIDUAL");
   const mounted = useRef(false),
     busyRef = useRef(false),
@@ -415,35 +421,68 @@ export function ArenaPanel({
           )}
         </>
       ) : arena.queue ? (
-        <>
-          <p>
-            {modeTitle(arena.queue.mode)} · {arena.queue.size}v
-            {arena.queue.size} · {arena.queue.asset}
-          </p>
-          <p role="status">
-            Esperando un equipo completo compatible. Mismo modo y formato; rango
-            igual o adyacente. Desde Élite, todos entre sí.
-          </p>
-          <Deadline date={arena.queue.expiresAt} label="La búsqueda vence en" />
-          {team?.captainId === userId ? (
+        <MatchSearch
+          queue={arena.queue}
+          canCancel={arena.queue.size === 1 || team?.captainId === userId}
+          busy={busy}
+          onCancel={() => void act(arenaApi.leave)}
+        />
+      ) : !team || team.size === 1 ? (
+        <div className="solo-matchmaking">
+          <div className="solo-matchmaking-heading">
+            <span className="solo-format">1v1</span>
+            <div>
+              <h3>Juega solo. Encuentra tu rival.</h3>
+              <p>Elige tu modalidad y entra directamente a la búsqueda.</p>
+            </div>
+          </div>
+          <label>
+            Modalidad para 1v1
+            <select
+              value={
+                modes.some((item) => item.code === mode)
+                  ? mode
+                  : (modes[0]?.code ?? mode)
+              }
+              disabled={busy || !modes.length}
+              onChange={(event) => setMode(event.target.value)}
+            >
+              {modes.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {modeTitle(item.code)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="duel-buttons">
+            <button
+              className="button primary"
+              disabled={busy || !modes.length}
+              onClick={() =>
+                void act(() =>
+                  arenaApi.solo(
+                    modes.some((item) => item.code === mode)
+                      ? mode
+                      : modes[0]!.code,
+                    asset,
+                  ),
+                )
+              }
+            >
+              {busy ? "Entrando a la búsqueda…" : "Buscar rival 1v1"}
+            </button>
             <button
               className="button secondary"
               disabled={busy}
-              onClick={() => void act(arenaApi.leave)}
+              onClick={() => onTeam(mode)}
             >
-              Cancelar búsqueda
+              Jugar en equipo
             </button>
-          ) : (
-            <p>El capitán puede cancelar la búsqueda.</p>
-          )}
-        </>
-      ) : !team ? (
-        <>
-          <p>Primero crea o completa tu equipo, de 1v1 a 4v4.</p>
-          <button className="button primary" onClick={onTeam}>
-            Preparar equipo
-          </button>
-        </>
+          </div>
+          <p className="duel-note">
+            Para 2v2, 3v3 o 4v4, crea un equipo e invita a tus compañeros.
+          </p>
+        </div>
       ) : (
         <>
           <p>

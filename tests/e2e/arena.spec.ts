@@ -245,6 +245,9 @@ test("captain can form a 4v4 team, generate an invitation and close it", async (
   await page
     .getByRole("button", { name: "Seleccionar Build Fight", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Jugar en equipo", exact: true })
+    .click();
   const panel = page.getByRole("region", { name: "Tu formación", exact: true });
   await expect(
     panel.getByRole("heading", { name: "Crea tu equipo" }),
@@ -1023,5 +1026,136 @@ test("moderation requires a reason and records an explicit cancellation", async 
   await submit.click();
   await expect(
     page.getByText("No hay casos pendientes.", { exact: true }),
+  ).toBeVisible();
+});
+
+test("solo enters 1v1 directly and animated search can pause and cancel", async ({
+  page,
+}, info) => {
+  await mockApi(page, { signedIn: true });
+  let queue: Record<string, unknown> | null = null;
+  let teamCreates = 0;
+  await page.route("**/v1/teams", (route) => {
+    if (route.request().method() === "POST") teamCreates++;
+    return route.fulfill({ json: { team: null } });
+  });
+  await page.route("**/v1/arena**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === "/v1/arena/solo") {
+      expect(route.request().postDataJSON()).toEqual({
+        mode: "BUILD_FIGHT",
+        asset: "PEN",
+      });
+      queue = {
+        mode: "BUILD_FIGHT",
+        size: 1,
+        asset: "PEN",
+        stakeMinor: "0",
+        paymentMode: "INDIVIDUAL",
+        createdAt: new Date(Date.now() - 12000).toISOString(),
+        expiresAt: new Date(Date.now() + 900000).toISOString(),
+      };
+    }
+    if (path === "/v1/arena/queue/leave") queue = null;
+    return route.fulfill({
+      json: { queue, duel: null, roomsConfigured: false },
+    });
+  });
+  await page.goto("/app");
+  await page
+    .getByRole("button", { name: "Seleccionar Build Fight", exact: true })
+    .click();
+  await expect(page.getByLabel("Modalidad para 1v1")).toHaveValue(
+    "BUILD_FIGHT",
+  );
+  await page
+    .getByRole("button", { name: "Buscar rival 1v1", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Buscando tu próximo rival",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Build Fight · 1v1", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Tiempo transcurrido")).toContainText("0:1");
+  expect(teamCreates).toBe(0);
+  const pause = page.getByRole("button", {
+    name: "Pausar animación",
+    exact: true,
+  });
+  await pause.click();
+  await expect(page.locator(".match-search-orbit")).toHaveCSS(
+    "animation-play-state",
+    "paused",
+  );
+  await page
+    .getByRole("button", { name: "Reanudar animación", exact: true })
+    .click();
+  await expect(page.locator(".match-search-orbit")).toHaveCSS(
+    "animation-play-state",
+    "running",
+  );
+  const a11y = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(a11y.violations).toEqual([]);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.scrollTo(0, 0);
+  });
+  await page.screenshot({
+    path: `test-results/solo-search-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator(".match-search-orbit")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await expect(
+    page.getByRole("button", { name: "Pausar animación", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Cancelar búsqueda", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Buscar rival 1v1", exact: true }),
+  ).toBeVisible();
+  expect(teamCreates).toBe(0);
+});
+
+test("Equipo offers multiplayer formats and handles an old solo formation without a roster", async ({
+  page,
+}) => {
+  await mockApi(page, { signedIn: true });
+  await page.route("**/v1/teams", (route) =>
+    route.fulfill({
+      json: {
+        team: {
+          id: "9585cba1-c01d-4b3b-acb9-3e825f93c977",
+          captainId: duelUserId,
+          mode: "BOX_FIGHT",
+          size: 1,
+          members: [
+            { id: duelUserId, name: "Jugador de prueba", points: 0, level: 1 },
+          ],
+          level: 1,
+          points: 0,
+          complete: true,
+          state: "FORMING",
+        },
+      },
+    }),
+  );
+  await page.goto("/app");
+  await nav(page, "Equipo");
+  const format = page.getByRole("combobox", { name: "Formato", exact: true });
+  await expect(format.locator("option")).toHaveText(["2v2", "3v3", "4v4"]);
+  await expect(page.locator(".team-roster")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Crea tu equipo", exact: true }),
   ).toBeVisible();
 });

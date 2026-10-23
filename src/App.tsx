@@ -660,7 +660,7 @@ export function App() {
                                   className="mode-image-button"
                                   onClick={() => {
                                     setTeamMode(mode.code);
-                                    navigate("teams");
+                                    navigate("duels");
                                   }}
                                   aria-label={`Seleccionar ${mode.name}`}
                                   disabled={connection === "online" && !enabled}
@@ -692,7 +692,7 @@ export function App() {
                                       className={`mode-status ${enabled ? "available" : ""}`}
                                     >
                                       {enabled
-                                        ? "Preparar equipo"
+                                        ? "Buscar rival"
                                         : connection === "online"
                                           ? "Próximamente"
                                           : "Vista previa"}
@@ -839,7 +839,12 @@ export function App() {
                   key={user.id}
                   userId={user.id}
                   asset={asset}
-                  onTeam={() => navigate("teams")}
+                  modes={modes}
+                  initialMode={teamMode}
+                  onTeam={(mode) => {
+                    setTeamMode(mode);
+                    navigate("teams");
+                  }}
                 />
               )}
               {view === "moderation" && user?.moderator && <ModerationPanel />}

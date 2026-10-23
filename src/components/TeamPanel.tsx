@@ -116,7 +116,7 @@ export function TeamPanel({
             ? "No pudimos cargar tu equipo. Usa Actualizar equipo para reintentar."
             : "Cargando tu equipo…"}
         </p>
-      ) : team === null ? (
+      ) : team === null || (team?.size === 1 && !locked) ? (
         <div className="team-setup">
           <form
             onSubmit={(event) => {
@@ -151,7 +151,7 @@ export function TeamPanel({
                   onChange={(event) => setSize(Number(event.target.value))}
                   disabled={busy}
                 >
-                  {[1, 2, 3, 4].map((n) => (
+                  {[2, 3, 4].map((n) => (
                     <option key={n} value={n}>
                       {n}v{n}
                     </option>
@@ -191,6 +191,18 @@ export function TeamPanel({
               Unirme al equipo
             </button>
           </form>
+        </div>
+      ) : team.size === 1 ? (
+        <div className="team-solo-notice">
+          <p className="team-copy">
+            Tienes una búsqueda o un duelo 1v1 en curso. Puedes seguirlo o
+            cancelar la búsqueda desde Duelos.
+          </p>
+          {onFind && (
+            <button className="button primary" onClick={onFind}>
+              Ver mi 1v1
+            </button>
+          )}
         </div>
       ) : (
         <>

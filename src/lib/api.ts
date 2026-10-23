@@ -27,6 +27,8 @@ export function friendlyError(error: unknown): string {
       ALREADY_IN_TEAM:
         "Ya perteneces a un equipo. Sal de él antes de unirte a otro.",
       NO_TEAM: "Crea o únete a un equipo primero.",
+      LEAVE_TEAM_FIRST:
+        "Sal de tu equipo antes de buscar un 1v1 por tu cuenta.",
       TEAM_INCOMPLETE: "Completa tu equipo antes de buscar rival.",
       INVALID_ROUNDS:
         "Revisa las rondas: 3–0 termina; en los demás casos, mínimo cinco con diferencia de dos.",

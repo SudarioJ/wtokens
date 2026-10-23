@@ -90,6 +90,8 @@ const send = <T>(path: string, schema: z.ZodType<T>, body: unknown = {}) =>
 const duelPath = (id: string) => `/v1/arena/duels/${z.uuid().parse(id)}`;
 export const arenaApi = {
   current: () => request("/v1/arena", arenaSchema),
+  solo: (mode: string, asset: string) =>
+    send("/v1/arena/solo", arenaSchema, { mode, asset }),
   enter: (asset: string, paymentMode: string) =>
     send("/v1/arena/queue", arenaSchema, {
       asset,
