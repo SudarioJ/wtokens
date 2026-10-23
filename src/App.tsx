@@ -16,6 +16,7 @@ import {
   CircleHelp,
   CreditCard,
   Crosshair,
+  Crown,
   Gamepad2,
   Headphones,
   History,
@@ -45,6 +46,13 @@ import { TeamPanel } from "./components/TeamPanel";
 import { ArenaPanel } from "./components/ArenaPanel";
 import { ArenaHistory, ModerationPanel } from "./components/ArenaHistory";
 import { MatchHistory } from "./components/MatchHistory";
+import { AdminPanel } from "./components/AdminPanel";
+import {
+  getActiveManagedUser,
+  getManagedUsers,
+  setActiveUserId,
+  type ManagedUser,
+} from "./lib/admin";
 
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
 import { discordCommunityUrl } from "./lib/community";
@@ -64,6 +72,7 @@ import { formatMoney, inputToMinor, prize } from "./lib/money";
 type View =
   | "duels"
   | "moderation"
+  | "admin"
   | "arena"
   | "teams"
   | "ranks"
@@ -73,6 +82,7 @@ type View =
 const viewLabels: Record<View, string> = {
   duels: "Duelos",
   moderation: "Moderación",
+  admin: "Administración",
   arena: "Tokens",
   teams: "Equipo",
   ranks: "Rangos",
@@ -83,6 +93,7 @@ const viewLabels: Record<View, string> = {
 const viewDescriptions: Record<View, string> = {
   duels: "Elige modalidad, encuentra rival y juega.",
   moderation: "Revisa reportes y resuelve los casos pendientes.",
+  admin: "Manejador de WTokens, balances aislados y gestión de usuarios.",
   arena: "Modalidades y desafíos disponibles.",
   teams: "Reúne a tus compañeros y gestiona tu formación.",
   ranks: "Tu progreso en cada modalidad.",
@@ -220,6 +231,32 @@ export function App() {
     setAssets(currencies.status === "fulfilled" ? currencies.value : []);
     setPlatform(settings.status === "fulfilled" ? settings.value : null);
     if (profile.status !== "fulfilled") {
+      const isDemoLoggedIn =
+        typeof localStorage !== "undefined" &&
+        localStorage.getItem("wtokens_demo_logged_in") === "true";
+      if (isDemoLoggedIn) {
+        const managed = getActiveManagedUser();
+        setUser(buildUserFromManaged(managed));
+        setBalances([
+          {
+            asset: "PEN",
+            kind: "AVAILABLE",
+            amount_minor: String(Math.round(managed.balance_wt * 3.8 * 100)),
+          },
+          {
+            asset: "ARS",
+            kind: "AVAILABLE",
+            amount_minor: String(Math.round(managed.balance_wt * 1150 * 100)),
+          },
+          {
+            asset: "CLP",
+            kind: "AVAILABLE",
+            amount_minor: String(Math.round(managed.balance_wt * 980)),
+          },
+        ]);
+        setConnection("online");
+        return;
+      }
       setUser(null);
       setBalances(null);
       setTransactions(null);
@@ -265,6 +302,159 @@ export function App() {
       setModal("login");
     }
   }, [panelRequested, connection, user]);
+
+  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>(() =>
+    getManagedUsers(),
+  );
+
+  function buildUserFromManaged(managed: ManagedUser): User {
+    return {
+      id: managed.id,
+      display_name: managed.display_name,
+      avatar_url: managed.avatar_url,
+      eligible: managed.eligible,
+      suspended: managed.suspended,
+      moderator: managed.role === "admin",
+      role: managed.role,
+      epic_nickname: managed.epic_nickname,
+      discord_tag: managed.discord_tag,
+      balance_wt: managed.balance_wt,
+      ranking: {
+        tiers: [
+          { level: 1, name: "Bronze I", minimumPoints: 0 },
+          { level: 2, name: "Bronze II", minimumPoints: 100 },
+          { level: 3, name: "Silver I", minimumPoints: 250 },
+          { level: 4, name: "Silver II", minimumPoints: 500 },
+          { level: 5, name: "Gold I", minimumPoints: 800 },
+          { level: 6, name: "Gold II", minimumPoints: 1200 },
+          { level: 7, name: "Platinum I", minimumPoints: 1700 },
+          { level: 8, name: "Platinum II", minimumPoints: 2300 },
+          { level: 9, name: "Diamond", minimumPoints: 3000 },
+          { level: 10, name: "Elite Champion", minimumPoints: 4000 },
+        ],
+        modes: [
+          {
+            mode: "BOX_FIGHT",
+            name: "Box Fight",
+            points: 850,
+            wins: 24,
+            losses: 7,
+            level: 5,
+            placementGamesRemaining: 0,
+          },
+          {
+            mode: "BUILD_FIGHT",
+            name: "Build Fight",
+            points: 520,
+            wins: 14,
+            losses: 5,
+            level: 4,
+            placementGamesRemaining: 0,
+          },
+          {
+            mode: "REALISTICS",
+            name: "Realistics",
+            points: 280,
+            wins: 6,
+            losses: 3,
+            level: 3,
+            placementGamesRemaining: 0,
+          },
+          {
+            mode: "ZONE_WARS",
+            name: "Zone Wars",
+            points: 120,
+            wins: 2,
+            losses: 1,
+            level: 2,
+            placementGamesRemaining: 3,
+          },
+        ],
+      },
+    };
+  }
+
+  function loginAsManaged(managed: ManagedUser) {
+    setActiveUserId(managed.id);
+    try {
+      localStorage.setItem("wtokens_demo_logged_in", "true");
+    } catch {
+      /* ignore */
+    }
+    const simulatedUser = buildUserFromManaged(managed);
+    setUser(simulatedUser);
+    setBalances([
+      {
+        asset: "PEN",
+        kind: "AVAILABLE",
+        amount_minor: String(Math.round(managed.balance_wt * 3.8 * 100)),
+      },
+      {
+        asset: "ARS",
+        kind: "AVAILABLE",
+        amount_minor: String(Math.round(managed.balance_wt * 1150 * 100)),
+      },
+      {
+        asset: "CLP",
+        kind: "AVAILABLE",
+        amount_minor: String(Math.round(managed.balance_wt * 980)),
+      },
+    ]);
+    setConnection("online");
+    closeModal();
+    window.history.pushState(null, "", "/app");
+    setPanelRequested(true);
+    if (managed.role === "admin") {
+      setView("admin");
+    } else {
+      setView("arena");
+    }
+    notify(
+      `Sesión iniciada: ${managed.display_name} (${managed.role === "admin" ? "ADMIN / MANEJADOR" : "JUGADOR"})`,
+    );
+  }
+
+  useEffect(() => {
+    const handleSync = () => {
+      const allUsers = getManagedUsers();
+      setManagedUsers(allUsers);
+      const active = getActiveManagedUser();
+      setUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          id: active.id,
+          display_name: active.display_name,
+          avatar_url: active.avatar_url,
+          role: active.role,
+          moderator: active.role === "admin",
+          suspended: active.suspended,
+          balance_wt: active.balance_wt,
+          discord_tag: active.discord_tag,
+          epic_nickname: active.epic_nickname,
+        };
+      });
+      setBalances([
+        {
+          asset: "PEN",
+          kind: "AVAILABLE",
+          amount_minor: String(Math.round(active.balance_wt * 3.8 * 100)),
+        },
+        {
+          asset: "ARS",
+          kind: "AVAILABLE",
+          amount_minor: String(Math.round(active.balance_wt * 1150 * 100)),
+        },
+        {
+          asset: "CLP",
+          kind: "AVAILABLE",
+          amount_minor: String(Math.round(active.balance_wt * 980)),
+        },
+      ]);
+    };
+    window.addEventListener("wtokens-admin-sync", handleSync);
+    return () => window.removeEventListener("wtokens-admin-sync", handleSync);
+  }, []);
 
   function enterPanel() {
     if (!user) {
@@ -325,7 +515,27 @@ export function App() {
       ?.amount_minor;
   const displayBalance = (kind: Balance["kind"]) => {
     const value = walletAmount(kind);
-    return value === undefined ? "—" : formatMoney(value, asset, exponent);
+    if (value !== undefined) {
+      return formatMoney(value, asset, exponent);
+    }
+    if (user?.balance_wt !== undefined) {
+      if (kind === "RESERVED") {
+        return formatMoney("0", asset, exponent);
+      }
+      const rates: Record<string, number> = {
+        PEN: 3.8,
+        ARS: 1150,
+        CLP: 980,
+        BOB: 6.9,
+        PYG: 7800,
+        UYU: 42,
+        BRL: 5.6,
+      };
+      const rate = rates[asset] ?? 1;
+      const converted = user.balance_wt * rate;
+      return `${converted.toLocaleString("es", { minimumFractionDigits: exponent, maximumFractionDigits: exponent })}`;
+    }
+    return "—";
   };
   const canWager =
     !!user?.eligible &&
@@ -493,14 +703,48 @@ export function App() {
                 </button>
               ))}
             </nav>
-            {user?.moderator && (
-              <button
-                className="nav-item"
-                onClick={() => navigate("moderation")}
-              >
-                <ShieldCheck size={18} />
-                Moderación
-              </button>
+            {(user?.moderator || user?.role === "admin") && (
+              <>
+                <div className="sidebar-divider" />
+                <span className="nav-label" style={{ color: "#fbbf24" }}>
+                  ADMINISTRACIÓN
+                </span>
+                <button
+                  className={`nav-item ${view === "admin" ? "active" : ""}`}
+                  onClick={() => navigate("admin")}
+                  style={
+                    view === "admin"
+                      ? {
+                          background: "rgba(245, 158, 11, 0.15)",
+                          color: "#fbbf24",
+                        }
+                      : { color: "#fbbf24" }
+                  }
+                >
+                  <Crown size={19} />
+                  <span>Manejador WT & Usuarios</span>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: "9px",
+                      fontWeight: "700",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      background: "rgba(245, 158, 11, 0.25)",
+                      color: "#fbbf24",
+                    }}
+                  >
+                    ADMIN
+                  </span>
+                </button>
+                <button
+                  className={`nav-item ${view === "moderation" ? "active" : ""}`}
+                  onClick={() => navigate("moderation")}
+                >
+                  <ShieldCheck size={18} />
+                  Moderación
+                </button>
+              </>
             )}
             <div className="sidebar-divider" />
             <span className="nav-label">COMUNIDAD</span>
@@ -848,6 +1092,27 @@ export function App() {
                   }}
                 />
               )}
+              {view === "admin" &&
+                (user?.moderator || user?.role === "admin") && (
+                  <AdminPanel
+                    currentAdmin={{
+                      id: user.id,
+                      display_name: user.display_name,
+                      role: user.role,
+                    }}
+                    onUserSwitched={(switched) => {
+                      loginAsManaged(switched);
+                    }}
+                    onBalanceUpdated={() => {
+                      const active = getActiveManagedUser();
+                      setUser((prev) =>
+                        prev
+                          ? { ...prev, balance_wt: active.balance_wt }
+                          : null,
+                      );
+                    }}
+                  />
+                )}
               {view === "moderation" && user?.moderator && <ModerationPanel />}
               {view === "teams" && user && (
                 <TeamPanel
@@ -886,7 +1151,11 @@ export function App() {
                         <div>
                           <span className="eyebrow">DISPONIBLE / {asset}</span>
                           <h2>{displayBalance("AVAILABLE")}</h2>
-                          <p>Saldo registrado en tu cuenta</p>
+                          <p>
+                            {user.balance_wt !== undefined
+                              ? `Saldo asignado: ${user.balance_wt.toFixed(2)} WT (Intransferible)`
+                              : "Saldo registrado en tu cuenta"}
+                          </p>
                         </div>
                         <div>
                           <span className="eyebrow">RESERVADO EN PARTIDAS</span>
@@ -983,7 +1252,16 @@ export function App() {
                         disabled={busy}
                         onClick={() =>
                           void run(async () => {
-                            await api.logout();
+                            try {
+                              await api.logout();
+                            } catch {
+                              /* ignore */
+                            }
+                            try {
+                              localStorage.removeItem("wtokens_demo_logged_in");
+                            } catch {
+                              /* ignore */
+                            }
                             returnToSite();
                             await refresh();
                             notify("Sesión cerrada.");
@@ -1362,6 +1640,105 @@ export function App() {
                   </span>
                 </div>
               )}
+              <div
+                className="demo-accounts-picker"
+                style={{
+                  marginTop: "20px",
+                  borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                  paddingTop: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      letterSpacing: "0.08em",
+                      color: "#fbbf24",
+                    }}
+                  >
+                    👑 ACCESO ADMINISTRADOR & CUENTAS DEMO
+                  </span>
+                  <small style={{ color: "#94a3b8", fontSize: "11px" }}>
+                    Balances aislados
+                  </small>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
+                  {managedUsers.map((mu) => (
+                    <button
+                      key={mu.id}
+                      type="button"
+                      onClick={() => loginAsManaged(mu)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "9px 12px",
+                        background:
+                          mu.role === "admin"
+                            ? "rgba(245, 158, 11, 0.1)"
+                            : "#0f1622",
+                        border:
+                          mu.role === "admin"
+                            ? "1px solid rgba(245, 158, 11, 0.35)"
+                            : "1px solid #1c2738",
+                        borderRadius: "8px",
+                        color: "#f1f5f9",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        {mu.role === "admin" ? (
+                          <Crown size={16} style={{ color: "#fbbf24" }} />
+                        ) : (
+                          <Gamepad2 size={16} style={{ color: "#38bdf8" }} />
+                        )}
+                        <div>
+                          <strong
+                            style={{ fontSize: "12px", display: "block" }}
+                          >
+                            {mu.display_name}
+                          </strong>
+                          <span style={{ fontSize: "10px", color: "#94a3b8" }}>
+                            {mu.role === "admin"
+                              ? "👑 Staff Manejador WTokens"
+                              : `🎮 Epic: ${mu.epic_nickname} · ${mu.country_name}`}
+                          </span>
+                        </div>
+                      </div>
+                      <strong
+                        style={{
+                          fontSize: "12px",
+                          color: mu.role === "admin" ? "#fbbf24" : "#34d399",
+                        }}
+                      >
+                        {mu.balance_wt.toFixed(2)} WT
+                      </strong>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <p className="dialog-footnote">
                 La verificación y la habilitación para participar se realizan
                 por separado. Solo para mayores de edad conforme al país

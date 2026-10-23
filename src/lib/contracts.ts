@@ -22,6 +22,10 @@ export const userSchema = z.object({
   eligible: z.boolean(),
   suspended: z.boolean(),
   moderator: z.boolean().optional(),
+  role: z.enum(["admin", "user"]).optional(),
+  epic_nickname: z.string().max(100).optional(),
+  discord_tag: z.string().max(100).optional(),
+  balance_wt: z.number().optional(),
   ranking: z
     .object({
       tiers: z
