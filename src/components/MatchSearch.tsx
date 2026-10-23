@@ -75,8 +75,8 @@ export function MatchSearch({
           </time>
         </div>
         <p className="duel-note">
-          La búsqueda se actualiza automáticamente. Tu rival debe buscar el
-          mismo modo y formato.
+          Buscamos en todos los países, sin separar por moneda. Tu rival debe
+          buscar el mismo modo y formato, con rango compatible.
         </p>
         <Deadline date={queue.expiresAt} label="La búsqueda vence en" />
       </div>
