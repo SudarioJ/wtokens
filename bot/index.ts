@@ -49,6 +49,9 @@ export const botBridge = {
 };
 
 // If run directly: node/tsx bot/index.ts
-if (import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}`) {
+if (
+  import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}` ||
+  process.argv[1]?.includes("bot")
+) {
   startBot();
 }
