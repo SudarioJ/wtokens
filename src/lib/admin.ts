@@ -541,3 +541,172 @@ export function rejectWithdrawal(
     message: `Retiro rechazado. Se reembolsaron ${req.amount_wt.toFixed(2)} WT a la cuenta de ${req.user_name}.`,
   };
 }
+
+// Duel Escrow Engine: Retain tokens during match
+export function escrowDuelStake(
+  userId: string,
+  stakeWt: number,
+): { success: boolean; message: string; balance_wt: number; balance_reserved_wt: number } {
+  if (stakeWt <= 0 || isNaN(stakeWt)) {
+    return { success: false, message: "El monto a retener debe ser mayor a 0.", balance_wt: 0, balance_reserved_wt: 0 };
+  }
+
+  const users = getManagedUsers();
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return { success: false, message: "Usuario no encontrado.", balance_wt: 0, balance_reserved_wt: 0 };
+  }
+  if (user.suspended) {
+    return { success: false, message: "La cuenta está suspendida.", balance_wt: user.balance_wt, balance_reserved_wt: user.balance_reserved_wt };
+  }
+  if (user.balance_wt < stakeWt) {
+    return {
+      success: false,
+      message: `Saldo insuficiente (${user.balance_wt.toFixed(2)} WT disponibles, requeridos ${stakeWt.toFixed(2)} WT).`,
+      balance_wt: user.balance_wt,
+      balance_reserved_wt: user.balance_reserved_wt,
+    };
+  }
+
+  user.balance_wt = Number((user.balance_wt - stakeWt).toFixed(2));
+  user.balance_reserved_wt = Number(((user.balance_reserved_wt || 0) + stakeWt).toFixed(2));
+  saveManagedUsers(users);
+
+  return {
+    success: true,
+    message: `Retenidos ${stakeWt.toFixed(2)} WT en escrow para duelo.`,
+    balance_wt: user.balance_wt,
+    balance_reserved_wt: user.balance_reserved_wt,
+  };
+}
+
+// Duel Settlement: Release escrow, take 10% WTokens fee, award pot to winner
+export function settleDuelPayout(
+  winnerId: string,
+  loserId: string,
+  stakeWt: number,
+  feeBps = 1000, // 10% default
+): {
+  success: boolean;
+  message: string;
+  pot: number;
+  fee: number;
+  prize: number;
+  winnerNewBalance: number;
+  loserNewBalance: number;
+} {
+  const users = getManagedUsers();
+  const winner = users.find((u) => u.id === winnerId);
+  const loser = users.find((u) => u.id === loserId);
+
+  if (!winner || !loser) {
+    return {
+      success: false,
+      message: "No se encontraron los participantes del duelo.",
+      pot: 0,
+      fee: 0,
+      prize: 0,
+      winnerNewBalance: 0,
+      loserNewBalance: 0,
+    };
+  }
+
+  const pot = Number((stakeWt * 2).toFixed(2));
+  const fee = Number(((pot * feeBps) / 10000).toFixed(2));
+  const prize = Number((pot - fee).toFixed(2));
+
+  // Release reserved balances
+  winner.balance_reserved_wt = Math.max(0, Number(((winner.balance_reserved_wt || 0) - stakeWt).toFixed(2)));
+  loser.balance_reserved_wt = Math.max(0, Number(((loser.balance_reserved_wt || 0) - stakeWt).toFixed(2)));
+
+  // Winner receives prize (pot minus fee)
+  winner.balance_wt = Number((winner.balance_wt + prize).toFixed(2));
+
+  // Affiliate commission distribution if any player had a referrer
+  const feePerPlayer = fee / 2;
+  [winner, loser].forEach((player) => {
+    if (player.referrer_code) {
+      // Find creator by code or display_name
+      const creator = users.find(
+        (c) => c.referrer_code === player.referrer_code || c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
+      );
+      if (creator && creator.id !== player.id) {
+        // Normal affiliate: 10% of player fee part. Verified: 15%.
+        const commRate = creator.role === "admin" ? 0.15 : 0.10;
+        const comm = Number((feePerPlayer * commRate).toFixed(4));
+        if (comm > 0) {
+          creator.balance_wt = Number((creator.balance_wt + comm).toFixed(2));
+        }
+      }
+    }
+  });
+
+  saveManagedUsers(users);
+
+  // Audit entry for match resolution
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: "MatchEngine",
+    target_user_id: winner.id,
+    target_user_name: winner.display_name,
+    amount: prize,
+    reason: `Premio Duelo 1v1 Box Fight (Pozo: ${pot} WT, Fee: ${fee} WT)`,
+    note: `Rival: ${loser.display_name} (-${stakeWt} WT). Ganador recibió ${prize} WT netos.`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    message: `Duelo liquidado: ${winner.display_name} ganó ${prize.toFixed(2)} WT. Fee WTokens: ${fee.toFixed(2)} WT.`,
+    pot,
+    fee,
+    prize,
+    winnerNewBalance: winner.balance_wt,
+    loserNewBalance: loser.balance_wt,
+  };
+}
+
+// Duel Cancellation: Refund retained escrow tokens back to players
+export function cancelDuelEscrow(
+  user1Id: string,
+  user2Id: string,
+  stakeWt: number,
+  reason = "Duelo cancelado o tiempo expirado",
+): { success: boolean; message: string } {
+  const users = getManagedUsers();
+  const u1 = users.find((u) => u.id === user1Id);
+  const u2 = users.find((u) => u.id === user2Id);
+
+  if (u1) {
+    u1.balance_reserved_wt = Math.max(0, Number(((u1.balance_reserved_wt || 0) - stakeWt).toFixed(2)));
+    u1.balance_wt = Number((u1.balance_wt + stakeWt).toFixed(2));
+  }
+  if (u2) {
+    u2.balance_reserved_wt = Math.max(0, Number(((u2.balance_reserved_wt || 0) - stakeWt).toFixed(2)));
+    u2.balance_wt = Number((u2.balance_wt + stakeWt).toFixed(2));
+  }
+
+  saveManagedUsers(users);
+
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: "MatchEngine",
+    target_user_id: u1?.id || "unknown",
+    target_user_name: u1?.display_name || "Jugador",
+    amount: stakeWt,
+    reason: `Reembolso por cancelación de duelo (${reason})`,
+    note: `Tokens retenidos devueltos a saldo disponible`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    message: `Tokens retenidos de duelo reembolsados exitosamente (${stakeWt.toFixed(2)} WT por jugador).`,
+  };
+}
