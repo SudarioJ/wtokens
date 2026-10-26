@@ -2,13 +2,14 @@ export interface PaymentAccount {
   id: string;
   name: string;
   badge: string;
-  category: "mercadopago" | "lemon" | "belo" | "paypal";
+  category: "mercadopago" | "lemon" | "belo" | "binance" | "paypal";
   description: string;
   recommendedFor: string[];
   currencies: string[];
   alias?: string;
   tag?: string;
   cvu?: string;
+  binanceId?: string;
   url?: string;
   note?: string;
   feeNote?: string;
@@ -25,6 +26,17 @@ export const OFFICIAL_PAYMENT_ACCOUNTS: PaymentAccount[] = [
     currencies: ["ARS"],
     alias: "gus.wtokens",
     note: "Envía desde Mercado Pago, Ualá o cualquier banco o billetera virtual de Argentina.",
+  },
+  {
+    id: "binance",
+    name: "Binance Pay",
+    category: "binance",
+    badge: "🟡 Cero Comisiones (Latam)",
+    description: "Transferencia instantánea en USDT sin comisiones entre usuarios de Binance.",
+    recommendedFor: ["Perú", "Chile", "Bolivia", "Uruguay", "Paraguay", "Brasil", "Argentina", "Internacional"],
+    currencies: ["USD", "PEN", "CLP", "ARS", "BRL"],
+    binanceId: "1045450722",
+    note: "En la app de Binance ve a Pay ➔ Enviar y pega el Pay ID: 1045450722. Transfiere en USDT (1 USDT = 1 WT).",
   },
   {
     id: "lemon",

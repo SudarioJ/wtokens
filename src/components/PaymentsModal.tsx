@@ -306,6 +306,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                       <div className="method-title-group">
                         <div className="method-icon-circle">
                           {m.category === "mercadopago" && "MP"}
+                          {m.category === "binance" && "🟡"}
                           {m.category === "lemon" && "🍋"}
                           {m.category === "belo" && "🟣"}
                           {m.category === "paypal" && "🅿️"}
@@ -331,6 +332,22 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                                 onClick={() => copyToClipboard(m.alias!, `${m.id}-alias`)}
                               >
                                 {copiedKey === `${m.id}-alias` ? "¡Copiado!" : "Copiar"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {m.binanceId && (
+                          <div className="data-row">
+                            <span className="data-label">Binance Pay ID:</span>
+                            <div className="data-value">
+                              <span style={{ fontSize: "14px", fontWeight: "700" }}>{m.binanceId}</span>
+                              <button
+                                type="button"
+                                className="copy-mini-btn"
+                                onClick={() => copyToClipboard(m.binanceId!, `${m.id}-binanceId`)}
+                              >
+                                {copiedKey === `${m.id}-binanceId` ? "¡Copiado!" : "Copiar"}
                               </button>
                             </div>
                           </div>
@@ -529,6 +546,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                   onChange={(e) => setWithdrawMethod(e.target.value)}
                 >
                   <option value="mercadopago">Mercado Pago (Argentina - CVU/Alias)</option>
+                  <option value="binance">Binance Pay (Pay ID / Email USDT)</option>
                   <option value="lemon">Lemon Cash ($lemontag / CVU)</option>
                   <option value="belo">Belo ($belotag / CVU)</option>
                   <option value="pix">Pix (Brasil - Llave Pix / CPF)</option>
