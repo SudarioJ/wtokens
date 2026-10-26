@@ -1807,14 +1807,16 @@ export function App() {
                   </span>
                 </div>
               )}
-              <div
-                className="demo-accounts-picker"
-                style={{
-                  marginTop: "20px",
-                  borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                  paddingTop: "16px",
-                }}
-              >
+              {typeof window !== "undefined" &&
+                window.location.search.includes("dev=true") && (
+                  <div
+                    className="demo-accounts-picker"
+                    style={{
+                      marginTop: "20px",
+                      borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                      paddingTop: "16px",
+                    }}
+                  >
                 <div
                   style={{
                     display: "flex",
@@ -1906,6 +1908,7 @@ export function App() {
                   ))}
                 </div>
               </div>
+            )}
               <p className="dialog-footnote">
                 La verificación y la habilitación para participar se realizan
                 por separado. Solo para mayores de edad conforme al país
