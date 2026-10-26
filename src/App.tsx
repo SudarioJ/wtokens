@@ -1589,9 +1589,15 @@ export function App() {
                 </span>
                 <div>
                   <button onClick={() => openModal("rules")}>Reglamento</button>
-                  <button onClick={() => navigate("help")}>
-                    Ayuda y privacidad
-                  </button>
+                  <a href="/privacy.html" style={{ color: "inherit", textDecoration: "none", fontSize: "12px", margin: "0 8px" }}>
+                    Privacidad
+                  </a>
+                  <a href="/terms.html" style={{ color: "inherit", textDecoration: "none", fontSize: "12px", margin: "0 8px" }}>
+                    Términos
+                  </a>
+                  <a href="mailto:wtokens17@gmail.com" style={{ color: "inherit", textDecoration: "none", fontSize: "12px", margin: "0 8px" }}>
+                    wtokens17@gmail.com
+                  </a>
                   <span className="age-mark">18+</span>
                 </div>
                 <p>

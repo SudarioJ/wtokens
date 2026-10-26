@@ -658,6 +658,12 @@ export function Landing({
             <a href="#faq">Preguntas frecuentes</a>
             <button onClick={onRules}>Reglamento</button>
           </div>
+          <div>
+            <h3>LEGAL & CONTACTO</h3>
+            <a href="/privacy.html">Política de Privacidad</a>
+            <a href="/terms.html">Términos y Condiciones</a>
+            <a href="mailto:wtokens17@gmail.com">wtokens17@gmail.com</a>
+          </div>
           <div className="lp-footer-status">
             <ShieldCheck size={22} />
             <strong>
