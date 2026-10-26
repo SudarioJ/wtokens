@@ -49,6 +49,7 @@ import { ArenaHistory, ModerationPanel } from "./components/ArenaHistory";
 import { MatchHistory } from "./components/MatchHistory";
 import { AdminPanel } from "./components/AdminPanel";
 import { AffiliatesPanel } from "./components/AffiliatesPanel";
+import { PaymentsModal } from "./components/PaymentsModal";
 import {
   getActiveManagedUser,
   getManagedUsers,
@@ -1859,7 +1860,7 @@ export function App() {
               : modal === "create"
                 ? "Crea tu próximo desafío."
                 : modal === "payments"
-                  ? "Pagos en preparación."
+                  ? "Billetera WTokens: Recargas y Retiros"
                   : modal === "dispute"
                     ? "Solicitar mediación"
                     : "Compite con reglas claras."
@@ -2207,25 +2208,17 @@ export function App() {
             </form>
           )}
           {modal === "payments" && (
-            <>
-              <div className="modal-illustration">
-                <Wallet size={40} />
-              </div>
-              <p className="dialog-copy">
-                Los depósitos y retiros aún no están disponibles. Aquí
-                aparecerán los métodos autorizados cuando estén integrados.
-              </p>
-              <div className="info-note">
-                <ShieldCheck size={19} />
-                <span>
-                  Esta acción no genera un cobro, no solicita datos bancarios ni
-                  modifica tu saldo.
-                </span>
-              </div>
-              <button className="button secondary full" onClick={closeModal}>
-                Entendido
-              </button>
-            </>
+            <PaymentsModal
+              user={user}
+              currentCurrency={asset}
+              onClose={closeModal}
+              onBalanceUpdated={(newBal) => {
+                if (user) {
+                  user.balance_wt = newBal;
+                  setUser({ ...user, balance_wt: newBal });
+                }
+              }}
+            />
           )}
           {modal === "rules" && (
             <>

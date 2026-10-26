@@ -1,0 +1,309 @@
+/* Payments Modal Styles (WTokens Deposit & Withdraw) */
+.payments-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #e2e8f0;
+}
+
+.payments-tabs {
+  display: flex;
+  background: rgba(6, 16, 32, 0.85);
+  border: 1px solid rgba(101, 183, 255, 0.2);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.payments-tab {
+  flex: 1;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.payments-tab.active {
+  background: rgba(101, 183, 255, 0.15);
+  color: #5eeaff;
+  border: 1px solid rgba(94, 234, 255, 0.4);
+  box-shadow: 0 0 12px rgba(94, 234, 255, 0.1);
+}
+
+.payments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payments-amount-box {
+  background: #081322;
+  border: 1px solid #1a3356;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.amount-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-chip {
+  flex: 1;
+  min-width: 60px;
+  padding: 6px 10px;
+  background: #0d1e34;
+  border: 1px solid #234575;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.preset-chip.active,
+.preset-chip:hover {
+  background: rgba(94, 234, 255, 0.2);
+  border-color: #5eeaff;
+  color: #5eeaff;
+}
+
+.amount-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #040913;
+  border: 1px solid #264b7d;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.amount-input-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  outline: none;
+}
+
+.amount-currency-label {
+  color: #5eeaff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.amount-conversion-hint {
+  font-size: 11px;
+  color: #8bb5f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Method Cards */
+.methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.method-card {
+  background: #091629;
+  border: 1px solid #1d365a;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.method-card:hover {
+  border-color: #3b82f6;
+  background: #0c1b33;
+}
+
+.method-card.selected {
+  border-color: #5eeaff;
+  background: rgba(94, 234, 255, 0.05);
+  box-shadow: 0 0 16px rgba(94, 234, 255, 0.1);
+}
+
+.method-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.method-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.method-icon-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #0d1e34;
+  border: 1px solid #214373;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5eeaff;
+  font-weight: 700;
+}
+
+.method-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.method-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(101, 183, 255, 0.15);
+  color: #65b7ff;
+  border: 1px solid rgba(101, 183, 255, 0.3);
+}
+
+.method-details-box {
+  background: #040a15;
+  border: 1px solid #182e4e;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.data-row:last-child {
+  border-bottom: none;
+}
+
+.data-label {
+  color: #94a3b8;
+}
+
+.data-value {
+  color: #5eeaff;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copy-mini-btn {
+  background: rgba(101, 183, 255, 0.15);
+  border: 1px solid rgba(101, 183, 255, 0.3);
+  color: #65b7ff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copy-mini-btn:hover {
+  background: #5eeaff;
+  color: #061020;
+}
+
+.paypal-fee-banner {
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #fef08a;
+  line-height: 1.4;
+}
+
+.receipt-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.receipt-input-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8bb5f0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.receipt-input {
+  background: #040913;
+  border: 1px solid #1f3b64;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+}
+
+.receipt-input:focus {
+  border-color: #5eeaff;
+}
+
+.withdraw-balance-banner {
+  background: linear-gradient(135deg, rgba(101, 183, 255, 0.1) 0%, rgba(6, 16, 32, 0.95) 100%);
+  border: 1px solid rgba(101, 183, 255, 0.3);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.withdraw-balance-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #5eeaff;
+  font-family: var(--font-mono, monospace);
+}
+
+.withdraw-min-notice {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
