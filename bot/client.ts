@@ -125,4 +125,34 @@ async function handleButtonInteraction(
     });
     return;
   }
+
+  // 5. Botón: Solicitar Desban / Métodos de Pago
+  if (customId === "request_unban_ticket") {
+    await interaction.reply({
+      content:
+        `⚖️ **Solicitud de Reactivación / Desban Recibida**\n\n` +
+        `Has solicitado pagar la penalización de **$3.00 USD** para retirar la suspensión de tu cuenta.\n\n` +
+        `📌 **Instrucciones:**\n` +
+        `1. Un moderador de <@&1562188681383776461> te responderá en breve para darte el alias/CVU (Mercado Pago / Yape / Transferencia).\n` +
+        `2. Envía el comprobante de pago en este canal.\n` +
+        `3. Al confirmarse el pago, el bot te retirará el rol de suspendido y reactivará tu cuenta en la web inmediatamente.`,
+      ephemeral: true,
+    });
+
+    if (botConfig.staffAlertsChannelId) {
+      try {
+        const alertChannel = (await client.channels.fetch(
+          botConfig.staffAlertsChannelId,
+        )) as any;
+        if (alertChannel?.isTextBased()) {
+          await alertChannel.send({
+            content: `🚨 **SOLICITUD DE DESBAN ($3 USD)**: El usuario suspendido <@${interaction.user.id}> (${interaction.user.username}) ha solicitado pagar su penalización para reactivar su cuenta. Por favor atender en <#1564317591843901500>.`,
+          });
+        }
+      } catch (err) {
+        console.error("Error sending unban staff alert:", err);
+      }
+    }
+    return;
+  }
 }
