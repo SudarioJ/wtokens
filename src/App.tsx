@@ -202,8 +202,22 @@ export function App() {
   }, [selectedMatch?.id, view]);
 
   const [asset, setAsset] = useState(initialCurrency);
-  const [createMode, setCreateMode] = useState("BOX_FIGHT");
-  const [amount, setAmount] = useState("5");
+  const [createMode, setCreateMode] = useState(() => {
+    try {
+      const m = new URLSearchParams(window.location.search).get("mode");
+      return m ? m.toUpperCase() : "BOX_FIGHT";
+    } catch {
+      return "BOX_FIGHT";
+    }
+  });
+  const [amount, setAmount] = useState(() => {
+    try {
+      const s = new URLSearchParams(window.location.search).get("stake");
+      return s || "5";
+    } catch {
+      return "5";
+    }
+  });
   const [disputeReason, setDisputeReason] = useState("");
   const [affiliateCode, setAffiliateCode] = useState(() => {
     try {
@@ -332,6 +346,22 @@ export function App() {
       setModal("login");
     }
   }, [panelRequested, connection, user]);
+
+  useEffect(() => {
+    try {
+      const challenge = new URLSearchParams(window.location.search).get("challenge");
+      const mode = new URLSearchParams(window.location.search).get("mode");
+      if ((challenge || mode) && connection !== "loading") {
+        if (!user && connection === "online") {
+          setModal("login");
+        } else if (user) {
+          setModal("create");
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [user, connection]);
 
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>(() =>
     getManagedUsers(),

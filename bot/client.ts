@@ -226,4 +226,13 @@ async function handleButtonInteraction(
     });
     return;
   }
+
+  // 7. Botón: Rechazar Duelo
+  if (customId.startsWith("decline_duel_")) {
+    await interaction.update({
+      content: `❌ El desafío ha sido **rechazado** por <@${interaction.user.id}>.`,
+      components: [],
+    });
+    return;
+  }
 }

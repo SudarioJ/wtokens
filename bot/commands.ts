@@ -4,6 +4,9 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import { botConfig, FORTNITE_MAPS } from "./config";
 import { getManagedUsers } from "../src/lib/admin";
@@ -39,6 +42,38 @@ export const slashCommands = [
         .setName("motivo")
         .setDescription("Describe brevemente tu problema o duda")
         .setRequired(true),
+    ),
+
+  new SlashCommandBuilder()
+    .setName("duelo")
+    .setDescription("Desafía a un jugador a un 1v1 oficial con WTokens y salas privadas")
+    .addUserOption((opt) =>
+      opt
+        .setName("oponente")
+        .setDescription("El jugador al que deseas desafiar")
+        .setRequired(true),
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("modo")
+        .setDescription("Modalidad competitiva de Fortnite")
+        .setRequired(true)
+        .addChoices(
+          { name: "🥊 Box Fight 1v1", value: "BOX_FIGHT" },
+          { name: "⚔️ Build Fight 1v1", value: "BUILD_FIGHT" },
+          { name: "🌋 Zone Wars 1v1", value: "ZONE_WARS" },
+          { name: "🎯 Realistic 1v1", value: "REALISTICS" },
+          { name: "🛡️ Cero Construcción 1v1", value: "ZERO_BUILD" },
+          { name: "🧩 Piece Control 1v1", value: "PIECE_CONTROL" },
+        ),
+    )
+    .addNumberOption((opt) =>
+      opt
+        .setName("apuesta")
+        .setDescription("Monto en WTokens por jugador (ej: 1, 2, 5, 10, 20 WT)")
+        .setRequired(true)
+        .setMinValue(0.5)
+        .setMaxValue(100),
     ),
 ];
 
@@ -210,5 +245,67 @@ export async function handleSlashCommand(
         console.error("Error sending staff alert:", err);
       }
     }
+    return;
+  }
+
+  if (commandName === "duelo") {
+    const oponente = interaction.options.getUser("oponente", true);
+    const modo = interaction.options.getString("modo", true);
+    const apuesta = interaction.options.getNumber("apuesta", true);
+
+    if (oponente.bot) {
+      await interaction.reply({
+        content: "❌ No puedes desafiar a un bot.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (oponente.id === interaction.user.id) {
+      await interaction.reply({
+        content: "❌ No puedes desafiarte a ti mismo.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const pot = Number((apuesta * 2).toFixed(2));
+    const prize = Number((pot * 0.9).toFixed(2));
+    const challengeId = `ch_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const map = FORTNITE_MAPS[modo] || FORTNITE_MAPS.BOX_FIGHT!;
+
+    const embed = new EmbedBuilder()
+      .setTitle("⚔️ ¡DESAFÍO DIRECTO 1v1 EN WTOKENS!")
+      .setDescription(
+        `¡Atención <@${oponente.id}>! Has recibido un desafío directo de parte de <@${interaction.user.id}>.\n\n` +
+          `🎮 **Modalidad:** ${map.name}\n` +
+          `💰 **Entrada:** \`$${apuesta.toFixed(2)} WT\` por jugador (Bóveda Escrow)\n` +
+          `🏆 **Premio al Ganador:** \`$${prize.toFixed(2)} WT\` (90% del Pozo)\n` +
+          `📍 **Código Oficial de Isla:** \`${map.code}\`\n\n` +
+          `*Haz clic en el botón de abajo para entrar a la plataforma web y confirmar tu partida con tus WTokens:*`,
+      )
+      .setColor(0xf59e0b)
+      .setFooter({ text: "WTokens Competitivo · Salas y Arbitraje en Vivo" })
+      .setTimestamp();
+
+    const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setLabel("⚔️ Aceptar Desafío y Jugar en la Web")
+        .setURL(
+          `https://wtokens.net/?challenge=${challengeId}&mode=${modo}&stake=${apuesta}&opponent=${interaction.user.id}`,
+        ),
+      new ButtonBuilder()
+        .setCustomId(`decline_duel_${challengeId}`)
+        .setStyle(ButtonStyle.Danger)
+        .setLabel("❌ Rechazar Desafío"),
+    );
+
+    await interaction.reply({
+      content: `<@${oponente.id}> ¡Te han desafiado a un duelo!`,
+      embeds: [embed],
+      components: [buttons],
+    });
+    return;
   }
 }
