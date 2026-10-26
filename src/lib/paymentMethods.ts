@@ -1,3 +1,31 @@
+export const BELO_PIX_CHECKOUT_LINKS: Record<number, { url: string; ars: number; brl: number }> = {
+  2: {
+    url: "https://pay.belo.app/checkout?id=6adfddc87b8023aaeb348f6f",
+    ars: 2300,
+    brl: 11.2,
+  },
+  3: {
+    url: "https://pay.belo.app/checkout?id=6adfde2c85bf343dc849b6fe",
+    ars: 3450,
+    brl: 16.8,
+  },
+  5: {
+    url: "https://pay.belo.app/checkout?id=6adfde8d7b8023aaeb353576",
+    ars: 5750,
+    brl: 28.0,
+  },
+  10: {
+    url: "https://pay.belo.app/checkout?id=6adfded6b8432c946b5fd4aa",
+    ars: 11500,
+    brl: 56.0,
+  },
+  20: {
+    url: "https://pay.belo.app/checkout?id=6adfdf2f583f2b3a61748298",
+    ars: 23000,
+    brl: 112.0,
+  },
+};
+
 export interface PaymentAccount {
   id: string;
   name: string;

@@ -8,7 +8,11 @@ import {
   AlertCircle,
   MessageSquare,
 } from "lucide-react";
-import { OFFICIAL_PAYMENT_ACCOUNTS, PaymentAccount } from "../lib/paymentMethods";
+import {
+  OFFICIAL_PAYMENT_ACCOUNTS,
+  PaymentAccount,
+  BELO_PIX_CHECKOUT_LINKS,
+} from "../lib/paymentMethods";
 import { User } from "../lib/contracts";
 import "./payments.css";
 
@@ -19,7 +23,7 @@ interface PaymentsModalProps {
   onBalanceUpdated?: (newBalance: number) => void;
 }
 
-const PRESET_AMOUNTS = [1, 3, 5, 10, 20, 50, 100];
+const PRESET_AMOUNTS = [1, 2, 3, 5, 10, 20, 50, 100];
 
 // Approximate exchange rates relative to 1 WT ($1 USD)
 const RATES: Record<string, number> = {
@@ -454,7 +458,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                               marginTop: "8px",
                               display: "flex",
                               flexDirection: "column",
-                              gap: "8px",
+                              gap: "10px",
                             }}
                           >
                             <div
@@ -468,9 +472,12 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                                 🇧🇷 Pagamento Instantâneo Pix (Brasil)
                               </strong>
                               <span style={{ fontSize: "11px", color: "#fef08a", fontWeight: "700" }}>
-                                Total: {(amount * 5.6).toFixed(2)} BRL
+                                {BELO_PIX_CHECKOUT_LINKS[amount]
+                                  ? `${BELO_PIX_CHECKOUT_LINKS[amount].brl} BRL ($${BELO_PIX_CHECKOUT_LINKS[amount].ars} ARS)`
+                                  : `${(amount * 5.6).toFixed(2)} BRL`}
                               </span>
                             </div>
+
                             <p
                               style={{
                                 margin: "0",
@@ -479,11 +486,34 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                                 lineHeight: "1.4",
                               }}
                             >
-                              Para recargar <strong>{amount} WT</strong> ({(amount * 5.6).toFixed(2)} BRL),
-                              pulsa el botón para que el Staff genere tu código Pix Copia e Cola desde Belo
-                              y te lo envíe al instante.
+                              Paga directamente con <strong>Pix</strong> a través de <strong>Belopay</strong> sin esperas.
                             </p>
-                            {pixRequested ? (
+
+                            {/* Enlace directo oficial de Belopay Pix si coincide con monto disponible */}
+                            {BELO_PIX_CHECKOUT_LINKS[amount] ? (
+                              <a
+                                href={BELO_PIX_CHECKOUT_LINKS[amount].url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="button primary small full"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "8px",
+                                  textDecoration: "none",
+                                  background: "linear-gradient(135deg, #00b050 0%, #008f39 100%)",
+                                  borderColor: "#00e676",
+                                  color: "#ffffff",
+                                  fontWeight: "700",
+                                  padding: "10px",
+                                  borderRadius: "6px",
+                                }}
+                              >
+                                ⚡ Abrir Checkout Pix Belopay ({amount} WT = {BELO_PIX_CHECKOUT_LINKS[amount].brl} BRL)
+                                <ExternalLink size={14} />
+                              </a>
+                            ) : pixRequested ? (
                               <div
                                 style={{
                                   background: "#051324",
@@ -535,6 +565,26 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                                 🇧🇷 Solicitar código Pix por {(amount * 5.6).toFixed(2)} BRL
                               </button>
                             )}
+
+                            {/* Accesos rápidos a los montos exactos de Pix Belopay */}
+                            <div style={{ marginTop: "2px" }}>
+                              <span style={{ fontSize: "10px", color: "#6e8cb5", textTransform: "uppercase", fontWeight: "700" }}>
+                                Montos disponibles con Pix automático:
+                              </span>
+                              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+                                {[2, 3, 5, 10, 20].map((wt) => (
+                                  <button
+                                    key={wt}
+                                    type="button"
+                                    className={`preset-chip ${amount === wt ? "active" : ""}`}
+                                    style={{ padding: "4px 8px", fontSize: "11px", minWidth: "auto" }}
+                                    onClick={() => setAmount(wt)}
+                                  >
+                                    {wt} WT ({BELO_PIX_CHECKOUT_LINKS[wt]?.brl} BRL)
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         )}
 
