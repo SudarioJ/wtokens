@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { backendOrigin } from "./server/security.ts";
+import epicVerifyHandler from "./api/epic-verify.ts";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -21,6 +22,10 @@ export default defineConfig(({ mode }) => {
             ) {
               res.writeHead(303, { Location: "/app" });
               res.end();
+              return;
+            }
+            if (req.url?.startsWith("/api/epic-verify")) {
+              epicVerifyHandler(req, res);
               return;
             }
             next();

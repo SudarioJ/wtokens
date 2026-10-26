@@ -106,6 +106,8 @@ const viewDescriptions: Record<View, string> = {
   matches: "Todas tus partidas y sus resultados.",
   help: "Reglas, cuenta y soporte.",
 };
+const EPIC_CLIENT_ID = "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
+const EPIC_AUTH_URL = `https://www.epicgames.com/id/authorize?client_id=${EPIC_CLIENT_ID}&response_type=code&scope=basic_profile&redirect_uri=https%3A%2F%2Fwtokens.net%2F`;
 type Modal = "login" | "create" | "payments" | "rules" | "dispute" | null;
 const visualModes = [
   {
@@ -363,6 +365,83 @@ export function App() {
     }
   }, [user, connection]);
 
+  // Epic Games Account Services OAuth Callback
+  useEffect(() => {
+    try {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        (async () => {
+          setNotice({
+            text: "Conectando con Epic Games... Verificando tu Nickname de Fortnite...",
+            error: false,
+          });
+          try {
+            const res = await fetch("/api/epic-verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                code,
+                redirect_uri: "https://wtokens.net/",
+              }),
+            });
+            const data = await res.json();
+            if (data.success && data.displayName) {
+              setNotice({
+                text: `✅ ¡Cuenta de Epic Games vinculada con éxito: ${data.displayName}!`,
+                error: false,
+              });
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete("code");
+              window.history.replaceState(null, "", cleanUrl.toString());
+
+              try {
+                localStorage.setItem("wtokens_epic_nick", data.displayName);
+                localStorage.setItem("wtokens_epic_verified", "true");
+                if (data.accountId) {
+                  localStorage.setItem("wtokens_epic_account_id", data.accountId);
+                }
+              } catch {}
+
+              setUser((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  epic_nickname: data.displayName,
+                  epic_verified: true,
+                  epic_account_id: data.accountId,
+                };
+              });
+
+              setManagedUsers((prev) => {
+                const active = getActiveManagedUser();
+                return prev.map((u) =>
+                  u.id === active.id
+                    ? {
+                        ...u,
+                        epic_nickname: data.displayName,
+                        epic_verified: true,
+                        epic_account_id: data.accountId,
+                      }
+                    : u,
+                );
+              });
+            } else {
+              setNotice({
+                text: data.error || "No se pudo verificar la cuenta de Epic Games.",
+                error: true,
+              });
+            }
+          } catch {
+            setNotice({
+              text: "Error de conexión al verificar con Epic Games.",
+              error: true,
+            });
+          }
+        })();
+      }
+    } catch {}
+  }, []);
+
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>(() =>
     getManagedUsers(),
   );
@@ -377,6 +456,8 @@ export function App() {
       moderator: managed.role === "admin",
       role: managed.role,
       epic_nickname: managed.epic_nickname,
+      epic_verified: managed.epic_verified,
+      epic_account_id: managed.epic_account_id,
       discord_tag: managed.discord_tag,
       balance_wt: managed.balance_wt,
       referrer_code: managed.referrer_code,
@@ -497,6 +578,8 @@ export function App() {
           balance_wt: active.balance_wt,
           discord_tag: active.discord_tag,
           epic_nickname: active.epic_nickname,
+          epic_verified: active.epic_verified,
+          epic_account_id: active.epic_account_id,
           referrer_code: active.referrer_code,
         };
       });
@@ -1253,6 +1336,119 @@ export function App() {
                           original.
                         </span>
                       </div>
+
+                      {/* Tarjeta Oficial de Identidad Fortnite / Epic Games */}
+                      <div
+                        style={{
+                          background: user.epic_nickname
+                            ? "linear-gradient(135deg, rgba(101, 183, 255, 0.08) 0%, rgba(6, 16, 32, 0.95) 100%)"
+                            : "linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(6, 16, 32, 0.95) 100%)",
+                          border: user.epic_nickname
+                            ? "1px solid rgba(101, 183, 255, 0.3)"
+                            : "1px solid rgba(234, 179, 8, 0.35)",
+                          borderRadius: "12px",
+                          padding: "16px 20px",
+                          margin: "18px 0 24px 0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "14px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                          <div
+                            style={{
+                              width: "44px",
+                              height: "44px",
+                              borderRadius: "10px",
+                              background: user.epic_nickname ? "#0a1728" : "#1e1608",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              border: user.epic_nickname
+                                ? "1px solid #1c3558"
+                                : "1px solid #4a3610",
+                            }}
+                          >
+                            <Gamepad2
+                              size={24}
+                              color={user.epic_nickname ? "#5eeaff" : "#facc15"}
+                            />
+                          </div>
+                          <div>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                color: user.epic_nickname ? "#7296c8" : "#d97706",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                                fontWeight: "700",
+                              }}
+                            >
+                              Identidad Fortnite / Epic Games
+                            </span>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                marginTop: "2px",
+                              }}
+                            >
+                              <strong
+                                style={{
+                                  fontSize: "16px",
+                                  color: user.epic_nickname ? "#f0f6ff" : "#fef08a",
+                                }}
+                              >
+                                {user.epic_nickname || "Cuenta no vinculada"}
+                              </strong>
+                              {user.epic_nickname && (
+                                <span
+                                  style={{
+                                    background: "rgba(94, 234, 255, 0.12)",
+                                    color: "#5eeaff",
+                                    fontSize: "10px",
+                                    padding: "2px 8px",
+                                    borderRadius: "10px",
+                                    border: "1px solid rgba(94, 234, 255, 0.35)",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  ✓ Verificado Epic Games
+                                </span>
+                              )}
+                            </div>
+                            {!user.epic_nickname && (
+                              <p
+                                style={{
+                                  margin: "3px 0 0 0",
+                                  fontSize: "11px",
+                                  color: "#a3a3a3",
+                                }}
+                              >
+                                Vincula tu cuenta de Epic Games para que tus rivales puedan agregarte en Fortnite.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <a
+                          href={EPIC_AUTH_URL}
+                          className={user.epic_nickname ? "button secondary small" : "button primary small"}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <Gamepad2 size={16} />
+                          {user.epic_nickname ? "Cambiar cuenta de Epic" : "Vincular con Epic Games"}
+                          <ArrowUpRight size={14} />
+                        </a>
+                      </div>
+
                       <div className="section-heading">
                         <h2>Movimientos recientes</h2>
                         <span className="section-meta">

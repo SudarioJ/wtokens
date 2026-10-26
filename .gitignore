@@ -32,5 +32,6 @@ Thumbs.db
 test-results/
 playwright-report/
 coverage/
+.agents/
 .env.*
 !.env.example

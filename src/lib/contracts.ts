@@ -24,6 +24,8 @@ export const userSchema = z.object({
   moderator: z.boolean().optional(),
   role: z.enum(["admin", "user"]).optional(),
   epic_nickname: z.string().max(100).optional(),
+  epic_verified: z.boolean().optional(),
+  epic_account_id: z.string().optional(),
   discord_tag: z.string().max(100).optional(),
   balance_wt: z.number().optional(),
   referrer_code: z.string().max(40).optional(),

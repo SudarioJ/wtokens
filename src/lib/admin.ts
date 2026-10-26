@@ -6,6 +6,8 @@ export interface ManagedUser {
   id: string;
   display_name: string;
   epic_nickname: string;
+  epic_verified?: boolean;
+  epic_account_id?: string;
   discord_tag: string;
   avatar_url?: string | undefined;
   role: "admin" | "user";
