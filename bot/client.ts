@@ -11,6 +11,30 @@ import { registerCommands, handleSlashCommand } from "./commands";
 import { convertRoomToDispute } from "./rooms";
 import { isStaffMember } from "./roles";
 
+import {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  Interaction,
+  ButtonInteraction,
+  TextChannel,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  GuildMember,
+} from "discord.js";
+import { botConfig } from "./config";
+import { registerCommands, handleSlashCommand } from "./commands";
+import { convertRoomToDispute } from "./rooms";
+import { isStaffMember, assignGuildRole, removeGuildRole } from "./roles";
+import { handleSecurityMessage, handleSecurityJoin } from "./protection";
+import {
+  COUNTRY_ROLES,
+  MEMBER_ROLE_ID,
+  UNVERIFIED_ROLE_ID,
+} from "./setup-onboarding-panel";
+
 export function createBotClient(): Client {
   const client = new Client({
     intents: [
@@ -23,6 +47,16 @@ export function createBotClient(): Client {
   client.once("clientReady", async () => {
     console.log(`🤖 [Discord Bot] Conectado exitosamente como: ${client.user?.tag}`);
     await registerCommands();
+  });
+
+  // Security: Anti-Invite, Anti-Mass-Mention, Anti-Spam
+  client.on("messageCreate", async (message) => {
+    await handleSecurityMessage(message);
+  });
+
+  // Security: Anti-Raid Join Tracker
+  client.on("guildMemberAdd", async (member) => {
+    await handleSecurityJoin(client, member as GuildMember);
   });
 
   client.on("interactionCreate", async (interaction: Interaction) => {
@@ -153,6 +187,43 @@ async function handleButtonInteraction(
         console.error("Error sending unban staff alert:", err);
       }
     }
+    return;
+  }
+
+  // 6. Botones: Selección de País y Onboarding
+  if (customId.startsWith("select_country_")) {
+    const countryKey = customId.replace("select_country_", "");
+    const country = COUNTRY_ROLES[countryKey];
+    if (!country) return;
+
+    // Assign country role and member role
+    await assignGuildRole(client, interaction.user.id, country.roleId);
+    await assignGuildRole(client, interaction.user.id, MEMBER_ROLE_ID);
+    await removeGuildRole(client, interaction.user.id, UNVERIFIED_ROLE_ID);
+
+    const embed = new EmbedBuilder()
+      .setTitle(`✅ ¡Bienvenido a WTOKENS!`)
+      .setDescription(
+        `Se te ha asignado el rol de **${country.emoji} ${country.name}** y el rol de **Miembro**.\n` +
+          `Tu acceso al servidor de Discord ha sido **desbloqueado con éxito**.\n\n` +
+          `🚀 **Siguiente paso obligatorio:**\n` +
+          `Ingresa ahora a la plataforma web oficial para vincular tu cuenta de **Epic Games** y participar en las colas de Fortnite:`,
+      )
+      .setColor(0x10b981)
+      .setFooter({ text: "WTokens Competitivo" });
+
+    const linkButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel("🌐 Entrar a WTOKENS (wtokens.net)")
+        .setStyle(ButtonStyle.Link)
+        .setURL("https://wtokens.net"),
+    );
+
+    await interaction.reply({
+      embeds: [embed],
+      components: [linkButton],
+      ephemeral: true,
+    });
     return;
   }
 }
