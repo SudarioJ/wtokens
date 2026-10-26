@@ -103,6 +103,89 @@ export function AdminPanel({
     "Datos de cuenta inválidos o no coincidentes con el titular",
   );
 
+  // Incoming deposits and Pix requests
+  const [pendingDeposits, setPendingDeposits] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("wtokens_pending_deposits") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const [pendingPixRequests, setPendingPixRequests] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("wtokens_pix_requests") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  function handleApproveDeposit(dep: any) {
+    if (!dep.userId) return;
+    const res = creditUserTokens(
+      currentAdmin.id,
+      currentAdmin.display_name,
+      dep.userId,
+      dep.amountWt,
+      `Recarga aprobada vía ${dep.method} (Titular: ${dep.receiptCode})`,
+    );
+    if (res.success) {
+      setUsers(getManagedUsers());
+      setAudit(getAuditLog());
+      const updated = pendingDeposits.filter((d) => d.id !== dep.id);
+      setPendingDeposits(updated);
+      try {
+        localStorage.setItem("wtokens_pending_deposits", JSON.stringify(updated));
+      } catch {}
+      setFeedback({
+        text: `✅ ¡Acreditados ${dep.amountWt} WT a ${dep.userDiscord || dep.userId}!`,
+        error: false,
+      });
+      if (onBalanceUpdated) onBalanceUpdated();
+    }
+  }
+
+  function handleDismissDeposit(id: string) {
+    const updated = pendingDeposits.filter((d) => d.id !== id);
+    setPendingDeposits(updated);
+    try {
+      localStorage.setItem("wtokens_pending_deposits", JSON.stringify(updated));
+    } catch {}
+  }
+
+  function handleApprovePix(req: any) {
+    if (!req.userId) return;
+    const res = creditUserTokens(
+      currentAdmin.id,
+      currentAdmin.display_name,
+      req.userId,
+      req.amountWt,
+      `Recarga Pix Belo aprobada (${req.amountBrl} BRL)`,
+    );
+    if (res.success) {
+      setUsers(getManagedUsers());
+      setAudit(getAuditLog());
+      const updated = pendingPixRequests.filter((p) => p.id !== req.id);
+      setPendingPixRequests(updated);
+      try {
+        localStorage.setItem("wtokens_pix_requests", JSON.stringify(updated));
+      } catch {}
+      setFeedback({
+        text: `✅ ¡Acreditados ${req.amountWt} WT a ${req.userName}!`,
+        error: false,
+      });
+      if (onBalanceUpdated) onBalanceUpdated();
+    }
+  }
+
+  function handleDismissPix(id: string) {
+    const updated = pendingPixRequests.filter((p) => p.id !== id);
+    setPendingPixRequests(updated);
+    try {
+      localStorage.setItem("wtokens_pix_requests", JSON.stringify(updated));
+    } catch {}
+  }
+
   function reloadAll() {
     setUsers(getManagedUsers());
     setAudit(getAuditLog());
@@ -373,6 +456,122 @@ export function AdminPanel({
           </div>
         </div>
       </div>
+
+      {/* Solicitudes de Recarga y Pix Pendientes */}
+      {(pendingPixRequests.length > 0 || pendingDeposits.length > 0) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+          {/* Banner Pix Brasil */}
+          {pendingPixRequests.map((req) => (
+            <div
+              key={req.id}
+              style={{
+                background: "linear-gradient(135deg, rgba(234, 179, 8, 0.12) 0%, rgba(6, 16, 32, 0.95) 100%)",
+                border: "1px solid rgba(234, 179, 8, 0.4)",
+                borderRadius: "10px",
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "16px" }}>🇧🇷</span>
+                  <strong style={{ color: "#fef08a", fontSize: "14px" }}>
+                    Solicitud Pix Brasil de {req.userName}
+                  </strong>
+                  {req.userDiscord && (
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>@{req.userDiscord}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: "12px", color: "#e2e8f0", marginTop: "3px" }}>
+                  Genera en Belo: <strong style={{ color: "#5eeaff", fontSize: "14px" }}>{req.amountBrl} BRL</strong> para acreditar <strong>{req.amountWt} WT</strong>.
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(String(req.amountBrl));
+                    alert(`Monto ${req.amountBrl} copiado para ingresar en Belo.`);
+                  }}
+                >
+                  Copiar {req.amountBrl} BRL
+                </button>
+                <button
+                  type="button"
+                  className="button primary small"
+                  onClick={() => handleApprovePix(req)}
+                >
+                  ✓ Acreditar {req.amountWt} WT
+                </button>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  style={{ color: "#94a3b8" }}
+                  onClick={() => handleDismissPix(req.id)}
+                >
+                  Descartar
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Banner Recargas Generales */}
+          {pendingDeposits.map((dep) => (
+            <div
+              key={dep.id}
+              style={{
+                background: "linear-gradient(135deg, rgba(94, 234, 255, 0.1) 0%, rgba(6, 16, 32, 0.95) 100%)",
+                border: "1px solid rgba(94, 234, 255, 0.35)",
+                borderRadius: "10px",
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <strong style={{ color: "#5eeaff", fontSize: "14px" }}>
+                    Recarga de {dep.amountWt} WT vía {dep.method}
+                  </strong>
+                  {dep.userDiscord && (
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>@{dep.userDiscord}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: "12px", color: "#f1f5f9", marginTop: "3px" }}>
+                  Titular / Cuenta emisora informada: <strong style={{ color: "#fef08a" }}>{dep.receiptCode}</strong>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  className="button primary small"
+                  onClick={() => handleApproveDeposit(dep)}
+                >
+                  ✓ Acreditar {dep.amountWt} WT
+                </button>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  style={{ color: "#94a3b8" }}
+                  onClick={() => handleDismissDeposit(dep.id)}
+                >
+                  Descartar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Admin Navigation Tabs */}
       <div className="admin-tabs">

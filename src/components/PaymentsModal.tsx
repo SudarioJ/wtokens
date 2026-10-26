@@ -19,7 +19,7 @@ interface PaymentsModalProps {
   onBalanceUpdated?: (newBalance: number) => void;
 }
 
-const PRESET_AMOUNTS = [5, 10, 20, 50, 100];
+const PRESET_AMOUNTS = [1, 3, 5, 10, 20, 50, 100];
 
 // Approximate exchange rates relative to 1 WT ($1 USD)
 const RATES: Record<string, number> = {
@@ -53,6 +53,29 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
 
   // Submission state
   const [depositSuccess, setDepositSuccess] = useState<boolean>(false);
+  const [pixRequested, setPixRequested] = useState<boolean>(false);
+
+  function handleRequestPix() {
+    const brl = Math.round(amount * 5.6 * 100) / 100;
+    try {
+      const pixRequests = JSON.parse(
+        localStorage.getItem("wtokens_pix_requests") || "[]",
+      );
+      pixRequests.push({
+        id: "pix_" + Date.now(),
+        userId: user?.id,
+        userName: user?.display_name || user?.discord_tag || "Jugador BR",
+        userDiscord: user?.discord_tag,
+        userEpic: user?.epic_nickname,
+        amountWt: amount,
+        amountBrl: brl,
+        createdAt: new Date().toISOString(),
+        status: "PENDING",
+      });
+      localStorage.setItem("wtokens_pix_requests", JSON.stringify(pixRequests));
+    } catch {}
+    setPixRequested(true);
+  }
 
   const selectedMethod: PaymentAccount =
     OFFICIAL_PAYMENT_ACCOUNTS.find((m) => m.id === selectedMethodId) ||
@@ -219,7 +242,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                 fontFamily: "var(--font-mono, monospace)",
               }}
             >
-              Comprobante: {receiptCode}
+              Titular / Cuenta emisora: {receiptCode}
             </div>
             <div style={{ display: "flex", gap: "10px", width: "100%", marginTop: "6px" }}>
               <a
@@ -421,6 +444,100 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                           </div>
                         )}
 
+                        {m.id === "belo" && (
+                          <div
+                            style={{
+                              background: "rgba(94, 234, 255, 0.08)",
+                              border: "1px solid rgba(94, 234, 255, 0.3)",
+                              borderRadius: "8px",
+                              padding: "12px",
+                              marginTop: "8px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <strong style={{ color: "#5eeaff", fontSize: "13px" }}>
+                                🇧🇷 Pagamento Instantâneo Pix (Brasil)
+                              </strong>
+                              <span style={{ fontSize: "11px", color: "#fef08a", fontWeight: "700" }}>
+                                Total: {(amount * 5.6).toFixed(2)} BRL
+                              </span>
+                            </div>
+                            <p
+                              style={{
+                                margin: "0",
+                                fontSize: "11px",
+                                color: "#94a3b8",
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              Para recargar <strong>{amount} WT</strong> ({(amount * 5.6).toFixed(2)} BRL),
+                              pulsa el botón para que el Staff genere tu código Pix Copia e Cola desde Belo
+                              y te lo envíe al instante.
+                            </p>
+                            {pixRequested ? (
+                              <div
+                                style={{
+                                  background: "#051324",
+                                  border: "1px solid #1c4273",
+                                  borderRadius: "6px",
+                                  padding: "10px",
+                                  textAlign: "center",
+                                  fontSize: "12px",
+                                  color: "#5eeaff",
+                                }}
+                              >
+                                ✅ ¡Solicitud Pix de <strong>{(amount * 5.6).toFixed(2)} BRL</strong> enviada
+                                al Staff!
+                                <div style={{ marginTop: "6px" }}>
+                                  <a
+                                    href="https://discord.gg/w8h6Yvd28h"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                      color: "#ffffff",
+                                      background: "#0284c7",
+                                      padding: "6px 12px",
+                                      borderRadius: "4px",
+                                      textDecoration: "none",
+                                      fontWeight: "600",
+                                      fontSize: "11px",
+                                    }}
+                                  >
+                                    <MessageSquare size={14} />
+                                    Abrir Ticket en Discord para recibir tu código Pix
+                                  </a>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="button primary small full"
+                                onClick={handleRequestPix}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "6px",
+                                }}
+                              >
+                                🇧🇷 Solicitar código Pix por {(amount * 5.6).toFixed(2)} BRL
+                              </button>
+                            )}
+                          </div>
+                        )}
+
                         {m.note && (
                           <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#8bb5f0" }}>
                             ℹ️ {m.note}
@@ -433,15 +550,16 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
               </div>
             </div>
 
-            {/* Confirmar con Comprobante */}
+            {/* Confirmar con Nombre de Titular o Tag */}
             <form onSubmit={handleConfirmDeposit} className="receipt-input-group">
-              <label>3. Ingresa tu número de comprobante o referencia de pago</label>
+              <label>3. Nombre del titular o $tag desde donde envías el pago</label>
               <input
                 type="text"
-                placeholder="Ej. N° de operación, ID de PayPal o referencia bancaria..."
+                placeholder="Ej. Lucas Gómez (Mercado Pago), $soker (Lemon), tu email o tu Nickname..."
                 className="receipt-input"
+                maxLength={60}
                 value={receiptCode}
-                onChange={(e) => setReceiptCode(e.target.value)}
+                onChange={(e) => setReceiptCode(e.target.value.replace(/[<>"'`]/g, ""))}
                 required
               />
               <button
