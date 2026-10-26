@@ -358,6 +358,237 @@
   border-color: #f59e0b;
 }
 
+/* User Search & Dropdown in Token Manager */
+.admin-user-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #111a28;
+  border: 1px solid #22334c;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.admin-user-search-box:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  background: #141f30;
+}
+
+.admin-user-search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: #f8fafc !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  width: 100%;
+  outline: none !important;
+}
+
+.admin-user-search-box input::placeholder {
+  color: #64748b;
+}
+
+.admin-user-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #0d1522;
+  border: 1px solid #22334c;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 120;
+}
+
+.dropdown-hint {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #1a273b;
+  background: #090e18;
+}
+
+.search-empty-state {
+  padding: 16px;
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+  font-style: italic;
+}
+
+.user-search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #141f2e;
+  transition: background 0.15s ease;
+}
+
+.user-search-item:last-child {
+  border-bottom: none;
+}
+
+.user-search-item:hover {
+  background: #152234;
+}
+
+.user-search-item.selected {
+  background: rgba(56, 189, 248, 0.12);
+  border-left: 3px solid #38bdf8;
+}
+
+.user-search-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #24354c;
+  flex-shrink: 0;
+}
+
+.user-search-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-search-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #f8fafc;
+  flex-wrap: wrap;
+}
+
+.user-search-tag {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.badge-admin-tag {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.badge-suspended-tag {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.user-search-meta {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.user-search-bal {
+  color: #fbbf24;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Selected Player Summary Banner */
+.selected-player-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #0f1826;
+  border: 1px solid #1f3047;
+  border-radius: 8px;
+}
+
+.selected-player-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #2a4160;
+  flex-shrink: 0;
+}
+
+.selected-player-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-player-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.selected-player-title h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #f8fafc;
+}
+
+.player-tag {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.selected-player-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.dot-divider {
+  color: #475569;
+}
+
+.player-current-wt {
+  color: #fbbf24;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+}
+
+.change-player-btn {
+  background: #172436;
+  border: 1px solid #293d5a;
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.change-player-btn:hover {
+  background: #1e314b;
+  border-color: #38bdf8;
+  color: #fff;
+}
+
 .type-toggle-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -745,6 +976,8 @@
 
 .balance-cell strong {
   display: block;
+  font-family: var(--font-mono, monospace);
+  font-feature-settings: "tnum";
 }
 
 .balance-cell small {

@@ -26,6 +26,7 @@ export const userSchema = z.object({
   epic_nickname: z.string().max(100).optional(),
   discord_tag: z.string().max(100).optional(),
   balance_wt: z.number().optional(),
+  referrer_code: z.string().max(40).optional(),
   ranking: z
     .object({
       tiers: z

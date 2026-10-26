@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WTOKENS — Design System Preview</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== DESIGN TOKENS ===== */
+:root {
+  --bg: #060a14;
+  --panel: #0e1522;
+  --panel-elevated: #141d2e;
+  --line: #1e2d44;
+  --text: #e8ecf4;
+  --text-muted: #8a96b0;
+  --blue: #5ca8f5;
+  --green: #4de8a0;
+  --green-hover: #6ff0b8;
+  --danger: #f04040;
+  --warning: #f5a623;
+  --gold: #ffd166;
+
+  --font-display: 'Satoshi', sans-serif;
+  --font-display-landing: 'Bebas Neue', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --rounded-sm: 4px;
+  --rounded-md: 8px;
+  --rounded-lg: 12px;
+
+  --xs: 4px;
+  --sm: 8px;
+  --md: 16px;
+  --lg: 24px;
+  --xl: 32px;
+  --xxl: 48px;
+
+  color-scheme: dark;
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; }
+button { cursor: pointer; font: inherit; color: inherit; border: 0; background: none; }
+
+/* ===== PREVIEW LAYOUT ===== */
+.preview-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--xl) var(--lg);
+}
+.preview-header {
+  text-align: center;
+  padding: var(--xxl) 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--xxl);
+}
+.preview-header h1 {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: var(--sm);
+}
+.preview-header h1 span { color: var(--green); }
+.preview-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.section {
+  margin-bottom: var(--xxl);
+  padding-bottom: var(--xxl);
+  border-bottom: 1px solid var(--line);
+}
+.section:last-child { border-bottom: 0; }
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--lg);
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+}
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 22px;
+  background: var(--green);
+  border-radius: 2px;
+}
+
+/* ===== 1. COLOR PALETTE ===== */
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--md);
+}
+.swatch {
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.swatch-color {
+  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--sm) var(--md);
+}
+.swatch-color span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #00000066;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.swatch-label {
+  background: var(--panel);
+  padding: var(--sm) var(--md);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.swatch-label small {
+  display: block;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+/* ===== 2. TYPOGRAPHY ===== */
+.type-specimen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+.type-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: var(--lg);
+  align-items: baseline;
+  padding: var(--md) 0;
+  border-bottom: 1px solid #1a2236;
+}
+.type-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.type-meta span {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--green);
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: var(--xs);
+}
+.type-display-landing {
+  font-family: var(--font-display-landing);
+  font-size: 4.5rem;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  line-height: 1;
+}
+.type-display-dashboard {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+.type-body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+.type-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.type-mono {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: var(--green);
+  font-feature-settings: 'tnum';
+}
+
+/* ===== 3. BUTTONS ===== */
+.button-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md);
+  align-items: center;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sm);
+  min-height: 44px;
+  padding: 12px 20px;
+  border-radius: var(--rounded-md);
+  font-size: 0.85rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.15s;
+  border: 1px solid transparent;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary {
+  background: var(--green);
+  color: #0a1a12;
+  border-color: var(--green);
+}
+.btn-primary:hover { background: var(--green-hover); }
+.btn-secondary {
+  background: var(--panel-elevated);
+  color: var(--text);
+  border-color: var(--line);
+}
+.btn-secondary:hover { background: #1c2940; }
+.btn-blue {
+  background: #1a4fa8;
+  color: #fff;
+  border-color: #3870d4;
+}
+.btn-blue:hover { background: #2460c2; }
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: #5a2020;
+}
+.btn-danger:hover { background: #2a1010; }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: transparent;
+}
+.btn-ghost:hover { color: var(--text); }
+.btn-sm {
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== 4. CARDS ===== */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--lg);
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--rounded-lg);
+  padding: var(--lg);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.card:hover {
+  border-color: #3a5070;
+  transform: translateY(-2px);
+}
+.card-eyebrow {
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: var(--sm);
+}
+.card h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: var(--sm);
+}
+.card p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--md);
+  padding-top: var(--md);
+  border-top: 1px solid #1a2538;
+}
+.card-amount {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--green);
+  font-feature-settings: 'tnum';
+}
+.card-status {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.status-open { background: #1a3a2a; color: var(--green); }
+.status-locked { background: #3a2a0a; color: var(--warning); }
+.status-dispute { background: #3a1a1a; color: var(--danger); }
+
+/* ===== 5. FORM INPUTS ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--lg);
+}
+.form-group { display: flex; flex-direction: column; gap: var(--xs); }
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.form-input {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--rounded-sm);
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 0.9rem;
+  transition: border-color 0.15s;
+}
+.form-input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-color: var(--green);
+}
+.form-input::placeholder { color: #5a6880; }
+.form-input-error { border-color: var(--danger); }
+.form-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.form-error {
+  font-size: 0.7rem;
+  color: var(--danger);
+}
+
+/* ===== 6. ALERTS ===== */
+.alert-stack { display: flex; flex-direction: column; gap: var(--md); }
+.alert {
+  padding: var(--md);
+  border-radius: var(--rounded-md);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--md);
+  border: 1px solid;
+}
+.alert-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.alert-success { background: #0a1f15; border-color: #1a3a2a; color: #b0f0d0; }
+.alert-success .alert-icon { background: var(--green); color: #0a1a12; }
+.alert-warning { background: #1f1a0a; border-color: #3a2a0a; color: #f5d0a0; }
+.alert-warning .alert-icon { background: var(--warning); color: #1a0a00; }
+.alert-error { background: #1f0a0a; border-color: #3a1a1a; color: #f0b0b0; }
+.alert-error .alert-icon { background: var(--danger); color: #fff; }
+.alert-info { background: #0a1525; border-color: #1a2d50; color: #a0c8f5; }
+.alert-info .alert-icon { background: var(--blue); color: #0a1525; }
+
+/* ===== 7. DASHBOARD MOCKUP ===== */
+.mockup-wrapper {
+  border: 1px solid var(--line);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  background: var(--bg);
+}
+.mockup-sidebar {
+  width: 220px;
+  background: #0a0f1a;
+  border-right: 1px solid #1a2236;
+  padding: var(--lg) var(--md);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mockup-layout {
+  display: flex;
+  position: relative;
+  min-height: 500px;
+}
+.mockup-main {
+  margin-left: 220px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.mockup-topbar {
+  height: 60px;
+  border-bottom: 1px solid #1a2236;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--lg);
+  background: #0c111c;
+}
+.mockup-content {
+  padding: var(--lg);
+  flex: 1;
+}
+.mock-brand {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--xl);
+}
+.mock-brand span { color: var(--green); }
+.mock-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.mock-nav-item.active {
+  background: #141d2e;
+  color: #c0d0f0;
+}
+.mock-nav-item.active::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: var(--green);
+  border-radius: 2px;
+  margin-left: -12px;
+  margin-right: 8px;
+}
+.mock-nav-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+.mock-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.mock-topbar-left strong {
+  color: var(--text);
+  font-weight: 500;
+}
+.mock-balance {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--green);
+  font-feature-settings: 'tnum';
+  padding: 6px 12px;
+  background: #0a1f15;
+  border: 1px solid #1a3a2a;
+  border-radius: 6px;
+}
+.mock-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--md);
+  margin-bottom: var(--lg);
+}
+.mock-stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--rounded-md);
+  padding: var(--md);
+}
+.mock-stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--xs);
+}
+.mock-stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+}
+.mock-stat-value.green { color: var(--green); }
+.mock-stat-value.blue { color: var(--blue); }
+.mock-stat-value.gold { color: var(--gold); }
+.mock-section-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: var(--md);
+}
+.mock-match-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: var(--md);
+  align-items: center;
+  padding: var(--md);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--rounded-md);
+  margin-bottom: var(--sm);
+  font-size: 0.82rem;
+}
+.mock-match-mode {
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--blue);
+  width: 80px;
+}
+.mock-match-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.mock-match-stake {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--green);
+  font-feature-settings: 'tnum';
+}
+.mock-separator {
+  height: 1px;
+  background: #1a2236;
+  margin: var(--lg) 0;
+}
+
+/* ===== 8. LANDING MOCKUP ===== */
+.landing-mockup {
+  border: 1px solid var(--line);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  background: #030405;
+}
+.landing-mock-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--lg);
+  border-bottom: 1px solid #1a283f;
+  background: #050609f0;
+}
+.landing-mock-brand {
+  font-family: var(--font-display-landing);
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+.landing-mock-nav {
+  display: flex;
+  gap: var(--lg);
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.landing-mock-hero {
+  text-align: center;
+  padding: 80px var(--lg) 60px;
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 70%, #0a4a3520, transparent 60%),
+    radial-gradient(ellipse at 20% 30%, #1252a215, transparent 50%);
+}
+.landing-mock-hero h2 {
+  font-family: var(--font-display-landing);
+  font-size: 5rem;
+  font-weight: 400;
+  letter-spacing: 2px;
+  line-height: 1.05;
+  color: #fff;
+}
+.landing-mock-hero h2 span {
+  background: linear-gradient(120deg, var(--blue), var(--green) 50%, #20d090);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.landing-mock-hero p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  max-width: 480px;
+  margin: var(--md) auto 0;
+  line-height: 1.8;
+}
+.landing-mock-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--md);
+  margin-top: var(--lg);
+}
+.landing-mock-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--md);
+  padding: var(--lg);
+  border-top: 1px solid #1a283f;
+}
+.landing-stat {
+  text-align: center;
+  padding: var(--md);
+}
+.landing-stat-value {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: -0.5px;
+}
+.landing-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: var(--xs);
+  line-height: 1.6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .type-row { grid-template-columns: 1fr; gap: var(--sm); }
+  .form-grid { grid-template-columns: 1fr; }
+  .mock-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .mock-match-row { grid-template-columns: 1fr; gap: var(--sm); }
+  .mockup-sidebar { display: none; }
+  .mockup-main { margin-left: 0; }
+  .landing-mock-hero h2 { font-size: 3rem; }
+  .type-display-landing { font-size: 3rem; }
+  .palette-grid { grid-template-columns: repeat(2, 1fr); }
+  .landing-mock-stats { grid-template-columns: 1fr; }
+  .landing-mock-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="preview-container">
+
+  <!-- HEADER -->
+  <div class="preview-header">
+    <h1>WTOKENS <span>Design System</span></h1>
+    <p>Sistema de diseno propuesto para la arena competitiva de Fortnite en Latinoamerica. Tipografia, paleta, componentes y layout.</p>
+  </div>
+
+  <!-- 1. COLOR PALETTE -->
+  <div class="section">
+    <h2 class="section-title">Color Palette</h2>
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#060a14"><span>#060a14</span></div>
+        <div class="swatch-label">Background<small>--bg</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0e1522"><span>#0e1522</span></div>
+        <div class="swatch-label">Panel<small>--panel</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#141d2e"><span>#141d2e</span></div>
+        <div class="swatch-label">Panel Elevated<small>--panel-elevated</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1e2d44"><span>#1e2d44</span></div>
+        <div class="swatch-label">Line / Border<small>--line</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#e8ecf4"><span style="color:#060a14;background:#060a1466">#e8ecf4</span></div>
+        <div class="swatch-label">Text<small>--text</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#8a96b0"><span>#8a96b0</span></div>
+        <div class="swatch-label">Text Muted<small>--text-muted</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#5ca8f5"><span>#5ca8f5</span></div>
+        <div class="swatch-label">Blue<small>--blue · info/nav</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#4de8a0"><span style="color:#0a1a12">#4de8a0</span></div>
+        <div class="swatch-label">Green<small>--green · action/money</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f04040"><span>#f04040</span></div>
+        <div class="swatch-label">Danger<small>--danger</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f5a623"><span>#f5a623</span></div>
+        <div class="swatch-label">Warning<small>--warning</small></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ffd166"><span style="color:#1a1200">#ffd166</span></div>
+        <div class="swatch-label">Gold<small>--gold · ranks</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TYPOGRAPHY -->
+  <div class="section">
+    <h2 class="section-title">Typography</h2>
+    <div class="type-specimen">
+      <div class="type-row">
+        <div class="type-meta">Display Landing<span>Bebas Neue 400</span></div>
+        <div class="type-display-landing">TU ARENA COMPETITIVA</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Display Dashboard<span>Satoshi 700</span></div>
+        <div class="type-display-dashboard">Arena de Desafios Activos</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Body<span>Inter 400</span></div>
+        <div class="type-body">Cuando el servidor confirma el desafio, el aporte pasa del saldo disponible al reservado. Se mantiene separado hasta que la partida se resuelve o se devuelve conforme a sus reglas.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Label / Eyebrow<span>Inter 650 tracked</span></div>
+        <div class="type-label">Box Fight Clasico · Modalidad Activa</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Mono / Money<span>JetBrains Mono 500</span></div>
+        <div class="type-mono">$25.00 USD · FN-82914</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. BUTTONS -->
+  <div class="section">
+    <h2 class="section-title">Buttons</h2>
+    <div class="button-grid">
+      <button class="btn btn-primary">Crear Desafio</button>
+      <button class="btn btn-blue">Entrar con Discord</button>
+      <button class="btn btn-secondary">Ver Detalles</button>
+      <button class="btn btn-danger">Cancelar Partida</button>
+      <button class="btn btn-ghost">Cerrar Sesion</button>
+      <button class="btn btn-primary btn-sm">Aceptar</button>
+      <button class="btn btn-secondary btn-sm">Filtrar</button>
+      <button class="btn btn-primary" disabled>No Disponible</button>
+    </div>
+  </div>
+
+  <!-- 4. MATCH CARDS -->
+  <div class="section">
+    <h2 class="section-title">Match Cards</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-eyebrow">Box Fight</div>
+        <h3>Desafio Abierto</h3>
+        <p>Edicion, precision y reflejos en combate a corta distancia. Creado hace 3 minutos.</p>
+        <div class="card-footer">
+          <span class="card-amount">$5.00</span>
+          <span class="card-status status-open">Abierto</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow">Zone Wars</div>
+        <h3>Fondos en Boveda</h3>
+        <p>Rotaciones, presion y decisiones. Ambos jugadores aceptaron, fondos retenidos.</p>
+        <div class="card-footer">
+          <span class="card-amount">$10.00</span>
+          <span class="card-status status-locked">En Boveda</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow">Build Fight</div>
+        <h3>En Disputa</h3>
+        <p>Los participantes reportaron resultados distintos. Mediacion en curso.</p>
+        <div class="card-footer">
+          <span class="card-amount">$25.00</span>
+          <span class="card-status status-dispute">Disputa</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. FORM INPUTS -->
+  <div class="section">
+    <h2 class="section-title">Form Inputs</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Monto del desafio</label>
+        <input class="form-input" type="text" placeholder="Ej: 5.00" value="$10.00">
+        <span class="form-hint">Minimo $0.50, maximo $50.00 USD</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Modalidad</label>
+        <select class="form-input">
+          <option>Box Fight</option>
+          <option>Build Fight</option>
+          <option>Zone Wars</option>
+          <option>Realistics</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nickname Epic</label>
+        <input class="form-input form-input-error" type="text" value="user123">
+        <span class="form-error">No se encontro esta cuenta de Epic Games</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ID de Partida</label>
+        <input class="form-input" type="text" placeholder="FN-XXXXX" disabled>
+        <span class="form-hint">Se asigna automaticamente</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. ALERTS -->
+  <div class="section">
+    <h2 class="section-title">Alerts</h2>
+    <div class="alert-stack">
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <div>Partida liquidada. Premio de <strong style="font-family:var(--font-mono)">$9.00 USD</strong> acreditado a tu saldo disponible.</div>
+      </div>
+      <div class="alert alert-warning">
+        <span class="alert-icon">!</span>
+        <div>Tu desafio vence en 15 minutos. Si no se acepta, el aporte vuelve a tu saldo.</div>
+      </div>
+      <div class="alert alert-error">
+        <span class="alert-icon">×</span>
+        <div>Error al procesar la solicitud. Saldo insuficiente para este monto.</div>
+      </div>
+      <div class="alert alert-info">
+        <span class="alert-icon">i</span>
+        <div>La verificacion de cuenta Epic esta pendiente. Completa tu perfil para participar.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. DASHBOARD MOCKUP -->
+  <div class="section">
+    <h2 class="section-title">Dashboard Mockup</h2>
+    <div class="mockup-wrapper">
+      <div class="mockup-layout">
+        <div class="mockup-sidebar">
+          <div class="mock-brand">W<span>TOKENS</span></div>
+          <div class="mock-nav-item active"><span class="mock-nav-dot"></span> Arena</div>
+          <div class="mock-nav-item"><span class="mock-nav-dot"></span> Billetera</div>
+          <div class="mock-nav-item"><span class="mock-nav-dot"></span> Historial</div>
+          <div class="mock-nav-item"><span class="mock-nav-dot"></span> Rankings</div>
+          <div class="mock-nav-item"><span class="mock-nav-dot"></span> Ayuda</div>
+        </div>
+        <div class="mockup-main">
+          <div class="mockup-topbar">
+            <div class="mock-topbar-left">
+              Arena / <strong>Desafios</strong>
+            </div>
+            <div class="mock-balance">$ 142.50</div>
+          </div>
+          <div class="mockup-content">
+            <div class="mock-stat-grid">
+              <div class="mock-stat">
+                <div class="mock-stat-label">Saldo Disponible</div>
+                <div class="mock-stat-value green">$142.50</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-label">En Boveda</div>
+                <div class="mock-stat-value" style="color:var(--warning)">$25.00</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-label">Partidas</div>
+                <div class="mock-stat-value blue">47</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-label">Racha</div>
+                <div class="mock-stat-value gold">5W</div>
+              </div>
+            </div>
+            <div class="mock-section-title">Desafios Recientes</div>
+            <div class="mock-match-row">
+              <span class="mock-match-mode">Box Fight</span>
+              <span>vs. player_rival</span>
+              <span class="mock-match-id">FN-82914</span>
+              <span class="mock-match-stake">+$9.00</span>
+              <span class="card-status status-open" style="font-size:0.65rem">Victoria</span>
+            </div>
+            <div class="mock-match-row">
+              <span class="mock-match-mode">Zone Wars</span>
+              <span>vs. zona_master</span>
+              <span class="mock-match-id">FN-83102</span>
+              <span class="mock-match-stake" style="color:var(--warning)">$10.00</span>
+              <span class="card-status status-locked" style="font-size:0.65rem">En Boveda</span>
+            </div>
+            <div class="mock-match-row">
+              <span class="mock-match-mode">Build Fight</span>
+              <span>vs. build_king</span>
+              <span class="mock-match-id">FN-81450</span>
+              <span class="mock-match-stake" style="color:var(--danger)">-$5.00</span>
+              <span class="card-status status-dispute" style="font-size:0.65rem">Disputa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. LANDING MOCKUP -->
+  <div class="section">
+    <h2 class="section-title">Landing Mockup</h2>
+    <div class="landing-mockup">
+      <div class="landing-mock-header">
+        <span class="landing-mock-brand">WTOKENS</span>
+        <div class="landing-mock-nav">
+          <span style="color:#fff;font-weight:700">Inicio</span>
+          <span>Sistema</span>
+          <span>Comunidad</span>
+          <span>FAQ</span>
+        </div>
+        <button class="btn btn-primary btn-sm">Entrar con Discord</button>
+      </div>
+      <div class="landing-mock-hero">
+        <h2>TU ARENA<br><span>COMPETITIVA</span></h2>
+        <p>Desafia, demuestra tu nivel y gana. La arena donde los jugadores de Fortnite de Latinoamerica prueban sus mecanicas con dinero real.</p>
+        <div class="landing-mock-actions">
+          <button class="btn btn-primary">Empezar Ahora</button>
+          <button class="btn btn-secondary">Ver Modalidades</button>
+        </div>
+      </div>
+      <div class="landing-mock-stats">
+        <div class="landing-stat">
+          <div class="landing-stat-value">4</div>
+          <div class="landing-stat-label">Modalidades de duelo</div>
+        </div>
+        <div class="landing-stat">
+          <div class="landing-stat-value">6</div>
+          <div class="landing-stat-label">Paises de Latinoamerica</div>
+        </div>
+        <div class="landing-stat">
+          <div class="landing-stat-value">24/7</div>
+          <div class="landing-stat-label">Arena siempre abierta</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

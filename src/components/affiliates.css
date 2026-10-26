@@ -1,0 +1,435 @@
+.affiliates-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.affiliates-hero {
+  background: linear-gradient(135deg, #0e1b33 0%, #081020 100%);
+  border: 1px solid #233758;
+  border-radius: 12px;
+  padding: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.affiliates-hero::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #00bfff20 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.affiliates-hero-copy h2 {
+  font-family: var(--font-display, "Space Grotesk Variable", sans-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.affiliates-hero-copy h2 span {
+  color: #5eeaff;
+}
+
+.affiliates-hero-copy p {
+  color: #9aa5bc;
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 620px;
+}
+
+.affiliates-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #152644;
+  border: 1px solid #284470;
+  color: #65b7ff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.affiliates-hero-badge span {
+  width: 6px;
+  height: 6px;
+  background: #5eeaff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #5eeaff;
+}
+
+/* My Code Section */
+.affiliate-code-card {
+  background: #0c182d;
+  border: 1px solid #223554;
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.affiliate-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.affiliate-code-header h3 {
+  font-size: 14px;
+  font-weight: 650;
+  color: #e2e8f5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tier-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tier-pill.standard {
+  background: #1a2740;
+  color: #8bbaff;
+  border: 1px solid #2b4168;
+}
+
+.tier-pill.creator {
+  background: #1f2b4d;
+  color: #5eeaff;
+  border: 1px solid #365e94;
+}
+
+.tier-pill.partner {
+  background: #2b234d;
+  color: #d68bff;
+  border: 1px solid #6345a6;
+}
+
+.affiliate-link-box {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.affiliate-link-input {
+  flex: 1;
+  background: #081120;
+  border: 1px solid #263857;
+  border-radius: 7px;
+  padding: 12px 16px;
+  color: #5eeaff;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  user-select: all;
+}
+
+.affiliate-link-input:focus {
+  outline: 2px solid #5eeaff;
+}
+
+/* Stats Row */
+.affiliate-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.affiliate-stat-card {
+  background: #0c172a;
+  border: 1px solid #1f304e;
+  border-radius: 9px;
+  padding: 18px;
+}
+
+.affiliate-stat-card .stat-label {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #8292af;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.affiliate-stat-card .stat-val {
+  font-family: var(--font-mono, monospace);
+  font-size: 24px;
+  font-weight: 700;
+  color: #eef3ff;
+  font-feature-settings: "tnum";
+}
+
+.affiliate-stat-card .stat-val.accent {
+  color: #5eeaff;
+}
+
+.affiliate-stat-card .stat-hint {
+  font-size: 10px;
+  color: #647596;
+  margin-top: 4px;
+}
+
+/* Tiers comparison */
+.tiers-section-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tiers-section-title span {
+  font-size: 12px;
+  font-family: "Inter Variable", sans-serif;
+  color: #7b8ea8;
+  font-weight: 400;
+}
+
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.tier-card {
+  background: #0c172a;
+  border: 1px solid #233452;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.tier-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b5a8c;
+}
+
+.tier-card.featured {
+  background: linear-gradient(180deg, #12213d 0%, #0c172a 100%);
+  border-color: #3b6ba8;
+  box-shadow: 0 10px 30px #09183380;
+}
+
+.tier-card.featured::after {
+  content: "MÁS POPULAR";
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  background: #00bfff;
+  color: #061020;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.tier-header {
+  margin-bottom: 16px;
+}
+
+.tier-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.tier-desc {
+  font-size: 11px;
+  color: #8c9cb6;
+  min-height: 32px;
+}
+
+.tier-rate-box {
+  background: #08101d;
+  border: 1px solid #1a2a44;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.tier-rate-val {
+  font-family: var(--font-mono, monospace);
+  font-size: 32px;
+  font-weight: 800;
+  color: #5eeaff;
+  line-height: 1;
+}
+
+.tier-rate-sub {
+  font-size: 10px;
+  color: #7d8fa8;
+  margin-top: 4px;
+}
+
+.tier-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.tier-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 11px;
+  color: #b5c4db;
+  line-height: 1.5;
+}
+
+.tier-features li svg {
+  color: #5eeaff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Example Calculation Box */
+.affiliate-math-card {
+  background: #091322;
+  border: 1px solid #1c2e4c;
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.affiliate-math-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2eaf8;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.affiliate-math-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.math-explanation {
+  font-size: 12px;
+  color: #92a3be;
+  line-height: 1.8;
+}
+
+.math-explanation strong {
+  color: #dce7fa;
+}
+
+.math-steps {
+  background: #060e1a;
+  border: 1px solid #16253c;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #98a9c4;
+}
+
+.math-step-row {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #121e30;
+}
+
+.math-step-row.total {
+  border-bottom: 0;
+  padding-top: 4px;
+  font-weight: 700;
+  color: #5eeaff;
+  font-size: 12px;
+}
+
+/* Rules list */
+.affiliate-rules-card {
+  background: #0a1424;
+  border: 1px solid #1c2c46;
+  border-radius: 10px;
+  padding: 20px 24px;
+}
+
+.affiliate-rules-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8ca0be;
+  margin-bottom: 12px;
+}
+
+.affiliate-rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.affiliate-rule-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #9eb0cc;
+}
+
+.affiliate-rule-item span {
+  width: 5px;
+  height: 5px;
+  background: #65b7ff;
+  border-radius: 50%;
+}
+
+@media (max-width: 900px) {
+  .affiliates-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .affiliate-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tiers-grid {
+    grid-template-columns: 1fr;
+  }
+  .affiliate-math-body {
+    grid-template-columns: 1fr;
+  }
+  .affiliate-rules-grid {
+    grid-template-columns: 1fr;
+  }
+}

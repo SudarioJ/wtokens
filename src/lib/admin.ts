@@ -14,6 +14,7 @@ export interface ManagedUser {
   country: string;
   country_name: string;
   preferred_currency: string;
+  referrer_code?: string | undefined;
   balance_wt: number;
   balance_reserved_wt: number;
   created_at: string;

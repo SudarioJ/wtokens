@@ -26,6 +26,7 @@ import {
   Menu,
   Plus,
   RefreshCw,
+  Share2,
   ShieldCheck,
   Swords,
   Target,
@@ -47,6 +48,7 @@ import { ArenaPanel } from "./components/ArenaPanel";
 import { ArenaHistory, ModerationPanel } from "./components/ArenaHistory";
 import { MatchHistory } from "./components/MatchHistory";
 import { AdminPanel } from "./components/AdminPanel";
+import { AffiliatesPanel } from "./components/AffiliatesPanel";
 import {
   getActiveManagedUser,
   getManagedUsers,
@@ -77,6 +79,7 @@ type View =
   | "teams"
   | "ranks"
   | "wallet"
+  | "affiliates"
   | "matches"
   | "help";
 const viewLabels: Record<View, string> = {
@@ -87,6 +90,7 @@ const viewLabels: Record<View, string> = {
   teams: "Equipo",
   ranks: "Rangos",
   wallet: "Billetera",
+  affiliates: "Afiliados & Creadores",
   matches: "Historial",
   help: "Ayuda",
 };
@@ -98,6 +102,7 @@ const viewDescriptions: Record<View, string> = {
   teams: "Reúne a tus compañeros y gestiona tu formación.",
   ranks: "Tu progreso en cada modalidad.",
   wallet: "Saldo y movimientos de tu cuenta.",
+  affiliates: "Invita amigos y creadores, gana comisiones recurrentes por cada duelo.",
   matches: "Todas tus partidas y sus resultados.",
   help: "Reglas, cuenta y soporte.",
 };
@@ -163,6 +168,7 @@ const navigation = [
   { view: "matches" as const, name: "Historial", icon: History },
   { view: "ranks" as const, name: "Rangos", icon: Trophy },
   { view: "wallet" as const, name: "Billetera", icon: Wallet },
+  { view: "affiliates" as const, name: "Afiliados", icon: Share2 },
 ];
 
 export function App() {
@@ -199,6 +205,26 @@ export function App() {
   const [createMode, setCreateMode] = useState("BOX_FIGHT");
   const [amount, setAmount] = useState("5");
   const [disputeReason, setDisputeReason] = useState("");
+  const [affiliateCode, setAffiliateCode] = useState(() => {
+    try {
+      const urlCode = new URLSearchParams(window.location.search).get("ref");
+      if (urlCode) {
+        localStorage.setItem("wtokens_ref_code", urlCode.trim().toUpperCase());
+        return urlCode.trim().toUpperCase();
+      }
+      return localStorage.getItem("wtokens_ref_code") ?? "";
+    } catch {
+      return "";
+    }
+  });
+  const [showReferralInput, setShowReferralInput] = useState(() => {
+    try {
+      const urlCode = new URLSearchParams(window.location.search).get("ref");
+      return Boolean(urlCode);
+    } catch {
+      return false;
+    }
+  });
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
     () =>
       new URLSearchParams(window.location.search).get("auth_error") ===
@@ -254,7 +280,11 @@ export function App() {
             amount_minor: String(Math.round(managed.balance_wt * 980)),
           },
         ]);
-        setConnection("online");
+        if (affiliateCode.trim() && !managed.referrer_code) {
+      managed.referrer_code = affiliateCode.trim().toUpperCase();
+      notify(`Código de creador ${affiliateCode.trim().toUpperCase()} vinculado con éxito.`);
+    }
+    setConnection("online");
         return;
       }
       setUser(null);
@@ -319,6 +349,7 @@ export function App() {
       epic_nickname: managed.epic_nickname,
       discord_tag: managed.discord_tag,
       balance_wt: managed.balance_wt,
+      referrer_code: managed.referrer_code,
       ranking: {
         tiers: [
           { level: 1, name: "Bronze I", minimumPoints: 0 },
@@ -400,6 +431,10 @@ export function App() {
         amount_minor: String(Math.round(managed.balance_wt * 980)),
       },
     ]);
+    if (affiliateCode.trim() && !managed.referrer_code) {
+      managed.referrer_code = affiliateCode.trim().toUpperCase();
+      notify(`Código de creador ${affiliateCode.trim().toUpperCase()} vinculado con éxito.`);
+    }
     setConnection("online");
     closeModal();
     window.history.pushState(null, "", "/app");
@@ -432,6 +467,7 @@ export function App() {
           balance_wt: active.balance_wt,
           discord_tag: active.discord_tag,
           epic_nickname: active.epic_nickname,
+          referrer_code: active.referrer_code,
         };
       });
       setBalances([
@@ -1276,6 +1312,15 @@ export function App() {
                 </section>
               )}
 
+              {view === "affiliates" && (
+                <section className="panel-page">
+                  <AffiliatesPanel
+                    user={user}
+                    onNotify={(msg, isErr) => notify(msg, isErr)}
+                  />
+                </section>
+              )}
+
               {view === "matches" && (
                 <section className="panel-page">
                   {!user ? (
@@ -1609,6 +1654,124 @@ export function App() {
                   Una identidad para toda tu actividad.
                 </span>
               </div>
+              {/* Código de Creador / Afiliado (SOLO la primera vez; nunca más una vez vinculado) */}
+              {user?.referrer_code ? (
+                <div
+                  style={{
+                    background: "#081322",
+                    border: "1px solid #1c3558",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    margin: "12px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: "11px",
+                  }}
+                >
+                  <span style={{ color: "#92a6c8" }}>
+                    Creador vinculado: <strong style={{ color: "#5eeaff" }}>{user.referrer_code}</strong>
+                  </span>
+                  <span style={{ fontSize: "10px", color: "#617a9e", fontStyle: "italic" }}>
+                    (Permanente)
+                  </span>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    background: "#0a1322",
+                    border: "1px solid #1e3355",
+                    borderRadius: "8px",
+                    padding: "12px 14px",
+                    margin: "14px 0",
+                  }}
+                >
+                  {!showReferralInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowReferralInput(true)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        fontSize: "11px",
+                        color: "#65b7ff",
+                        fontWeight: "600",
+                        padding: "2px 0",
+                      }}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        🎁 ¿Tienes un código de creador o amigo?
+                      </span>
+                      <span style={{ fontSize: "10px", color: "#5eeaff" }}>+ Ingresar</span>
+                    </button>
+                  ) : (
+                    <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <label
+                          style={{
+                            fontSize: "10px",
+                            letterSpacing: "0.5px",
+                            fontWeight: "700",
+                            color: "#8bb5f0",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          🎁 Código de Creador / Afiliado
+                        </label>
+                        <small style={{ fontSize: "9px", color: "#6e82a3" }}>
+                          Solo una vez al inicio
+                        </small>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Ej: SOKER, JUAN123..."
+                        value={affiliateCode}
+                        onChange={(e) => {
+                          const val = e.target.value.trim().toUpperCase();
+                          setAffiliateCode(val);
+                          try {
+                            if (val) localStorage.setItem("wtokens_ref_code", val);
+                            else localStorage.removeItem("wtokens_ref_code");
+                          } catch {}
+                        }}
+                        style={{
+                          width: "100%",
+                          background: "#060b14",
+                          border: "1px solid #284470",
+                          borderRadius: "5px",
+                          padding: "8px 12px",
+                          fontSize: "12px",
+                          color: "#5eeaff",
+                          fontFamily: "var(--font-mono, monospace)",
+                          fontWeight: "700",
+                          letterSpacing: "1px",
+                        }}
+                      />
+                      <small
+                        style={{
+                          display: "block",
+                          fontSize: "10px",
+                          color: "#7a90b3",
+                          marginTop: "5px",
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        Atención: Solo se puede vincular una única vez al crear o iniciar sesión. No se podrá cambiar después.
+                      </small>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {connection === "online" && platform?.discordEnabled ? (
                 <>
                   <label className="remember-login">
@@ -1623,7 +1786,11 @@ export function App() {
                   </label>
                   <a
                     className="button primary full"
-                    href={`/oauth2/authorization/discord?remember=${rememberLogin}`}
+                    href={`/oauth2/authorization/discord?remember=${rememberLogin}${
+                      affiliateCode.trim()
+                        ? `&ref=${encodeURIComponent(affiliateCode.trim())}`
+                        : ""
+                    }`}
                   >
                     <Gamepad2 size={20} />
                     Continuar con Discord

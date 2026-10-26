@@ -36,15 +36,16 @@ export function createApp(options: {
     }
     proxyRequest(target, req, res);
   });
+  const distPath = resolve(options.distDir ?? "dist");
   app.use(
-    express.static(resolve(options.distDir ?? "dist"), {
+    express.static(distPath, {
       dotfiles: "deny",
       index: "index.html",
       fallthrough: true,
     }),
   );
   app.get("/app", (_req, res) => {
-    res.sendFile(resolve(options.distDir ?? "dist", "index.html"));
+    res.sendFile("index.html", { root: distPath });
   });
   app.use((_req, res) => {
     res.status(404).json({ code: "NOT_FOUND" });

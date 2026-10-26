@@ -1,4 +1,4 @@
-import { useState, useMemo, type FormEvent } from "react";
+import { useState, useMemo, useRef, useEffect, type FormEvent } from "react";
 import {
   ShieldCheck,
   Coins,
@@ -75,6 +75,8 @@ export function AdminPanel({
   const [selectedUserId, setSelectedUserId] = useState<string>(
     () => users.find((u) => u.id !== currentAdmin.id)?.id ?? users[0]?.id ?? "",
   );
+  const [userSearchText, setUserSearchText] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [amountInput, setAmountInput] = useState<string>("25");
   const [creditType, setCreditType] = useState<"credit" | "debit">("credit");
   const [reason, setReason] = useState<string>(
@@ -113,6 +115,39 @@ export function AdminPanel({
     () => users.find((u) => u.id === selectedUserId),
     [users, selectedUserId],
   );
+
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const searchMatches = useMemo(() => {
+    const q = userSearchText.trim().toLowerCase();
+    if (!q) {
+      return users.slice(0, 8);
+    }
+    return users
+      .filter(
+        (u) =>
+          u.display_name.toLowerCase().includes(q) ||
+          u.discord_tag.toLowerCase().includes(q) ||
+          u.epic_nickname.toLowerCase().includes(q) ||
+          u.id.toLowerCase().includes(q),
+      )
+      .slice(0, 10);
+  }, [users, userSearchText]);
 
   const numericAmount = parseFloat(amountInput) || 0;
   const finalDelta = creditType === "credit" ? numericAmount : -numericAmount;
@@ -391,28 +426,131 @@ export function AdminPanel({
                 </div>
               </div>
 
-              {/* Target User Selector */}
-              <div className="form-group">
-                <label>Jugador Destinatario</label>
-                <select
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="user-select"
-                >
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.display_name} ({u.discord_tag}) — Epic:{" "}
-                      {u.epic_nickname} [{u.balance_wt.toFixed(2)} WT]
-                      {u.role === "admin" ? " [ADMIN]" : ""}
-                      {u.suspended ? " [SUSPENDIDO]" : ""}
-                    </option>
-                  ))}
-                </select>
+              {/* Target User Search & Selector */}
+              <div className="form-group user-search-group" ref={searchDropdownRef}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <label style={{ margin: 0, fontWeight: 700, color: "#f8fafc" }}>
+                    1. Buscar Jugador Destinatario
+                  </label>
+                  <small style={{ color: "#64748b", fontSize: "11px" }}>
+                    Escribe nombre, Discord o Epic Games
+                  </small>
+                </div>
+                
+                {/* Search input with quick-clear and dropdown toggle */}
+                <div style={{ position: "relative" }}>
+                  <div className="admin-user-search-box">
+                    <Search size={16} style={{ color: "#38bdf8", flexShrink: 0 }} />
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre, @discord o epic ID..."
+                      value={userSearchText}
+                      onChange={(e) => {
+                        setUserSearchText(e.target.value);
+                        setIsDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsDropdownOpen(true)}
+                    />
+                    {userSearchText && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserSearchText("");
+                        }}
+                        style={{ color: "#94a3b8", background: "none", border: "none", fontSize: "14px", padding: "0 6px", cursor: "pointer" }}
+                        title="Limpiar búsqueda"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown Results */}
+                  {isDropdownOpen && (
+                    <div className="admin-user-search-dropdown">
+                      <div className="dropdown-hint">
+                        {userSearchText.trim()
+                          ? `Coincidencias (${searchMatches.length})`
+                          : "Selecciona un jugador o escribe para filtrar:"}
+                      </div>
+                      {searchMatches.length === 0 ? (
+                        <div className="search-empty-state">
+                          No se encontró ningún jugador con "{userSearchText}"
+                        </div>
+                      ) : (
+                        searchMatches.map((u) => (
+                          <div
+                            key={u.id}
+                            className={`user-search-item ${u.id === selectedUserId ? "selected" : ""}`}
+                            onClick={() => {
+                              setSelectedUserId(u.id);
+                              setUserSearchText("");
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <img
+                              src={u.avatar_url || "https://cdn.discordapp.com/embed/avatars/0.png"}
+                              alt={u.display_name}
+                              className="user-search-avatar"
+                            />
+                            <div className="user-search-info">
+                              <div className="user-search-name">
+                                <strong>{u.display_name}</strong>
+                                <span className="user-search-tag">{u.discord_tag}</span>
+                                {u.role === "admin" && <span className="badge-admin-tag">ADMIN</span>}
+                                {u.suspended && <span className="badge-suspended-tag">SUSPENDIDO</span>}
+                              </div>
+                              <div className="user-search-meta">
+                                Epic: <strong>{u.epic_nickname}</strong> · Saldo actual: <span className="user-search-bal">{u.balance_wt.toFixed(2)} WT</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected User Summary Banner */}
+                {targetUser && (
+                  <div className="selected-player-summary">
+                    <img
+                      src={targetUser.avatar_url || "https://cdn.discordapp.com/embed/avatars/0.png"}
+                      alt={targetUser.display_name}
+                      className="selected-player-avatar"
+                    />
+                    <div className="selected-player-details">
+                      <div className="selected-player-title">
+                        <h4>{targetUser.display_name}</h4>
+                        <span className="player-tag">{targetUser.discord_tag}</span>
+                        {targetUser.role === "admin" && <span className="badge-admin-tag">ADMIN</span>}
+                        {targetUser.suspended && <span className="badge-suspended-tag">SUSPENDIDO</span>}
+                      </div>
+                      <div className="selected-player-stats">
+                        <span>Epic: <strong>{targetUser.epic_nickname}</strong></span>
+                        <span className="dot-divider">·</span>
+                        <span>Saldo actual: <strong className="player-current-wt">{targetUser.balance_wt.toFixed(2)} WT</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="change-player-btn"
+                      onClick={() => {
+                        setIsDropdownOpen(true);
+                        setUserSearchText("");
+                      }}
+                    >
+                      Buscar otro
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Type Switcher: Credit (+) vs Debit (-) */}
               <div className="form-group">
-                <label>Tipo de Operación</label>
+                <label style={{ fontWeight: 700, color: "#f8fafc" }}>
+                  2. Tipo de Operación y Monto
+                </label>
                 <div className="type-toggle-group">
                   <button
                     type="button"
@@ -466,7 +604,7 @@ export function AdminPanel({
 
               {/* Reason Selector */}
               <div className="form-group">
-                <label>Motivo Oficial</label>
+                <label style={{ fontWeight: 700, color: "#f8fafc" }}>3. Motivo Oficial y Referencia</label>
                 <select
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
@@ -768,11 +906,12 @@ export function AdminPanel({
                           title="Acreditar WTokens a este usuario"
                           onClick={() => {
                             setSelectedUserId(u.id);
+                            setUserSearchText("");
                             setTab("tokens");
                           }}
                         >
                           <Coins size={14} />
-                          <span>+ WT</span>
+                          <span>Acreditar WT</span>
                         </button>
                         <button
                           className="action-btn role"
