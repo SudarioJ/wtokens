@@ -2236,6 +2236,15 @@ export function App() {
                   setUser({ ...user, balance_wt: newBal });
                 }
               }}
+              onEpicLinked={(nick) => {
+                if (user) {
+                  setUser({
+                    ...user,
+                    epic_nickname: nick,
+                    epic_verified: true,
+                  });
+                }
+              }}
             />
           )}
           {modal === "rules" && (

@@ -294,6 +294,17 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           return;
         }
 
+        // 5.5. Update Epic Nickname
+        if (action === "update_epic" && payload.userId && payload.epic_nickname) {
+          const u = globalState.users.get(payload.userId);
+          if (u) {
+            u.epic_nickname = String(payload.epic_nickname);
+          }
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true, epic_nickname: payload.epic_nickname }));
+          return;
+        }
+
         // 6. Add Withdrawal Request
         if (action === "add_withdrawal" && payload.withdrawal) {
           const w: SyncedWithdrawal = {

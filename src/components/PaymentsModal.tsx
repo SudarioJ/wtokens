@@ -7,6 +7,8 @@ import {
   ExternalLink,
   AlertCircle,
   MessageSquare,
+  Gamepad2,
+  Lock,
 } from "lucide-react";
 import {
   OFFICIAL_PAYMENT_ACCOUNTS,
@@ -21,11 +23,15 @@ import {
 } from "../lib/admin";
 import "./payments.css";
 
+const EPIC_CLIENT_ID = "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
+const EPIC_AUTH_URL = `https://www.epicgames.com/id/authorize?client_id=${EPIC_CLIENT_ID}&response_type=code&scope=basic_profile&redirect_uri=https%3A%2F%2Fwtokens.net%2F`;
+
 interface PaymentsModalProps {
   user: User | null;
   currentCurrency: string;
   onClose: () => void;
   onBalanceUpdated?: (newBalance: number) => void;
+  onEpicLinked?: (nickname: string) => void;
 }
 
 const PRESET_AMOUNTS = [1, 2, 3, 5, 10, 20, 50, 100];
@@ -47,12 +53,56 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
   currentCurrency,
   onClose,
   onBalanceUpdated,
+  onEpicLinked,
 }) => {
   const [tab, setTab] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState<number>(10);
   const [selectedMethodId, setSelectedMethodId] = useState<string>("mercadopago");
   const [receiptCode, setReceiptCode] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Epic verification state
+  const [manualEpicNick, setManualEpicNick] = useState<string>("");
+  const [epicLinkedNick, setEpicLinkedNick] = useState<string>(() => {
+    if (user?.epic_nickname) return user.epic_nickname;
+    if (typeof localStorage !== "undefined") {
+      return localStorage.getItem("wtokens_epic_nick") || "";
+    }
+    return "";
+  });
+
+  const activeEpicNick = user?.epic_nickname || epicLinkedNick;
+  const hasEpic = Boolean(activeEpicNick && activeEpicNick.trim().length > 0);
+
+  function handleSaveManualEpic(e: React.FormEvent) {
+    e.preventDefault();
+    const nick = manualEpicNick.trim();
+    if (!nick) return;
+
+    setEpicLinkedNick(nick);
+    if (user) {
+      user.epic_nickname = nick;
+      user.epic_verified = true;
+    }
+    try {
+      localStorage.setItem("wtokens_epic_nick", nick);
+      localStorage.setItem("wtokens_epic_verified", "true");
+    } catch {}
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_epic",
+          userId: user?.id,
+          epic_nickname: nick,
+        }),
+      }).catch(() => {});
+    }
+
+    onEpicLinked?.(nick);
+  }
 
   // Withdraw state
   const [withdrawAmount, setWithdrawAmount] = useState<number>(10);
@@ -65,13 +115,18 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
   const [pixRequested, setPixRequested] = useState<boolean>(false);
 
   function handleRequestPix() {
+    if (!hasEpic) {
+      alert("Es obligatorio vincular tu cuenta de Epic Games antes de solicitar el pago Pix.");
+      return;
+    }
+
     const brl = Math.round(amount * 5.6 * 100) / 100;
     const pixData = {
       id: "pix_" + Date.now(),
       userId: user?.id,
       userName: user?.display_name || user?.discord_tag || "Jugador BR",
       userDiscord: user?.discord_tag,
-      userEpic: user?.epic_nickname,
+      userEpic: activeEpicNick,
       amountWt: amount,
       amountBrl: brl,
       createdAt: new Date().toISOString(),
@@ -121,6 +176,10 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
 
   function handleConfirmDeposit(e: React.FormEvent) {
     e.preventDefault();
+    if (!hasEpic) {
+      alert("Es obligatorio vincular tu cuenta de Epic Games antes de recargar saldo.");
+      return;
+    }
     if (!receiptCode.trim()) return;
 
     const depData = {
@@ -128,7 +187,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
       userId: user?.id,
       userName: user?.display_name || user?.discord_tag || "Jugador",
       userDiscord: user?.discord_tag,
-      userEpic: user?.epic_nickname,
+      userEpic: activeEpicNick,
       amountWt: amount,
       method: selectedMethod.name,
       receiptCode: receiptCode.trim(),
@@ -320,8 +379,162 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
               </button>
             </div>
           </div>
+        ) : !hasEpic ? (
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(14, 28, 48, 0.85) 0%, rgba(6, 16, 32, 0.95) 100%)",
+              border: "1px solid rgba(94, 234, 255, 0.3)",
+              borderRadius: "12px",
+              padding: "26px 20px",
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "12px",
+              margin: "6px 0",
+            }}
+          >
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "50%",
+                background: "rgba(94, 234, 255, 0.12)",
+                border: "1px solid rgba(94, 234, 255, 0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#5eeaff",
+              }}
+            >
+              <Gamepad2 size={30} />
+            </div>
+
+            <div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(245, 158, 11, 0.15)",
+                  color: "#fef08a",
+                  padding: "4px 12px",
+                  borderRadius: "20px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  marginBottom: "8px",
+                  border: "1px solid rgba(245, 158, 11, 0.3)",
+                }}
+              >
+                <Lock size={12} /> REQUISITO PREVIO OBLIGATORIO
+              </div>
+              <h3 style={{ margin: "0 0 6px 0", color: "#f8fafc", fontSize: "18px" }}>
+                Vincula tu cuenta de Epic Games
+              </h3>
+              <p style={{ margin: "0", color: "#94a3b8", fontSize: "13px", lineHeight: "1.5", maxWidth: "420px" }}>
+                Para recargar saldo en WTOKENS y disputar duelos oficiales en Fortnite, es obligatorio tener tu cuenta de <strong>Epic Games</strong> registrada. Así tus WTokens quedan acreditados de forma segura a tu cuenta de jugador.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", maxWidth: "380px", marginTop: "8px" }}>
+              <a
+                href={EPIC_AUTH_URL}
+                className="button primary full"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  textDecoration: "none",
+                  padding: "10px 16px",
+                }}
+              >
+                <Gamepad2 size={17} />
+                Conectar con Epic Games (Oficial)
+                <ExternalLink size={14} />
+              </a>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  color: "#64748b",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{ flex: 1, height: "1px", background: "#1e3a5f" }} />
+                O ingresa tu Nickname
+                <span style={{ flex: 1, height: "1px", background: "#1e3a5f" }} />
+              </div>
+
+              <form
+                onSubmit={handleSaveManualEpic}
+                style={{ display: "flex", gap: "8px", width: "100%" }}
+              >
+                <input
+                  type="text"
+                  placeholder="Tu Nickname exacto de Fortnite..."
+                  value={manualEpicNick}
+                  onChange={(e) => setManualEpicNick(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    background: "#081322",
+                    border: "1px solid #1e3a5f",
+                    borderRadius: "6px",
+                    color: "#f8fafc",
+                    fontSize: "13px",
+                  }}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="button secondary"
+                  disabled={!manualEpicNick.trim()}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  Guardar
+                </button>
+              </form>
+            </div>
+          </div>
         ) : (
           <div className="payments-section">
+            {/* Banner de Identidad Epic Verificada */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "rgba(10, 23, 40, 0.7)",
+                border: "1px solid #1f3d6b",
+                borderRadius: "8px",
+                padding: "8px 14px",
+                marginBottom: "12px",
+                fontSize: "12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Gamepad2 size={16} color="#5eeaff" />
+                <span style={{ color: "#94a3b8" }}>Cuenta Epic Games:</span>
+                <strong style={{ color: "#5eeaff" }}>{activeEpicNick}</strong>
+              </div>
+              <span
+                style={{
+                  color: "#4ade80",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <Check size={13} /> Verificado
+              </span>
+            </div>
             {/* Monto a recargar */}
             <div className="payments-amount-box">
               <span style={{ fontSize: "11px", fontWeight: "700", color: "#8bb5f0", textTransform: "uppercase" }}>
