@@ -25,6 +25,7 @@ import {
   getManagedUsers,
   getAuditLog,
   getWithdrawalRequests,
+  saveWithdrawalRequests,
   creditUserTokens,
   toggleUserRole,
   toggleUserSuspension,
@@ -287,6 +288,37 @@ export function AdminPanel({
           if (data && data.success) {
             if (Array.isArray(data.deposits)) setPendingDeposits(data.deposits);
             if (Array.isArray(data.pixRequests)) setPendingPixRequests(data.pixRequests);
+            if (Array.isArray(data.withdrawals)) {
+              const localW = getWithdrawalRequests();
+              const map = new Map<string, WithdrawalRequest>();
+              for (const w of localW) map.set(w.id, w);
+              for (const rw of data.withdrawals) {
+                if (!map.has(rw.id)) {
+                  map.set(rw.id, {
+                    id: rw.id,
+                    user_id: rw.user_id,
+                    user_name: rw.user_name,
+                    amount_wt: rw.amount_wt,
+                    local_currency: rw.local_currency,
+                    local_amount: rw.local_amount,
+                    method: rw.method,
+                    destination: rw.destination,
+                    status: rw.status,
+                    created_at: rw.created_at,
+                    admin_note: rw.admin_note,
+                  });
+                } else {
+                  const curr = map.get(rw.id)!;
+                  if (rw.status !== curr.status) {
+                    curr.status = rw.status;
+                    if (rw.admin_note) curr.admin_note = rw.admin_note;
+                  }
+                }
+              }
+              const merged = Array.from(map.values());
+              saveWithdrawalRequests(merged);
+              setWithdrawals(merged);
+            }
           }
         })
         .catch(() => {});

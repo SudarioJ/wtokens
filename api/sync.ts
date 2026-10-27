@@ -40,15 +40,31 @@ interface SyncedPixRequest {
   status: "pending" | "approved" | "dismissed";
 }
 
+interface SyncedWithdrawal {
+  id: string;
+  user_id: string;
+  user_name: string;
+  amount_wt: number;
+  local_currency: string;
+  local_amount: number;
+  method: string;
+  destination: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  admin_note?: string;
+}
+
 // Global state across warm lambdas
 const globalState: {
   users: Map<string, SyncedUser>;
   deposits: SyncedDeposit[];
   pixRequests: SyncedPixRequest[];
+  withdrawals: SyncedWithdrawal[];
 } = (globalThis as any).__wtokens_sync_state || {
   users: new Map<string, SyncedUser>(),
   deposits: [],
   pixRequests: [],
+  withdrawals: [],
 };
 
 (globalThis as any).__wtokens_sync_state = globalState;
@@ -121,6 +137,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         users: usersArr,
         deposits: globalState.deposits.filter((d) => d.status === "pending"),
         pixRequests: globalState.pixRequests.filter((p) => p.status === "pending"),
+        withdrawals: globalState.withdrawals,
       }),
     );
     return;
@@ -274,6 +291,38 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
           res.writeHead(404, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: "Usuario no encontrado" }));
+          return;
+        }
+
+        // 6. Add Withdrawal Request
+        if (action === "add_withdrawal" && payload.withdrawal) {
+          const w: SyncedWithdrawal = {
+            id: payload.withdrawal.id || "wth_" + Date.now(),
+            user_id: payload.withdrawal.user_id,
+            user_name: payload.withdrawal.user_name || "Jugador",
+            amount_wt: Number(payload.withdrawal.amount_wt) || 0,
+            local_currency: payload.withdrawal.local_currency || "USD",
+            local_amount: Number(payload.withdrawal.local_amount) || 0,
+            method: payload.withdrawal.method || "Transferencia",
+            destination: payload.withdrawal.destination || "",
+            status: "pending",
+            created_at: new Date().toISOString(),
+          };
+          globalState.withdrawals.unshift(w);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true, withdrawal: w }));
+          return;
+        }
+
+        // 7. Resolve Withdrawal Request
+        if (action === "resolve_withdrawal" && payload.id) {
+          const w = globalState.withdrawals.find((item) => item.id === payload.id);
+          if (w) {
+            w.status = payload.status || "approved";
+            w.admin_note = payload.note;
+          }
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
           return;
         }
 

@@ -2268,9 +2268,9 @@ export function App() {
                 </li>
               </ol>
               <p className="dialog-footnote">
-                Las reglas competitivas y los territorios admitidos están
-                pendientes de validación. Los desafíos con dinero permanecen
-                deshabilitados en la configuración inicial.
+                Todas las partidas en WTOKENS se rigen bajo el reglamento de
+                juego limpio y verificación obligatoria de evidencia. Juega con
+                responsabilidad (+18).
               </p>
               <button className="button primary full" onClick={closeModal}>
                 Volver a la arena

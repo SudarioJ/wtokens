@@ -84,12 +84,12 @@ const questions = [
   {
     title: "¿Puedo depositar y retirar en mi moneda?",
     answer:
-      "La billetera muestra cada saldo en su moneda original. Los depósitos, retiros y conversiones se habilitarán según los proveedores y territorios admitidos; todavía no están disponibles en este entorno.",
+      "Sí. En WTOKENS puedes recargar tu saldo en moneda local al instante mediante Mercado Pago, Lemon Cash, Pix (Belo Brasil), Binance Pay y PayPal. Para retiros, puedes solicitar transferencias a tus cuentas registradas a partir de un mínimo de 10 WT.",
   },
   {
     title: "¿Necesito una cuenta de Epic Games?",
     answer:
-      "Necesitas una cuenta de Fortnite para jugar. El acceso con Discord no verifica automáticamente tu identidad Epic; esa integración y los requisitos de participación se informarán en el panel.",
+      "Sí, para jugar partidas en Fortnite necesitas vincular tu cuenta oficial de Epic Games o registrar tu Nickname en tu perfil para que tus rivales puedan agregarte y coordinar la sala privada.",
   },
 ];
 

@@ -685,6 +685,20 @@ export function approveWithdrawal(
   req.admin_note = note || "Aprobado y transferido al método solicitado";
   saveWithdrawalRequests(requests);
 
+  // Sync resolution to server registry
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "resolve_withdrawal",
+        id: requestId,
+        status: "approved",
+        note: req.admin_note,
+      }),
+    }).catch(() => {});
+  }
+
   const audit = getAuditLog();
   audit.unshift({
     id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -725,6 +739,20 @@ export function rejectWithdrawal(
   req.resolved_by = adminName;
   req.admin_note = reason || "Datos de pago inválidos o solicitud rechazada";
   saveWithdrawalRequests(requests);
+
+  // Sync resolution to server registry
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "resolve_withdrawal",
+        id: requestId,
+        status: "rejected",
+        note: req.admin_note,
+      }),
+    }).catch(() => {});
+  }
 
   // Refund tokens back to user's available balance
   const users = getManagedUsers();

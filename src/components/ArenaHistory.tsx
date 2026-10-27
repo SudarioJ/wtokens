@@ -50,7 +50,7 @@ export function ArenaHistory() {
     <section className="duel-panel" aria-labelledby="duel-history-title">
       <h2 id="duel-history-title">Duelos de equipo</h2>
       <p className="duel-note">
-        Partidas de prueba sin dinero ni cambios de rango.
+        Historial de duelos y resultados oficiales disputados en la arena.
       </p>
       {error && <p role="alert">{error}</p>}
       {!busy && !items.length && !error && (

@@ -14,6 +14,11 @@ import {
   BELO_PIX_CHECKOUT_LINKS,
 } from "../lib/paymentMethods";
 import { User } from "../lib/contracts";
+import {
+  getWithdrawalRequests,
+  saveWithdrawalRequests,
+  type WithdrawalRequest,
+} from "../lib/admin";
 import "./payments.css";
 
 interface PaymentsModalProps {
@@ -176,23 +181,35 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
       onBalanceUpdated(newBalance);
     }
 
+    const newReq: WithdrawalRequest = {
+      id: "wth_" + Date.now(),
+      user_id: user?.id || "u_" + Date.now(),
+      user_name: user?.display_name || user?.discord_tag || "Jugador",
+      amount_wt: withdrawAmount,
+      local_currency: currentCurrency || "USD",
+      local_amount: Math.round(withdrawAmount * rate),
+      method: withdrawMethod,
+      destination: withdrawAccount.trim(),
+      status: "pending",
+      created_at: new Date().toISOString(),
+    };
+
     try {
-      const pendingWithdrawals = JSON.parse(
-        localStorage.getItem("wtokens_pending_withdrawals") || "[]",
-      );
-      pendingWithdrawals.push({
-        id: "wth_" + Date.now(),
-        userId: user?.id,
-        userDiscord: user?.discord_tag,
-        userEpic: user?.epic_nickname,
-        amountWt: withdrawAmount,
-        method: withdrawMethod,
-        accountDetails: withdrawAccount.trim(),
-        createdAt: new Date().toISOString(),
-        status: "PENDING",
-      });
-      localStorage.setItem("wtokens_pending_withdrawals", JSON.stringify(pendingWithdrawals));
+      const currentReqs = getWithdrawalRequests();
+      currentReqs.unshift(newReq);
+      saveWithdrawalRequests(currentReqs);
     } catch {}
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_withdrawal",
+          withdrawal: newReq,
+        }),
+      }).catch(() => {});
+    }
 
     setWithdrawStatus("SUCCESS");
   }

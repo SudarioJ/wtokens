@@ -761,16 +761,19 @@ export function ArenaPanel({
             </select>
           </label>
           <p className="duel-note">
-            Esta elección se guarda con el duelo. En las pruebas ambas opciones
-            cuestan cero; no reservan ni reparten dinero. Las partidas de prueba
-            no suben ni bajan rangos.
+            Esta elección define si el aporte de WTokens se deduce de cada integrante o si el capitán cubre la entrada completa del equipo. El pozo neto acumulado se transfiere automáticamente a los ganadores verificados.
           </p>
           <button
             className="button primary"
             disabled={busy || !team.complete || team.captainId !== userId}
-            onClick={() => void act(() => arenaApi.enter(asset, payment))}
+            onClick={() => {
+              try {
+                localStorage.setItem("wtokens_current_match_stake", String(activeStake));
+              } catch {}
+              void act(() => arenaApi.enter(asset, payment));
+            }}
           >
-            Buscar rival de prueba
+            {busy ? "Entrando a la búsqueda…" : `⚔️ Buscar rival de equipo (${team.size}v${team.size})`}
           </button>
           {team.captainId !== userId && (
             <p>El capitán debe iniciar la búsqueda.</p>
