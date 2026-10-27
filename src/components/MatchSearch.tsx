@@ -39,6 +39,39 @@ export function MatchSearch({
         <span className="match-search-mode">
           {modeTitle(queue.mode)} · {queue.size}v{queue.size}
         </span>
+        {(() => {
+          const currentStake = (() => {
+            try {
+              const s = localStorage.getItem("wtokens_current_match_stake");
+              return s ? parseFloat(s) || 5 : 5;
+            } catch {
+              return 5;
+            }
+          })();
+          const netPrize = Number((currentStake * 1.8).toFixed(2));
+          return (
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(94, 234, 255, 0.1)",
+                border: "1px solid rgba(94, 234, 255, 0.35)",
+                borderRadius: "8px",
+                padding: "6px 14px",
+                margin: "8px 0 12px",
+              }}
+            >
+              <span style={{ color: "#f8fafc", fontSize: "13px" }}>
+                Aporte: <strong style={{ color: "#5eeaff" }}>{currentStake} WT</strong>
+              </span>
+              <span style={{ color: "#64748b" }}>•</span>
+              <span style={{ color: "#fef08a", fontSize: "13px", fontWeight: 700 }}>
+                🏆 Pozo neto: {netPrize} WT
+              </span>
+            </div>
+          );
+        })()}
         <h3 aria-label="Buscando tu próximo rival">
           <span aria-hidden="true">
             Buscando tu próximo rival

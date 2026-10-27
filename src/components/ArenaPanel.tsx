@@ -23,6 +23,15 @@ import { DuelReview } from "./DuelReview";
 import { Deadline } from "./Deadline";
 import "./duels.css";
 export function DuelDetails({ duel }: { duel: Duel }) {
+  const currentStake = (() => {
+    try {
+      const s = localStorage.getItem("wtokens_current_match_stake");
+      return s ? parseFloat(s) || 5 : 5;
+    } catch {
+      return 5;
+    }
+  })();
+  const netPrize = Number((currentStake * 1.8).toFixed(2));
   return (
     <>
       <div className="duel-summary">
@@ -30,7 +39,9 @@ export function DuelDetails({ duel }: { duel: Duel }) {
           {modeTitle(duel.mode)} · {duel.size}v{duel.size}
         </strong>
         <span>{duelState(duel.state)}</span>
-        <span>Prueba sin dinero · No modifica tu rango</span>
+        <span style={{ color: "#5eeaff", fontWeight: 700 }}>
+          🏆 Partida Oficial 1v1 · Pozo: {netPrize} WT netos (Aporte: {currentStake} WT)
+        </span>
       </div>
       <div className="duel-rosters">
         {(["A", "B"] as const).map((side) => (
@@ -127,16 +138,20 @@ export function DuelDetails({ duel }: { duel: Duel }) {
 }
 export function ArenaPanel({
   userId,
+  userBalance,
   asset,
   modes,
   initialMode = "BOX_FIGHT",
   onTeam,
+  onOpenPayments,
 }: {
   userId: string;
+  userBalance?: number | undefined;
   asset: string;
   modes: Mode[];
-  initialMode?: string;
+  initialMode?: string | undefined;
   onTeam: (mode: string) => void;
+  onOpenPayments?: (() => void) | undefined;
 }) {
   const [arena, setArena] = useState<Arena>();
   const [sound, setSound] = useState(matchSoundEnabled);
@@ -157,6 +172,56 @@ export function ArenaPanel({
   const [reason, setReason] = useState("");
   const [mode, setMode] = useState(initialMode);
   const [payment, setPayment] = useState("INDIVIDUAL");
+
+  // Stake / Wager state
+  const STAKE_PRESETS = [1, 2, 3, 5, 10, 20];
+  const [selectedStake, setSelectedStake] = useState<number>(() => {
+    try {
+      const s = localStorage.getItem("wtokens_current_match_stake");
+      return s ? parseFloat(s) || 5 : 5;
+    } catch {
+      return 5;
+    }
+  });
+  const [customStake, setCustomStake] = useState<string>("");
+
+  const activeStake = customStake.trim()
+    ? Math.max(0.5, parseFloat(customStake) || selectedStake)
+    : selectedStake;
+
+  const pot = Number((activeStake * 2).toFixed(2));
+  const fee = Number((pot * 0.1).toFixed(2));
+  const prize = Number((pot - fee).toFixed(2));
+
+  const RATES: Record<string, number> = {
+    ARS: 1150,
+    BRL: 5.6,
+    PEN: 3.8,
+    CLP: 940,
+    UYU: 41,
+    PYG: 7700,
+    BOB: 6.9,
+    USD: 1,
+  };
+  const rate = RATES[asset] || 1;
+  const localEstimated = Math.round(activeStake * rate);
+  const localPrize = Math.round(prize * rate);
+  const effectiveBalance = userBalance ?? 0;
+  const hasSufficient = effectiveBalance >= activeStake;
+
+  function handleStartMatchmaking() {
+    try {
+      localStorage.setItem("wtokens_current_match_stake", String(activeStake));
+    } catch {}
+    void act(() =>
+      arenaApi.solo(
+        modes.some((item) => item.code === mode)
+          ? mode
+          : (modes[0]?.code ?? mode),
+        asset,
+      ),
+    );
+  }
   const mounted = useRef(false),
     busyRef = useRef(false),
     version = useRef(0),
@@ -459,9 +524,11 @@ export function ArenaPanel({
             <span className="solo-format">1v1</span>
             <div>
               <h3>Juega solo. Encuentra tu rival.</h3>
-              <p>Elige tu modalidad y entra directamente a la búsqueda.</p>
+              <p>Elige tu modalidad, define tu apuesta y entra al matchmaking.</p>
             </div>
           </div>
+
+          {/* 1. Modalidad */}
           <label>
             Modalidad para 1v1
             <select
@@ -480,22 +547,182 @@ export function ArenaPanel({
               ))}
             </select>
           </label>
+
+          {/* 2. Selector de Apuesta en WTokens */}
+          <div className="stake-selector-group" style={{ margin: "16px 0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <label style={{ margin: 0, fontWeight: 700, color: "#f8fafc", fontSize: "14px" }}>
+                Aporte por jugador (¿Cuánto deseas apostar?)
+              </label>
+              <span style={{ fontSize: "12px", color: hasSufficient ? "#34d399" : "#fbbf24", fontWeight: 600 }}>
+                Tu saldo: {effectiveBalance.toFixed(2)} WT
+              </span>
+            </div>
+
+            {/* Presets rápidos */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(75px, 1fr))", gap: "8px", marginBottom: "10px" }}>
+              {STAKE_PRESETS.map((wt) => {
+                const isSelected = !customStake && selectedStake === wt;
+                return (
+                  <button
+                    key={wt}
+                    type="button"
+                    onClick={() => {
+                      setSelectedStake(wt);
+                      setCustomStake("");
+                    }}
+                    style={{
+                      padding: "9px 8px",
+                      borderRadius: "8px",
+                      border: isSelected ? "2px solid #5eeaff" : "1px solid #1e3a5f",
+                      background: isSelected ? "rgba(94, 234, 255, 0.15)" : "#0b1524",
+                      color: isSelected ? "#5eeaff" : "#cbd5e1",
+                      fontWeight: 700,
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "2px",
+                    }}
+                  >
+                    <span>{wt} WT</span>
+                    {wt === 5 && (
+                      <span style={{ fontSize: "9px", color: "#fef08a", fontWeight: 600 }}>
+                        POPULAR
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Campo monto personalizado */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "12px", color: "#94a3b8" }}>O ingresa otro monto:</span>
+              <div style={{ position: "relative", width: "120px" }}>
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  placeholder="Otro WT"
+                  value={customStake}
+                  onChange={(e) => setCustomStake(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "6px 24px 6px 10px",
+                    borderRadius: "6px",
+                    background: "#081322",
+                    border: customStake ? "1px solid #5eeaff" : "1px solid #1e3a5f",
+                    color: "#f8fafc",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                  }}
+                />
+                <span style={{ position: "absolute", right: "8px", top: "7px", fontSize: "11px", color: "#64748b" }}>
+                  WT
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Ficha Financiera de la Partida */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(14, 28, 48, 0.7) 0%, rgba(6, 16, 32, 0.9) 100%)",
+              border: "1px solid #1e3a5f",
+              borderRadius: "10px",
+              padding: "14px 16px",
+              margin: "16px 0",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ color: "#94a3b8", fontSize: "12px" }}>Aporte de cada jugador:</span>
+              <strong style={{ color: "#f8fafc", fontSize: "13px" }}>
+                {activeStake.toFixed(2)} WT {asset !== "USD" && `(~ $${localEstimated} ${asset})`}
+              </strong>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ color: "#94a3b8", fontSize: "12px" }}>Pozo acumulado (2 jugadores):</span>
+              <span style={{ color: "#cbd5e1", fontSize: "13px" }}>{pot.toFixed(2)} WT</span>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <span style={{ color: "#64748b", fontSize: "11px" }}>Comisión de servicio (10%):</span>
+              <span style={{ color: "#64748b", fontSize: "11px" }}>-{fee.toFixed(2)} WT</span>
+            </div>
+
+            <div
+              style={{
+                borderTop: "1px dashed #1e3a5f",
+                paddingTop: "10px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "16px" }}>🏆</span>
+                <span style={{ color: "#f8fafc", fontWeight: 700, fontSize: "13px" }}>Premio neto al ganador:</span>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ color: "#5eeaff", fontWeight: 800, fontSize: "17px" }}>
+                  +{prize.toFixed(2)} WT
+                </div>
+                {asset !== "USD" && (
+                  <div style={{ color: "#94a3b8", fontSize: "11px" }}>
+                    ~ ${localPrize} {asset}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Alerta de saldo insuficiente si aplica */}
+          {!hasSufficient && (
+            <div
+              style={{
+                background: "rgba(245, 158, 11, 0.1)",
+                border: "1px solid rgba(245, 158, 11, 0.35)",
+                borderRadius: "8px",
+                padding: "10px 14px",
+                marginBottom: "14px",
+                fontSize: "12px",
+                color: "#fef08a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "10px",
+              }}
+            >
+              <span>
+                Saldo insuficiente: tienes <strong>{effectiveBalance.toFixed(2)} WT</strong> y necesitas{" "}
+                <strong>{activeStake.toFixed(2)} WT</strong>.
+              </span>
+              {onOpenPayments && (
+                <button
+                  type="button"
+                  className="button primary small"
+                  onClick={onOpenPayments}
+                  style={{ whiteSpace: "nowrap", padding: "4px 10px", fontSize: "11px" }}
+                >
+                  Recargar WT
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* 5. Botones de acción */}
           <div className="duel-buttons">
             <button
               className="button primary"
-              disabled={busy || !modes.length}
-              onClick={() =>
-                void act(() =>
-                  arenaApi.solo(
-                    modes.some((item) => item.code === mode)
-                      ? mode
-                      : modes[0]!.code,
-                    asset,
-                  ),
-                )
-              }
+              disabled={busy || !modes.length || !hasSufficient}
+              onClick={handleStartMatchmaking}
+              style={{ flex: "1 1 auto" }}
             >
-              {busy ? "Entrando a la búsqueda…" : "Buscar rival 1v1"}
+              {busy ? "Entrando a la búsqueda…" : `⚔️ Buscar rival 1v1 (${activeStake} WT)`}
             </button>
             <button
               className="button secondary"

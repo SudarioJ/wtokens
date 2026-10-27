@@ -1249,6 +1249,7 @@ export function App() {
                 <ArenaPanel
                   key={user.id}
                   userId={user.id}
+                  userBalance={user.balance_wt}
                   asset={asset}
                   modes={modes}
                   initialMode={teamMode}
@@ -1256,6 +1257,7 @@ export function App() {
                     setTeamMode(mode);
                     navigate("teams");
                   }}
+                  onOpenPayments={() => openModal("payments")}
                 />
               )}
               {view === "admin" &&
