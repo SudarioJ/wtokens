@@ -54,6 +54,8 @@ import {
   getActiveManagedUser,
   getManagedUsers,
   setActiveUserId,
+  upsertManagedUserFromSession,
+  syncWithServerRegistry,
   type ManagedUser,
 } from "./lib/admin";
 
@@ -604,6 +606,20 @@ export function App() {
     };
     window.addEventListener("wtokens-admin-sync", handleSync);
     return () => window.removeEventListener("wtokens-admin-sync", handleSync);
+  }, []);
+
+  useEffect(() => {
+    if (user && user.id) {
+      upsertManagedUserFromSession(user);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void syncWithServerRegistry().then((synced) => {
+      if (synced && synced.length > 0) {
+        setManagedUsers(synced);
+      }
+    });
   }, []);
 
   function enterPanel() {

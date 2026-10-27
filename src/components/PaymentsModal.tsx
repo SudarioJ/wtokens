@@ -61,23 +61,37 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
 
   function handleRequestPix() {
     const brl = Math.round(amount * 5.6 * 100) / 100;
+    const pixData = {
+      id: "pix_" + Date.now(),
+      userId: user?.id,
+      userName: user?.display_name || user?.discord_tag || "Jugador BR",
+      userDiscord: user?.discord_tag,
+      userEpic: user?.epic_nickname,
+      amountWt: amount,
+      amountBrl: brl,
+      createdAt: new Date().toISOString(),
+      status: "pending",
+    };
+
     try {
       const pixRequests = JSON.parse(
         localStorage.getItem("wtokens_pix_requests") || "[]",
       );
-      pixRequests.push({
-        id: "pix_" + Date.now(),
-        userId: user?.id,
-        userName: user?.display_name || user?.discord_tag || "Jugador BR",
-        userDiscord: user?.discord_tag,
-        userEpic: user?.epic_nickname,
-        amountWt: amount,
-        amountBrl: brl,
-        createdAt: new Date().toISOString(),
-        status: "PENDING",
-      });
+      pixRequests.push(pixData);
       localStorage.setItem("wtokens_pix_requests", JSON.stringify(pixRequests));
     } catch {}
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_pix",
+          pix: pixData,
+        }),
+      }).catch(() => {});
+    }
+
     setPixRequested(true);
   }
 
@@ -104,23 +118,38 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
     e.preventDefault();
     if (!receiptCode.trim()) return;
 
+    const depData = {
+      id: "dep_" + Date.now(),
+      userId: user?.id,
+      userName: user?.display_name || user?.discord_tag || "Jugador",
+      userDiscord: user?.discord_tag,
+      userEpic: user?.epic_nickname,
+      amountWt: amount,
+      method: selectedMethod.name,
+      receiptCode: receiptCode.trim(),
+      createdAt: new Date().toISOString(),
+      status: "pending",
+    };
+
     // Save pending deposit in local storage audit
     try {
       const pendingDeposits = JSON.parse(
         localStorage.getItem("wtokens_pending_deposits") || "[]",
       );
-      pendingDeposits.push({
-        id: "dep_" + Date.now(),
-        userId: user?.id,
-        userDiscord: user?.discord_tag,
-        userEpic: user?.epic_nickname,
-        amountWt: amount,
-        method: selectedMethod.name,
-        receiptCode: receiptCode.trim(),
-        createdAt: new Date().toISOString(),
-      });
+      pendingDeposits.push(depData);
       localStorage.setItem("wtokens_pending_deposits", JSON.stringify(pendingDeposits));
     } catch {}
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_deposit",
+          deposit: depData,
+        }),
+      }).catch(() => {});
+    }
 
     setDepositSuccess(true);
   }

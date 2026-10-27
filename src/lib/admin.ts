@@ -318,10 +318,207 @@ export function getActiveUserId(): string {
 export function setActiveUserId(userId: string): void {
   try {
     localStorage.setItem(STORAGE_ACTIVE_USER_ID, userId);
-    notifyStorageChange();
   } catch {
     /* ignore */
   }
+}
+
+export function registerNewUser(
+  name: string,
+  discordTag = "",
+  epicNick = "",
+  country = "PE",
+  initialBalance = 0,
+): ManagedUser {
+  const users = getManagedUsers();
+  const cleanName = name.trim();
+  const cleanDiscord = discordTag.trim();
+  const cleanEpic = epicNick.trim() || cleanName;
+
+  // Check if user already exists
+  let existing = users.find(
+    (u) =>
+      u.display_name.toLowerCase() === cleanName.toLowerCase() ||
+      (cleanDiscord && u.discord_tag.toLowerCase() === cleanDiscord.toLowerCase()) ||
+      (cleanEpic && u.epic_nickname.toLowerCase() === cleanEpic.toLowerCase()),
+  );
+
+  if (existing) {
+    if (initialBalance > 0) {
+      existing.balance_wt = Number((existing.balance_wt + initialBalance).toFixed(2));
+    }
+    saveManagedUsers(users);
+    return existing;
+  }
+
+  const countryNames: Record<string, string> = {
+    PE: "Perú",
+    AR: "Argentina",
+    BR: "Brasil",
+    CL: "Chile",
+    UY: "Uruguay",
+    PY: "Paraguay",
+    BO: "Bolivia",
+    CO: "Colombia",
+    MX: "México",
+    US: "Estados Unidos",
+  };
+
+  const newUser: ManagedUser = {
+    id: "usr-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+    display_name: cleanName,
+    epic_nickname: cleanEpic,
+    epic_verified: Boolean(cleanEpic),
+    discord_tag: cleanDiscord || `${cleanName}#0000`,
+    avatar_url: `https://cdn.discordapp.com/embed/avatars/${Math.floor(Math.random() * 5)}.png`,
+    role: "user",
+    eligible: true,
+    suspended: false,
+    country,
+    country_name: countryNames[country] || "Internacional",
+    preferred_currency:
+      country === "AR"
+        ? "ARS"
+        : country === "BR"
+          ? "BRL"
+          : country === "CL"
+            ? "CLP"
+            : country === "PE"
+              ? "PEN"
+              : "USD",
+    balance_wt: initialBalance > 0 ? Number(initialBalance.toFixed(2)) : 0,
+    balance_reserved_wt: 0,
+    created_at: new Date().toISOString(),
+    last_active: "Ahora",
+  };
+
+  users.unshift(newUser);
+  saveManagedUsers(users);
+
+  // Sync to API in background
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "register_user",
+        user: newUser,
+      }),
+    }).catch(() => {});
+  }
+
+  return newUser;
+}
+
+export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | null {
+  if (!sessionUser || !sessionUser.id) return null;
+  const users = getManagedUsers();
+  const existingIndex = users.findIndex((u) => u.id === sessionUser.id);
+
+  if (existingIndex >= 0) {
+    const existing = users[existingIndex]!;
+    let changed = false;
+    if (sessionUser.epic_nickname && existing.epic_nickname !== sessionUser.epic_nickname) {
+      existing.epic_nickname = sessionUser.epic_nickname;
+      existing.epic_verified = true;
+      changed = true;
+    }
+    if (sessionUser.display_name && existing.display_name !== sessionUser.display_name) {
+      existing.display_name = sessionUser.display_name;
+      changed = true;
+    }
+    if (sessionUser.balance_wt !== undefined && sessionUser.balance_wt !== existing.balance_wt) {
+      existing.balance_wt = sessionUser.balance_wt;
+      changed = true;
+    }
+    if (changed) {
+      users[existingIndex] = existing;
+      saveManagedUsers(users);
+    }
+    return existing;
+  }
+
+  const newUser: ManagedUser = {
+    id: sessionUser.id,
+    display_name: sessionUser.display_name || sessionUser.discord_tag || "Jugador",
+    epic_nickname: sessionUser.epic_nickname || sessionUser.display_name || "",
+    epic_verified: Boolean(sessionUser.epic_verified),
+    epic_account_id: sessionUser.epic_account_id,
+    discord_tag: sessionUser.discord_tag || `${sessionUser.display_name || "User"}#0000`,
+    avatar_url: sessionUser.avatar_url || "https://cdn.discordapp.com/embed/avatars/0.png",
+    role: sessionUser.role === "admin" ? "admin" : "user",
+    eligible: true,
+    suspended: Boolean(sessionUser.suspended),
+    country: sessionUser.country || "PE",
+    country_name: sessionUser.country_name || "Perú",
+    preferred_currency:
+      sessionUser.country === "AR"
+        ? "ARS"
+        : sessionUser.country === "BR"
+          ? "BRL"
+          : "PEN",
+    balance_wt: sessionUser.balance_wt ?? 0,
+    balance_reserved_wt: 0,
+    created_at: new Date().toISOString(),
+    last_active: "Ahora",
+  };
+
+  users.unshift(newUser);
+  saveManagedUsers(users);
+
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "register_user",
+        user: newUser,
+      }),
+    }).catch(() => {});
+  }
+
+  return newUser;
+}
+
+export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
+  try {
+    if (typeof fetch === "undefined") return getManagedUsers();
+    const res = await fetch("/api/sync");
+    if (!res.ok) return getManagedUsers();
+    const data = await res.json();
+    if (data.success && Array.isArray(data.users)) {
+      const currentUsers = getManagedUsers();
+      const currentMap = new Map<string, ManagedUser>(currentUsers.map((u) => [u.id, u]));
+
+      for (const remote of data.users) {
+        if (!currentMap.has(remote.id)) {
+          currentMap.set(remote.id, {
+            id: remote.id,
+            display_name: remote.display_name,
+            epic_nickname: remote.epic_nickname || remote.display_name,
+            epic_verified: true,
+            discord_tag: remote.discord_tag || `${remote.display_name}#0000`,
+            avatar_url: remote.avatar_url,
+            role: remote.role || "user",
+            eligible: true,
+            suspended: false,
+            country: remote.country || "PE",
+            country_name: remote.country_name || "Perú",
+            preferred_currency: "PEN",
+            balance_wt: remote.balance_wt || 0,
+            balance_reserved_wt: 0,
+            created_at: remote.created_at || new Date().toISOString(),
+            last_active: remote.last_active || "Reciente",
+          });
+        }
+      }
+
+      const merged = Array.from(currentMap.values());
+      saveManagedUsers(merged);
+      return merged;
+    }
+  } catch {}
+  return getManagedUsers();
 }
 
 export function getActiveManagedUser(): ManagedUser {
@@ -364,6 +561,19 @@ export function creditUserTokens(
 
   user.balance_wt = calculated;
   saveManagedUsers(users);
+
+  // Sync balance update to server registry
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "credit_user",
+        userId: targetUserId,
+        amount,
+      }),
+    }).catch(() => {});
+  }
 
   // Add to audit log
   const audit = getAuditLog();

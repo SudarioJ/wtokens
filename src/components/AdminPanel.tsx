@@ -31,6 +31,8 @@ import {
   approveWithdrawal,
   rejectWithdrawal,
   setActiveUserId,
+  registerNewUser,
+  syncWithServerRegistry,
 } from "../lib/admin";
 import "./admin.css";
 
@@ -120,6 +122,38 @@ export function AdminPanel({
     }
   });
 
+  // Register user modal state
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserDiscord, setNewUserDiscord] = useState("");
+  const [newUserEpic, setNewUserEpic] = useState("");
+  const [newUserCountry, setNewUserCountry] = useState("PE");
+  const [newUserInitialBalance, setNewUserInitialBalance] = useState("10");
+
+  function handleCreateNewUser(e: FormEvent) {
+    e.preventDefault();
+    if (!newUserName.trim()) return;
+    const initialBal = parseFloat(newUserInitialBalance) || 0;
+    const created = registerNewUser(
+      newUserName.trim(),
+      newUserDiscord.trim(),
+      newUserEpic.trim(),
+      newUserCountry,
+      initialBal,
+    );
+    reloadAll();
+    setSelectedUserId(created.id);
+    setNewUserName("");
+    setNewUserDiscord("");
+    setNewUserEpic("");
+    setNewUserInitialBalance("10");
+    setIsRegisterModalOpen(false);
+    setFeedback({
+      text: `¡Jugador ${created.display_name} registrado exitosamente con ${created.balance_wt.toFixed(2)} WT!`,
+      error: false,
+    });
+  }
+
   function handleApproveDeposit(dep: any) {
     if (!dep.userId) return;
     const res = creditUserTokens(
@@ -137,8 +171,21 @@ export function AdminPanel({
       try {
         localStorage.setItem("wtokens_pending_deposits", JSON.stringify(updated));
       } catch {}
+
+      if (typeof fetch !== "undefined") {
+        fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "resolve_deposit",
+            id: dep.id,
+            status: "approved",
+          }),
+        }).catch(() => {});
+      }
+
       setFeedback({
-        text: `✅ ¡Acreditados ${dep.amountWt} WT a ${dep.userDiscord || dep.userId}!`,
+        text: `✅ ¡Acreditados ${dep.amountWt} WT a ${dep.userName || dep.userDiscord || dep.userId}!`,
         error: false,
       });
       if (onBalanceUpdated) onBalanceUpdated();
@@ -151,6 +198,18 @@ export function AdminPanel({
     try {
       localStorage.setItem("wtokens_pending_deposits", JSON.stringify(updated));
     } catch {}
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resolve_deposit",
+          id,
+          status: "dismissed",
+        }),
+      }).catch(() => {});
+    }
   }
 
   function handleApprovePix(req: any) {
@@ -170,6 +229,19 @@ export function AdminPanel({
       try {
         localStorage.setItem("wtokens_pix_requests", JSON.stringify(updated));
       } catch {}
+
+      if (typeof fetch !== "undefined") {
+        fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "resolve_deposit",
+            id: req.id,
+            status: "approved",
+          }),
+        }).catch(() => {});
+      }
+
       setFeedback({
         text: `✅ ¡Acreditados ${req.amountWt} WT a ${req.userName}!`,
         error: false,
@@ -184,14 +256,52 @@ export function AdminPanel({
     try {
       localStorage.setItem("wtokens_pix_requests", JSON.stringify(updated));
     } catch {}
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resolve_deposit",
+          id,
+          status: "dismissed",
+        }),
+      }).catch(() => {});
+    }
   }
 
-  function reloadAll() {
-    setUsers(getManagedUsers());
+  async function reloadAll() {
+    try {
+      const synced = await syncWithServerRegistry();
+      setUsers(synced);
+    } catch {
+      setUsers(getManagedUsers());
+    }
     setAudit(getAuditLog());
     setWithdrawals(getWithdrawalRequests());
+
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && data.success) {
+            if (Array.isArray(data.deposits)) setPendingDeposits(data.deposits);
+            if (Array.isArray(data.pixRequests)) setPendingPixRequests(data.pixRequests);
+          }
+        })
+        .catch(() => {});
+    }
+
     onBalanceUpdated?.();
   }
+
+  useEffect(() => {
+    void reloadAll();
+    const interval = setInterval(() => {
+      void reloadAll();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Selected Target User for Token Manager
   const targetUser = useMemo(
@@ -672,9 +782,45 @@ export function AdminPanel({
                           ? `Coincidencias (${searchMatches.length})`
                           : "Selecciona un jugador o escribe para filtrar:"}
                       </div>
+                      {userSearchText.trim() && (
+                        <div
+                          style={{
+                            padding: "10px 14px",
+                            borderBottom: "1px solid #1e3a5f",
+                            background: "rgba(94, 234, 255, 0.08)",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                          onClick={() => {
+                            const created = registerNewUser(userSearchText.trim());
+                            reloadAll();
+                            setSelectedUserId(created.id);
+                            setUserSearchText("");
+                            setIsDropdownOpen(false);
+                            setFeedback({
+                              text: `¡Jugador ${created.display_name} registrado y seleccionado! Ya puedes acreditarle WTokens.`,
+                              error: false,
+                            });
+                          }}
+                        >
+                          <div>
+                            <span style={{ color: "#5eeaff", fontWeight: 700, fontSize: "13px" }}>
+                              + Registrar "{userSearchText.trim()}" como nuevo jugador
+                            </span>
+                            <div style={{ color: "#94a3b8", fontSize: "11px" }}>
+                              Crear cuenta en el sistema para poder acreditarle saldo inmediatamente
+                            </div>
+                          </div>
+                          <span className="button primary small" style={{ fontSize: "11px", padding: "4px 8px" }}>
+                            Registrar
+                          </span>
+                        </div>
+                      )}
                       {searchMatches.length === 0 ? (
                         <div className="search-empty-state">
-                          No se encontró ningún jugador con "{userSearchText}"
+                          No se encontró ningún jugador registrado con "{userSearchText}". Haz clic arriba para registrarlo.
                         </div>
                       ) : (
                         searchMatches.map((u) => (
@@ -1023,8 +1169,137 @@ export function AdminPanel({
                 <option value="active">Solo Activos</option>
                 <option value="suspended">Solo Suspendidos</option>
               </select>
+
+              <button
+                type="button"
+                className="button primary small"
+                onClick={() => setIsRegisterModalOpen((prev) => !prev)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}
+              >
+                <UserCheck size={15} />
+                <span>+ Registrar Nuevo Jugador</span>
+              </button>
             </div>
           </div>
+
+          {/* Modal / Formulario para registrar nuevo jugador */}
+          {isRegisterModalOpen && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(14, 28, 48, 0.98) 0%, rgba(6, 16, 32, 0.98) 100%)",
+                border: "1px solid #38bdf8",
+                borderRadius: "12px",
+                padding: "20px",
+                marginBottom: "20px",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h4 style={{ margin: 0, color: "#f8fafc", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <UserCheck size={18} className="text-gold" />
+                  Registrar Nuevo Jugador en el Sistema
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setIsRegisterModalOpen(false)}
+                  style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateNewUser} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Nombre / Display Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. K1ng_Fortnite"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Nickname de Epic Games / Fortnite
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. K1ng_FN"
+                    value={newUserEpic}
+                    onChange={(e) => setNewUserEpic(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Discord Tag (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. usuario#1234"
+                    value={newUserDiscord}
+                    onChange={(e) => setNewUserDiscord(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    País
+                  </label>
+                  <select
+                    value={newUserCountry}
+                    onChange={(e) => setNewUserCountry(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  >
+                    <option value="PE">🇵🇪 Perú (PEN)</option>
+                    <option value="AR">🇦🇷 Argentina (ARS)</option>
+                    <option value="BR">🇧🇷 Brasil (BRL)</option>
+                    <option value="CL">🇨🇱 Chile (CLP)</option>
+                    <option value="UY">🇺🇾 Uruguay (UYU)</option>
+                    <option value="PY">🇵🇾 Paraguay (PYG)</option>
+                    <option value="BO">🇧🇴 Bolivia (BOB)</option>
+                    <option value="US">🇺🇸 Estados Unidos / Intl (USD)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Saldo Inicial WTokens (WT)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={newUserInitialBalance}
+                    onChange={(e) => setNewUserInitialBalance(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "10px" }}>
+                  <button type="submit" className="button primary full" style={{ height: "38px" }}>
+                    Guardar y Registrar
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() => setIsRegisterModalOpen(false)}
+                    style={{ height: "38px" }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* Users Table */}
           <div className="table-responsive">
