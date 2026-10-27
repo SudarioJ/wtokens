@@ -283,6 +283,14 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
       existing.balance_wt = sessionUser.balance_wt;
       changed = true;
     }
+    if (sessionUser.role === "admin" && existing.role !== "admin") {
+      existing.role = "admin";
+      changed = true;
+    }
+    if (existing.role === "admin" && sessionUser.role !== "admin") {
+      sessionUser.role = "admin";
+      sessionUser.moderator = true;
+    }
     if (changed) {
       users[existingIndex] = existing;
       saveManagedUsers(users);

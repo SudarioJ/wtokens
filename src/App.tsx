@@ -280,7 +280,45 @@ export function App() {
       setSelectedMatch(null);
       return;
     }
-    setUser(profile.value);
+    const loggedUser = profile.value;
+    setUser(loggedUser);
+
+    // Verify if user has Administrator role in Discord
+    if (loggedUser) {
+      const q = new URLSearchParams({
+        userId: loggedUser.id || "",
+        username: loggedUser.display_name || "",
+        discordTag: loggedUser.discord_tag || "",
+        avatarUrl: loggedUser.avatar_url || "",
+      });
+      fetch(`/api/discord-admin-check?${q.toString()}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && data.isAdmin) {
+            setUser((prev) =>
+              prev ? { ...prev, role: "admin", moderator: true } : null,
+            );
+            upsertManagedUserFromSession({
+              ...loggedUser,
+              role: "admin",
+              moderator: true,
+            });
+            fetch("/api/sync", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "register_user",
+                user: {
+                  id: loggedUser.id,
+                  display_name: loggedUser.display_name,
+                  role: "admin",
+                },
+              }),
+            }).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
     const [wallet, history, offers] = await Promise.allSettled([
       api.balances(),
       api.transactions(),
@@ -405,12 +443,13 @@ export function App() {
         if (!prev) return null;
         const current = allUsers.find((u) => u.id === prev.id);
         if (!current) return prev;
+        const isAdmin = prev.role === "admin" || prev.moderator || current.role === "admin";
         return {
           ...prev,
           display_name: current.display_name,
           avatar_url: current.avatar_url,
-          role: current.role,
-          moderator: current.role === "admin",
+          role: isAdmin ? "admin" : current.role,
+          moderator: isAdmin,
           suspended: current.suspended,
           balance_wt: current.balance_wt,
           discord_tag: current.discord_tag,
