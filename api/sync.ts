@@ -69,52 +69,14 @@ const globalState: {
 
 (globalThis as any).__wtokens_sync_state = globalState;
 
-// Seed default users if empty
-if (globalState.users.size === 0) {
-  const seedUsers: SyncedUser[] = [
-    {
-      id: "a1a1a1a1-1111-4111-8111-111111111111",
-      display_name: "Admin_WTokens",
-      epic_nickname: "WTokens_Admin",
-      discord_tag: "Admin#0001",
-      avatar_url: "https://cdn.discordapp.com/embed/avatars/0.png",
-      role: "admin",
-      country: "PE",
-      country_name: "Perú",
-      balance_wt: 2500.0,
-      created_at: "2026-09-01T12:00:00Z",
-      last_active: "Ahora",
-    },
-    {
-      id: "b2b2b2b2-2222-4222-8222-222222222222",
-      display_name: "Staff_Arbitro",
-      epic_nickname: "Staff_Arbitro",
-      discord_tag: "StaffArbitro#1234",
-      avatar_url: "https://cdn.discordapp.com/embed/avatars/1.png",
-      role: "admin",
-      country: "AR",
-      country_name: "Argentina",
-      balance_wt: 750.0,
-      created_at: "2026-09-10T15:30:00Z",
-      last_active: "Hace 10 min",
-    },
-    {
-      id: "c3c3c3c3-3333-4333-8333-333333333333",
-      display_name: "K1ng_Fortnite",
-      epic_nickname: "K1ng_FN",
-      discord_tag: "K1ng#7777",
-      avatar_url: "https://cdn.discordapp.com/embed/avatars/2.png",
-      role: "user",
-      country: "AR",
-      country_name: "Argentina",
-      balance_wt: 120.0,
-      created_at: "2026-09-15T18:20:00Z",
-      last_active: "Hace 5 min",
-    },
-  ];
-  for (const u of seedUsers) {
-    globalState.users.set(u.id, u);
-  }
+// Purge any legacy demo accounts
+const DEMO_IDS = new Set([
+  "a1a1a1a1-1111-4111-8111-111111111111",
+  "b2b2b2b2-2222-4222-8222-222222222222",
+  "c3c3c3c3-3333-4333-8333-333333333333",
+]);
+for (const id of DEMO_IDS) {
+  globalState.users.delete(id);
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {

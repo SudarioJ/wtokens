@@ -10,7 +10,6 @@ import {
   Search,
   AlertTriangle,
   RefreshCw,
-  SlidersHorizontal,
   UserCheck,
   UserX,
   Sparkles,
@@ -31,7 +30,6 @@ import {
   toggleUserSuspension,
   approveWithdrawal,
   rejectWithdrawal,
-  setActiveUserId,
   registerNewUser,
   syncWithServerRegistry,
 } from "../lib/admin";
@@ -43,7 +41,6 @@ interface AdminPanelProps {
     display_name: string;
     role?: "admin" | "user" | undefined;
   };
-  onUserSwitched?: (user: ManagedUser) => void;
   onBalanceUpdated?: () => void;
 }
 
@@ -64,7 +61,6 @@ const COMMON_REASONS = [
 
 export function AdminPanel({
   currentAdmin,
-  onUserSwitched,
   onBalanceUpdated,
 }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTab>("tokens");
@@ -472,16 +468,6 @@ export function AdminPanel({
         error: false,
       });
     }
-  }
-
-  function handleSwitchUser(user: ManagedUser) {
-    setActiveUserId(user.id);
-    reloadAll();
-    onUserSwitched?.(user);
-    setFeedback({
-      text: `Sesión activa cambiada a: ${user.display_name} (${user.role.toUpperCase()})`,
-      error: false,
-    });
   }
 
   function handleApproveWithdrawal(reqId: string) {
@@ -1127,14 +1113,6 @@ export function AdminPanel({
                 <div className="quick-account-actions">
                   <button
                     type="button"
-                    className="button secondary small"
-                    onClick={() => handleSwitchUser(targetUser)}
-                  >
-                    <SlidersHorizontal size={14} />
-                    <span>Iniciar sesión como este usuario</span>
-                  </button>
-                  <button
-                    type="button"
                     className={`button secondary small ${targetUser.suspended ? "text-green" : "text-red"}`}
                     onClick={() => handleToggleSuspension(targetUser.id)}
                   >
@@ -1447,13 +1425,6 @@ export function AdminPanel({
                           ) : (
                             <UserX size={14} />
                           )}
-                        </button>
-                        <button
-                          className="action-btn switch"
-                          title="Probar sesión como este usuario"
-                          onClick={() => handleSwitchUser(u)}
-                        >
-                          <SlidersHorizontal size={14} />
                         </button>
                       </div>
                     </td>

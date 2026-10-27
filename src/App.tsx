@@ -51,12 +51,9 @@ import { AdminPanel } from "./components/AdminPanel";
 import { AffiliatesPanel } from "./components/AffiliatesPanel";
 import { PaymentsModal } from "./components/PaymentsModal";
 import {
-  getActiveManagedUser,
   getManagedUsers,
-  setActiveUserId,
   upsertManagedUserFromSession,
   syncWithServerRegistry,
-  type ManagedUser,
 } from "./lib/admin";
 
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
@@ -276,36 +273,6 @@ export function App() {
     setAssets(currencies.status === "fulfilled" ? currencies.value : []);
     setPlatform(settings.status === "fulfilled" ? settings.value : null);
     if (profile.status !== "fulfilled") {
-      const isDemoLoggedIn =
-        typeof localStorage !== "undefined" &&
-        localStorage.getItem("wtokens_demo_logged_in") === "true";
-      if (isDemoLoggedIn) {
-        const managed = getActiveManagedUser();
-        setUser(buildUserFromManaged(managed));
-        setBalances([
-          {
-            asset: "PEN",
-            kind: "AVAILABLE",
-            amount_minor: String(Math.round(managed.balance_wt * 3.8 * 100)),
-          },
-          {
-            asset: "ARS",
-            kind: "AVAILABLE",
-            amount_minor: String(Math.round(managed.balance_wt * 1150 * 100)),
-          },
-          {
-            asset: "CLP",
-            kind: "AVAILABLE",
-            amount_minor: String(Math.round(managed.balance_wt * 980)),
-          },
-        ]);
-        if (affiliateCode.trim() && !managed.referrer_code) {
-      managed.referrer_code = affiliateCode.trim().toUpperCase();
-      notify(`Código de creador ${affiliateCode.trim().toUpperCase()} vinculado con éxito.`);
-    }
-    setConnection("online");
-        return;
-      }
       setUser(null);
       setBalances(null);
       setTransactions(null);
@@ -414,20 +381,6 @@ export function App() {
                   epic_account_id: data.accountId,
                 };
               });
-
-              setManagedUsers((prev) => {
-                const active = getActiveManagedUser();
-                return prev.map((u) =>
-                  u.id === active.id
-                    ? {
-                        ...u,
-                        epic_nickname: data.displayName,
-                        epic_verified: true,
-                        epic_account_id: data.accountId,
-                      }
-                    : u,
-                );
-              });
             } else {
               setNotice({
                 text: data.error || "No se pudo verificar la cuenta de Epic Games.",
@@ -445,164 +398,51 @@ export function App() {
     } catch {}
   }, []);
 
-  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>(() =>
-    getManagedUsers(),
-  );
-
-  function buildUserFromManaged(managed: ManagedUser): User {
-    return {
-      id: managed.id,
-      display_name: managed.display_name,
-      avatar_url: managed.avatar_url,
-      eligible: managed.eligible,
-      suspended: managed.suspended,
-      moderator: managed.role === "admin",
-      role: managed.role,
-      epic_nickname: managed.epic_nickname,
-      epic_verified: managed.epic_verified,
-      epic_account_id: managed.epic_account_id,
-      discord_tag: managed.discord_tag,
-      balance_wt: managed.balance_wt,
-      referrer_code: managed.referrer_code,
-      ranking: {
-        tiers: [
-          { level: 1, name: "Bronze I", minimumPoints: 0 },
-          { level: 2, name: "Bronze II", minimumPoints: 100 },
-          { level: 3, name: "Silver I", minimumPoints: 250 },
-          { level: 4, name: "Silver II", minimumPoints: 500 },
-          { level: 5, name: "Gold I", minimumPoints: 800 },
-          { level: 6, name: "Gold II", minimumPoints: 1200 },
-          { level: 7, name: "Platinum I", minimumPoints: 1700 },
-          { level: 8, name: "Platinum II", minimumPoints: 2300 },
-          { level: 9, name: "Diamond", minimumPoints: 3000 },
-          { level: 10, name: "Elite Champion", minimumPoints: 4000 },
-        ],
-        modes: [
-          {
-            mode: "BOX_FIGHT",
-            name: "Box Fight",
-            points: 850,
-            wins: 24,
-            losses: 7,
-            level: 5,
-            placementGamesRemaining: 0,
-          },
-          {
-            mode: "BUILD_FIGHT",
-            name: "Build Fight",
-            points: 520,
-            wins: 14,
-            losses: 5,
-            level: 4,
-            placementGamesRemaining: 0,
-          },
-          {
-            mode: "REALISTICS",
-            name: "Realistics",
-            points: 280,
-            wins: 6,
-            losses: 3,
-            level: 3,
-            placementGamesRemaining: 0,
-          },
-          {
-            mode: "ZONE_WARS",
-            name: "Zone Wars",
-            points: 120,
-            wins: 2,
-            losses: 1,
-            level: 2,
-            placementGamesRemaining: 3,
-          },
-        ],
-      },
-    };
-  }
-
-  function loginAsManaged(managed: ManagedUser) {
-    setActiveUserId(managed.id);
-    try {
-      localStorage.setItem("wtokens_demo_logged_in", "true");
-    } catch {
-      /* ignore */
-    }
-    const simulatedUser = buildUserFromManaged(managed);
-    setUser(simulatedUser);
-    setBalances([
-      {
-        asset: "PEN",
-        kind: "AVAILABLE",
-        amount_minor: String(Math.round(managed.balance_wt * 3.8 * 100)),
-      },
-      {
-        asset: "ARS",
-        kind: "AVAILABLE",
-        amount_minor: String(Math.round(managed.balance_wt * 1150 * 100)),
-      },
-      {
-        asset: "CLP",
-        kind: "AVAILABLE",
-        amount_minor: String(Math.round(managed.balance_wt * 980)),
-      },
-    ]);
-    if (affiliateCode.trim() && !managed.referrer_code) {
-      managed.referrer_code = affiliateCode.trim().toUpperCase();
-      notify(`Código de creador ${affiliateCode.trim().toUpperCase()} vinculado con éxito.`);
-    }
-    setConnection("online");
-    closeModal();
-    window.history.pushState(null, "", "/app");
-    setPanelRequested(true);
-    if (managed.role === "admin") {
-      setView("admin");
-    } else {
-      setView("arena");
-    }
-    notify(
-      `Sesión iniciada: ${managed.display_name} (${managed.role === "admin" ? "ADMIN / MANEJADOR" : "JUGADOR"})`,
-    );
-  }
-
   useEffect(() => {
     const handleSync = () => {
       const allUsers = getManagedUsers();
-      setManagedUsers(allUsers);
-      const active = getActiveManagedUser();
       setUser((prev) => {
         if (!prev) return null;
+        const current = allUsers.find((u) => u.id === prev.id);
+        if (!current) return prev;
         return {
           ...prev,
-          id: active.id,
-          display_name: active.display_name,
-          avatar_url: active.avatar_url,
-          role: active.role,
-          moderator: active.role === "admin",
-          suspended: active.suspended,
-          balance_wt: active.balance_wt,
-          discord_tag: active.discord_tag,
-          epic_nickname: active.epic_nickname,
-          epic_verified: active.epic_verified,
-          epic_account_id: active.epic_account_id,
-          referrer_code: active.referrer_code,
+          display_name: current.display_name,
+          avatar_url: current.avatar_url,
+          role: current.role,
+          moderator: current.role === "admin",
+          suspended: current.suspended,
+          balance_wt: current.balance_wt,
+          discord_tag: current.discord_tag,
+          epic_nickname: current.epic_nickname,
+          epic_verified: current.epic_verified,
+          epic_account_id: current.epic_account_id,
+          referrer_code: current.referrer_code,
         };
       });
-      setBalances([
-        {
-          asset: "PEN",
-          kind: "AVAILABLE",
-          amount_minor: String(Math.round(active.balance_wt * 3.8 * 100)),
-        },
-        {
-          asset: "ARS",
-          kind: "AVAILABLE",
-          amount_minor: String(Math.round(active.balance_wt * 1150 * 100)),
-        },
-        {
-          asset: "CLP",
-          kind: "AVAILABLE",
-          amount_minor: String(Math.round(active.balance_wt * 980)),
-        },
-      ]);
+      setUser((prev) => {
+        if (prev?.balance_wt !== undefined) {
+          const bal = prev.balance_wt;
+          setBalances([
+            {
+              asset: "PEN",
+              kind: "AVAILABLE",
+              amount_minor: String(Math.round(bal * 3.8 * 100)),
+            },
+            {
+              asset: "ARS",
+              kind: "AVAILABLE",
+              amount_minor: String(Math.round(bal * 1150 * 100)),
+            },
+            {
+              asset: "CLP",
+              kind: "AVAILABLE",
+              amount_minor: String(Math.round(bal * 980)),
+            },
+          ]);
+        }
+        return prev;
+      });
     };
     window.addEventListener("wtokens-admin-sync", handleSync);
     return () => window.removeEventListener("wtokens-admin-sync", handleSync);
@@ -615,11 +455,7 @@ export function App() {
   }, [user]);
 
   useEffect(() => {
-    void syncWithServerRegistry().then((synced) => {
-      if (synced && synced.length > 0) {
-        setManagedUsers(synced);
-      }
-    });
+    void syncWithServerRegistry();
   }, []);
 
   function enterPanel() {
@@ -1268,16 +1104,16 @@ export function App() {
                       display_name: user.display_name,
                       role: user.role,
                     }}
-                    onUserSwitched={(switched) => {
-                      loginAsManaged(switched);
-                    }}
                     onBalanceUpdated={() => {
-                      const active = getActiveManagedUser();
-                      setUser((prev) =>
-                        prev
-                          ? { ...prev, balance_wt: active.balance_wt }
-                          : null,
-                      );
+                      const allUsers = getManagedUsers();
+                      const me = allUsers.find((u) => u.id === user.id);
+                      if (me) {
+                        setUser((prev) =>
+                          prev
+                            ? { ...prev, balance_wt: me.balance_wt }
+                            : null,
+                        );
+                      }
                     }}
                   />
                 )}
@@ -2058,108 +1894,6 @@ export function App() {
                   </span>
                 </div>
               )}
-              {typeof window !== "undefined" &&
-                window.location.search.includes("dev=true") && (
-                  <div
-                    className="demo-accounts-picker"
-                    style={{
-                      marginTop: "20px",
-                      borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                      paddingTop: "16px",
-                    }}
-                  >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: "10px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      letterSpacing: "0.08em",
-                      color: "#fbbf24",
-                    }}
-                  >
-                    👑 ACCESO ADMINISTRADOR & CUENTAS DEMO
-                  </span>
-                  <small style={{ color: "#94a3b8", fontSize: "11px" }}>
-                    Balances aislados
-                  </small>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  {managedUsers.map((mu) => (
-                    <button
-                      key={mu.id}
-                      type="button"
-                      onClick={() => loginAsManaged(mu)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "9px 12px",
-                        background:
-                          mu.role === "admin"
-                            ? "rgba(245, 158, 11, 0.1)"
-                            : "#0f1622",
-                        border:
-                          mu.role === "admin"
-                            ? "1px solid rgba(245, 158, 11, 0.35)"
-                            : "1px solid #1c2738",
-                        borderRadius: "8px",
-                        color: "#f1f5f9",
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                        textAlign: "left",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        {mu.role === "admin" ? (
-                          <Crown size={16} style={{ color: "#fbbf24" }} />
-                        ) : (
-                          <Gamepad2 size={16} style={{ color: "#38bdf8" }} />
-                        )}
-                        <div>
-                          <strong
-                            style={{ fontSize: "12px", display: "block" }}
-                          >
-                            {mu.display_name}
-                          </strong>
-                          <span style={{ fontSize: "10px", color: "#94a3b8" }}>
-                            {mu.role === "admin"
-                              ? "👑 Staff Manejador WTokens"
-                              : `🎮 Epic: ${mu.epic_nickname} · ${mu.country_name}`}
-                          </span>
-                        </div>
-                      </div>
-                      <strong
-                        style={{
-                          fontSize: "12px",
-                          color: mu.role === "admin" ? "#fbbf24" : "#34d399",
-                        }}
-                      >
-                        {mu.balance_wt.toFixed(2)} WT
-                      </strong>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
               <p className="dialog-footnote">
                 La verificación y la habilitación para participar se realizan
                 por separado. Solo para mayores de edad conforme al país

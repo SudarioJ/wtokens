@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import {
   getManagedUsers,
+  saveManagedUsers,
+  registerNewUser,
   creditUserTokens,
   toggleUserRole,
   toggleUserSuspension,
@@ -29,6 +31,14 @@ describe("WTokens Admin & Token Management Engine", () => {
 
   beforeEach(() => {
     store.clear();
+    const admin = registerNewUser("Admin_WTokens", "Admin#0001", "WTokens_Admin", "PE", 2500);
+    admin.role = "admin";
+    saveManagedUsers([
+      admin,
+      registerNewUser("K1ng_Fortnite", "K1ng#7777", "K1ng_FN", "AR", 120),
+      registerNewUser("Vortex_BR", "Vortex#9999", "Vortex_BR", "CL", 45),
+      registerNewUser("Savage_Aim", "Savage#4321", "Savage_Aim", "PE", 35),
+    ]);
   });
 
   it("loads default users and seeds admin and player accounts", () => {
@@ -120,6 +130,21 @@ describe("WTokens Admin & Token Management Engine", () => {
   });
 
   it("approves pending withdrawal request", () => {
+    const player = getManagedUsers().find((u) => u.role === "user")!;
+    saveWithdrawalRequests([
+      {
+        id: "test-wth-1",
+        user_id: player.id,
+        user_name: player.display_name,
+        amount_wt: 50.0,
+        local_currency: "ARS",
+        local_amount: 58500,
+        method: "Mercado Pago",
+        destination: "CVU: 0000003100049281729482",
+        status: "pending",
+        created_at: new Date().toISOString(),
+      },
+    ]);
     const requests = getWithdrawalRequests();
     const pending = requests.find((r) => r.status === "pending")!;
 

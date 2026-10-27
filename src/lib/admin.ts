@@ -56,188 +56,18 @@ const STORAGE_AUDIT = "wtokens_admin_audit_log_v2";
 const STORAGE_WITHDRAWALS = "wtokens_withdrawal_requests_v2";
 const STORAGE_ACTIVE_USER_ID = "wtokens_active_user_id_v2";
 
-const DEFAULT_USERS: ManagedUser[] = [
-  {
-    id: "a1a1a1a1-1111-4111-8111-111111111111",
-    display_name: "Admin_WTokens",
-    epic_nickname: "WTokens_Admin",
-    discord_tag: "Admin#0001",
-    avatar_url: "https://cdn.discordapp.com/embed/avatars/0.png",
-    role: "admin",
-    eligible: true,
-    suspended: false,
-    country: "PE",
-    country_name: "Perú",
-    preferred_currency: "PEN",
-    balance_wt: 2500.0,
-    balance_reserved_wt: 0.0,
-    created_at: "2026-09-01T12:00:00Z",
-    last_active: "Ahora",
-  },
-  {
-    id: "b2b2b2b2-2222-4222-8222-222222222222",
-    display_name: "Staff_Arbitro",
-    epic_nickname: "Staff_Arbitro",
-    discord_tag: "StaffArbitro#1234",
-    avatar_url: "https://cdn.discordapp.com/embed/avatars/1.png",
-    role: "admin",
-    eligible: true,
-    suspended: false,
-    country: "AR",
-    country_name: "Argentina",
-    preferred_currency: "ARS",
-    balance_wt: 750.0,
-    balance_reserved_wt: 0.0,
-    created_at: "2026-09-10T15:30:00Z",
-    last_active: "Hace 10 min",
-  },
-  {
-    id: "c3c3c3c3-3333-4333-8333-333333333333",
-    display_name: "K1ng_Fortnite",
-    epic_nickname: "K1ng_FN",
-    discord_tag: "K1ng#7777",
-    avatar_url: "https://cdn.discordapp.com/embed/avatars/2.png",
-    role: "user",
-    eligible: true,
-    suspended: false,
-    country: "AR",
-    country_name: "Argentina",
-    preferred_currency: "ARS",
-    balance_wt: 120.0,
-    balance_reserved_wt: 10.0,
-    created_at: "2026-09-15T18:20:00Z",
-    last_active: "Hace 5 min",
-  },
-  {
-    id: "d4d4d4d4-4444-4444-8444-444444444444",
-    display_name: "Vortex_BR",
-    epic_nickname: "Vortex_BR",
-    discord_tag: "Vortex#9999",
-    avatar_url: "https://cdn.discordapp.com/embed/avatars/3.png",
-    role: "user",
-    eligible: true,
-    suspended: false,
-    country: "CL",
-    country_name: "Chile",
-    preferred_currency: "CLP",
-    balance_wt: 45.0,
-    balance_reserved_wt: 0.0,
-    created_at: "2026-09-20T21:00:00Z",
-    last_active: "Hace 1 hora",
-  },
-  {
-    id: "e5e5e5e5-5555-4555-8555-555555555555",
-    display_name: "Savage_Aim",
-    epic_nickname: "Savage_Aim",
-    discord_tag: "Savage#4321",
-    avatar_url: "https://cdn.discordapp.com/embed/avatars/4.png",
-    role: "user",
-    eligible: true,
-    suspended: false,
-    country: "PE",
-    country_name: "Perú",
-    preferred_currency: "PEN",
-    balance_wt: 35.0,
-    balance_reserved_wt: 5.0,
-    created_at: "2026-10-01T14:10:00Z",
-    last_active: "Hace 2 horas",
-  },
-  {
-    id: "f6f6f6f6-6666-4666-8666-666666666666",
-    display_name: "Shadow_Sniper",
-    epic_nickname: "Shadow_Sniper",
-    discord_tag: "Shadow#5555",
-    avatar_url: "https://cdn.discordapp.com/embed/avatars/5.png",
-    role: "user",
-    eligible: false,
-    suspended: true,
-    country: "UY",
-    country_name: "Uruguay",
-    preferred_currency: "UYU",
-    balance_wt: 0.0,
-    balance_reserved_wt: 0.0,
-    created_at: "2026-10-05T09:45:00Z",
-    last_active: "Hace 3 días (Suspendido)",
-  },
-];
+const DEMO_USER_IDS = new Set([
+  "a1a1a1a1-1111-4111-8111-111111111111",
+  "b2b2b2b2-2222-4222-8222-222222222222",
+  "c3c3c3c3-3333-4333-8333-333333333333",
+  "d4d4d4d4-4444-4444-8444-444444444444",
+  "e5e5e5e5-5555-4555-8555-555555555555",
+  "f6f6f6f6-6666-4666-8666-666666666666",
+]);
 
-const DEFAULT_AUDIT: TokenCreditRecord[] = [
-  {
-    id: "aud-001",
-    admin_id: "a1a1a1a1-1111-4111-8111-111111111111",
-    admin_name: "Admin_WTokens",
-    target_user_id: "c3c3c3c3-3333-4333-8333-333333333333",
-    target_user_name: "K1ng_Fortnite",
-    amount: 100.0,
-    reason: "Premio de torneo semanal Box Fight 1v1",
-    note: "Final de temporada disputada el 20/10",
-    created_at: "2026-10-21T19:30:00Z",
-  },
-  {
-    id: "aud-002",
-    admin_id: "b2b2b2b2-2222-4222-8222-222222222222",
-    admin_name: "Staff_Arbitro",
-    target_user_id: "d4d4d4d4-4444-4444-8444-444444444444",
-    target_user_name: "Vortex_BR",
-    amount: 25.0,
-    reason: "Resolución de disputa #D-4091 a favor del jugador",
-    note: "Evidencia de desconexión del oponente validada",
-    created_at: "2026-10-22T14:15:00Z",
-  },
-  {
-    id: "aud-003",
-    admin_id: "a1a1a1a1-1111-4111-8111-111111111111",
-    admin_name: "Admin_WTokens",
-    target_user_id: "e5e5e5e5-5555-4555-8555-555555555555",
-    target_user_name: "Savage_Aim",
-    amount: 35.0,
-    reason: "Depósito de WTokens verificado (Yape)",
-    note: "Comprobante #YP-849204 validado",
-    created_at: "2026-10-22T22:00:00Z",
-  },
-];
-
-const DEFAULT_WITHDRAWALS: WithdrawalRequest[] = [
-  {
-    id: "wth-101",
-    user_id: "c3c3c3c3-3333-4333-8333-333333333333",
-    user_name: "K1ng_Fortnite",
-    amount_wt: 50.0,
-    local_currency: "ARS",
-    local_amount: 58500,
-    method: "Mercado Pago",
-    destination: "CVU: 0000003100049281729482 (alias: king.mp)",
-    status: "pending",
-    created_at: "2026-10-23T14:20:00Z",
-  },
-  {
-    id: "wth-102",
-    user_id: "d4d4d4d4-4444-4444-8444-444444444444",
-    user_name: "Vortex_BR",
-    amount_wt: 20.0,
-    local_currency: "CLP",
-    local_amount: 19600,
-    method: "CuentaRUT / BancoEstado",
-    destination: "RUT: 19.823.441-2, Cta: 19823441",
-    status: "pending",
-    created_at: "2026-10-23T15:10:00Z",
-  },
-  {
-    id: "wth-103",
-    user_id: "e5e5e5e5-5555-4555-8555-555555555555",
-    user_name: "Savage_Aim",
-    amount_wt: 10.0,
-    local_currency: "PEN",
-    local_amount: 38.0,
-    method: "Yape",
-    destination: "Tel: +51 984 122 391",
-    status: "approved",
-    created_at: "2026-10-22T10:00:00Z",
-    resolved_at: "2026-10-22T11:30:00Z",
-    resolved_by: "Admin_WTokens",
-    admin_note: "Transferido exitosamente vía Yape",
-  },
-];
+const DEFAULT_USERS: ManagedUser[] = [];
+const DEFAULT_AUDIT: TokenCreditRecord[] = [];
+const DEFAULT_WITHDRAWALS: WithdrawalRequest[] = [];
 
 function notifyStorageChange() {
   if (typeof window !== "undefined") {
@@ -248,11 +78,17 @@ function notifyStorageChange() {
 export function getManagedUsers(): ManagedUser[] {
   try {
     const raw = localStorage.getItem(STORAGE_USERS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: ManagedUser[] = JSON.parse(raw);
+      const cleaned = parsed.filter((u) => !DEMO_USER_IDS.has(u.id));
+      if (cleaned.length !== parsed.length) {
+        saveManagedUsers(cleaned);
+      }
+      return cleaned;
+    }
   } catch {
     /* fallback to defaults */
   }
-  saveManagedUsers(DEFAULT_USERS);
   return DEFAULT_USERS;
 }
 
@@ -268,11 +104,19 @@ export function saveManagedUsers(users: ManagedUser[]): void {
 export function getAuditLog(): TokenCreditRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_AUDIT);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: TokenCreditRecord[] = JSON.parse(raw);
+      const cleaned = parsed.filter(
+        (a) => !DEMO_USER_IDS.has(a.target_user_id) && !a.id.startsWith("aud-0"),
+      );
+      if (cleaned.length !== parsed.length) {
+        saveAuditLog(cleaned);
+      }
+      return cleaned;
+    }
   } catch {
     /* fallback to defaults */
   }
-  saveAuditLog(DEFAULT_AUDIT);
   return DEFAULT_AUDIT;
 }
 
@@ -288,11 +132,19 @@ export function saveAuditLog(logs: TokenCreditRecord[]): void {
 export function getWithdrawalRequests(): WithdrawalRequest[] {
   try {
     const raw = localStorage.getItem(STORAGE_WITHDRAWALS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: WithdrawalRequest[] = JSON.parse(raw);
+      const cleaned = parsed.filter(
+        (w) => !DEMO_USER_IDS.has(w.user_id) && !w.id.startsWith("wth-10"),
+      );
+      if (cleaned.length !== parsed.length) {
+        saveWithdrawalRequests(cleaned);
+      }
+      return cleaned;
+    }
   } catch {
     /* fallback to defaults */
   }
-  saveWithdrawalRequests(DEFAULT_WITHDRAWALS);
   return DEFAULT_WITHDRAWALS;
 }
 
@@ -308,11 +160,11 @@ export function saveWithdrawalRequests(requests: WithdrawalRequest[]): void {
 export function getActiveUserId(): string {
   try {
     const active = localStorage.getItem(STORAGE_ACTIVE_USER_ID);
-    if (active) return active;
+    if (active && !DEMO_USER_IDS.has(active)) return active;
   } catch {
     /* fallback */
   }
-  return DEFAULT_USERS[0]?.id ?? "a1a1a1a1-1111-4111-8111-111111111111";
+  return "";
 }
 
 export function setActiveUserId(userId: string): void {
@@ -521,10 +373,10 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
   return getManagedUsers();
 }
 
-export function getActiveManagedUser(): ManagedUser {
+export function getActiveManagedUser(): ManagedUser | null {
   const users = getManagedUsers();
   const activeId = getActiveUserId();
-  return users.find((u) => u.id === activeId) ?? users[0] ?? DEFAULT_USERS[0]!;
+  return users.find((u) => u.id === activeId) ?? users[0] ?? null;
 }
 
 // Token Operation: Add or adjust WTokens for a user
