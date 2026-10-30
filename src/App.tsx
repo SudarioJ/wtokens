@@ -17,7 +17,6 @@ import {
   CreditCard,
   Crosshair,
   Crown,
-  ExternalLink,
   Gamepad2,
   Headphones,
   History,
@@ -110,8 +109,6 @@ const viewDescriptions: Record<View, string> = {
   matches: "Todas tus partidas y sus resultados.",
   help: "Reglas, cuenta y soporte.",
 };
-const EPIC_CLIENT_ID = import.meta.env.VITE_EPIC_CLIENT_ID || "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
-const EPIC_AUTH_URL = `https://www.epicgames.com/id/authorize?client_id=${EPIC_CLIENT_ID}&response_type=code&scope=basic_profile&redirect_uri=https%3A%2F%2Fwtokens.net%2F`;
 type Modal = "login" | "create" | "payments" | "rules" | "dispute" | "epic" | null;
 const visualModes = [
   {
@@ -2221,81 +2218,43 @@ export function App() {
             />
           )}
           {modal === "epic" && (
-            <div>
-              <p className="dialog-copy" style={{ marginBottom: "16px" }}>
-                Vincula tu identidad oficial de <strong>Epic Games / Fortnite</strong>. Esto garantiza duelos oficiales transparentes y que tus rivales puedan agregarte a la sala privada.
+            <form className="form" onSubmit={handleSaveEpicNick}>
+              <p className="dialog-copy">
+                Ingresa tu <strong>Nickname exacto de Epic Games</strong> (el nombre que usas en Fortnite). Esto permite que tus rivales te agreguen a la sala privada y que el sistema valide tus duelos oficiales.
               </p>
 
-              {/* Botón Oficial Epic Games OAuth */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-                <a
-                  href={EPIC_AUTH_URL}
+              <label>
+                Nickname de Epic Games / Fortnite
+                <input
+                  type="text"
+                  placeholder="Ej: K1ng_Fortnite"
+                  value={epicInputNick}
+                  onChange={(e) => setEpicInputNick(e.target.value)}
+                  minLength={2}
+                  maxLength={32}
+                  required
+                  autoFocus
+                />
+              </label>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
+                <button
+                  type="submit"
                   className="button primary full"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    textDecoration: "none",
-                    padding: "12px 16px",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                  }}
+                  disabled={epicSaving || !epicInputNick.trim()}
+                  style={{ padding: "11px 16px" }}
                 >
-                  <Gamepad2 size={18} />
-                  Conectar con Epic Games (Oficial)
-                  <ExternalLink size={15} />
-                </a>
-                <span style={{ fontSize: "11px", color: "#64748b", textAlign: "center" }}>
-                  Inicio de sesión seguro oficial mediante Epic Online Services
+                  {epicSaving ? "Guardando..." : "Guardar y Verificar Cuenta"}
+                  <Check size={16} />
+                </button>
+              </div>
+
+              <div style={{ marginTop: "14px", textAlign: "center" }}>
+                <span style={{ fontSize: "11px", color: "#64748b" }}>
+                  🔒 Conexión oficial OAuth en proceso de revisión por Epic Games
                 </span>
               </div>
-
-              {/* Divisor */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  color: "#64748b",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                  margin: "16px 0",
-                }}
-              >
-                <span style={{ flex: 1, height: "1px", background: "#1e3a5f" }} />
-                O vincula tu Nickname manualmente
-                <span style={{ flex: 1, height: "1px", background: "#1e3a5f" }} />
-              </div>
-
-              <form className="form" onSubmit={handleSaveEpicNick}>
-                <label>
-                  Nickname exacto en Fortnite
-                  <input
-                    type="text"
-                    placeholder="Ej: K1ng_Fortnite"
-                    value={epicInputNick}
-                    onChange={(e) => setEpicInputNick(e.target.value)}
-                    minLength={2}
-                    maxLength={32}
-                    required
-                  />
-                </label>
-
-                <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-                  <button
-                    type="submit"
-                    className="button secondary full"
-                    disabled={epicSaving || !epicInputNick.trim()}
-                    style={{ padding: "11px 16px" }}
-                  >
-                    {epicSaving ? "Guardando..." : "Guardar Nickname"}
-                    <Check size={16} />
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           )}
           {modal === "rules" && (
             <>
