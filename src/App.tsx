@@ -556,6 +556,25 @@ export function App() {
       setUser((prev) => (prev ? { ...prev, epic_nickname: clean, epic_verified: true } : null));
 
       if (user?.id) {
+        upsertManagedUserFromSession({
+          ...user,
+          epic_nickname: clean,
+          epic_verified: true,
+        });
+
+        await fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "register_user",
+            user: {
+              ...user,
+              epic_nickname: clean,
+              epic_verified: true,
+            },
+          }),
+        }).catch(() => {});
+
         await fetch("/api/sync", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -390,6 +390,14 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
             created_at: remote.created_at || new Date().toISOString(),
             last_active: remote.last_active || "Reciente",
           });
+        } else {
+          const local = currentMap.get(remote.id)!;
+          if (remote.epic_nickname) local.epic_nickname = remote.epic_nickname;
+          if (remote.discord_tag) local.discord_tag = remote.discord_tag;
+          if (remote.display_name) local.display_name = remote.display_name;
+          if (remote.balance_wt !== undefined && remote.balance_wt !== local.balance_wt) {
+            local.balance_wt = remote.balance_wt;
+          }
         }
       }
 
