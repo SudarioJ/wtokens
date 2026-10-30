@@ -17,7 +17,6 @@ import {
   CreditCard,
   Crosshair,
   Crown,
-  ExternalLink,
   Gamepad2,
   Headphones,
   History,
@@ -110,8 +109,6 @@ const viewDescriptions: Record<View, string> = {
   matches: "Todas tus partidas y sus resultados.",
   help: "Reglas, cuenta y soporte.",
 };
-const EPIC_CLIENT_ID = "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
-const EPIC_AUTH_URL = `https://www.epicgames.com/id/authorize?client_id=${EPIC_CLIENT_ID}&response_type=code&scope=basic_profile&redirect_uri=https%3A%2F%2Fwtokens.net%2F`;
 type Modal = "login" | "create" | "payments" | "rules" | "dispute" | "epic" | null;
 const visualModes = [
   {
@@ -2240,30 +2237,16 @@ export function App() {
                 />
               </label>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+              <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
                 <button
                   type="submit"
                   className="button primary full"
                   disabled={epicSaving || !epicInputNick.trim()}
+                  style={{ padding: "11px 16px" }}
                 >
                   {epicSaving ? "Guardando..." : "Guardar y Verificar Cuenta"}
                   <Check size={16} />
                 </button>
-              </div>
-
-              <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px dashed rgba(255, 255, 255, 0.1)", textAlign: "center" }}>
-                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "8px" }}>
-                  ¿Deseas probar la conexión automática oficial?
-                </span>
-                <a
-                  href={EPIC_AUTH_URL}
-                  className="button secondary small"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
-                >
-                  <Gamepad2 size={14} />
-                  Conectar vía Epic Games OAuth
-                  <ExternalLink size={12} />
-                </a>
               </div>
             </form>
           )}
