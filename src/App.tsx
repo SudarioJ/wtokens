@@ -287,7 +287,7 @@ export function App() {
     const loggedUser = profile.value;
     setUser(loggedUser);
 
-    // Verify if user has Administrator role in Discord
+    // Verify if user has Administrator role in Discord and sync to registry
     if (loggedUser) {
       const q = new URLSearchParams({
         userId: loggedUser.id || "",
@@ -298,30 +298,43 @@ export function App() {
       fetch(`/api/discord-admin-check?${q.toString()}`)
         .then((r) => r.json())
         .then((data) => {
-          if (data && data.isAdmin) {
+          const isAdmin = Boolean(data && data.isAdmin);
+          if (isAdmin) {
             setUser((prev) =>
               prev ? { ...prev, role: "admin", moderator: true } : null,
             );
-            upsertManagedUserFromSession({
-              ...loggedUser,
-              role: "admin",
-              moderator: true,
-            });
-            fetch("/api/sync", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                action: "register_user",
-                user: {
-                  id: loggedUser.id,
-                  display_name: loggedUser.display_name,
-                  role: "admin",
-                },
-              }),
-            }).catch(() => {});
           }
+          upsertManagedUserFromSession({
+            ...loggedUser,
+            role: isAdmin ? "admin" : (loggedUser.role || "user"),
+            moderator: isAdmin,
+          });
+          fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "register_user",
+              user: {
+                id: loggedUser.id,
+                display_name: loggedUser.display_name,
+                discord_tag: loggedUser.discord_tag,
+                avatar_url: loggedUser.avatar_url,
+                role: isAdmin ? "admin" : (loggedUser.role || "user"),
+              },
+            }),
+          }).catch(() => {});
         })
-        .catch(() => {});
+        .catch(() => {
+          upsertManagedUserFromSession(loggedUser);
+          fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "register_user",
+              user: loggedUser,
+            }),
+          }).catch(() => {});
+        });
     }
     const [wallet, history, offers] = await Promise.allSettled([
       api.balances(),

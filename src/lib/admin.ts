@@ -303,6 +303,16 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
       users[existingIndex] = existing;
       saveManagedUsers(users);
     }
+    if (typeof fetch !== "undefined") {
+      fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "register_user",
+          user: existing,
+        }),
+      }).catch(() => {});
+    }
     return existing;
   }
 

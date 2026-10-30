@@ -755,13 +755,24 @@ export function AdminPanel({
 
               {/* Target User Search & Selector */}
               <div className="form-group user-search-group" ref={searchDropdownRef}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <label style={{ margin: 0, fontWeight: 700, color: "#f8fafc" }}>
-                    1. Buscar Jugador Destinatario
-                  </label>
-                  <small style={{ color: "#64748b", fontSize: "11px" }}>
-                    Escribe nombre, Discord o Epic Games
-                  </small>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                  <div>
+                    <label style={{ margin: 0, fontWeight: 700, color: "#f8fafc", fontSize: "14px" }}>
+                      1. Buscar Jugador Destinatario
+                    </label>
+                    <div style={{ color: "#94a3b8", fontSize: "12px" }}>
+                      Escribe el nombre de usuario, @discord o nick de Epic Games
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button secondary small"
+                    onClick={() => setIsRegisterModalOpen(true)}
+                    style={{ fontSize: "12px", padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                  >
+                    <UserCheck size={14} />
+                    <span>+ Registrar Nuevo Jugador</span>
+                  </button>
                 </div>
                 
                 {/* Search input with quick-clear and dropdown toggle */}
@@ -795,10 +806,18 @@ export function AdminPanel({
                   {/* Dropdown Results */}
                   {isDropdownOpen && (
                     <div className="admin-user-search-dropdown">
+                      {users.length <= 1 && !userSearchText.trim() && (
+                        <div style={{ padding: "12px 14px", background: "rgba(56, 189, 248, 0.08)", borderBottom: "1px solid #1e3a5f", fontSize: "12px", color: "#cbd5e1", lineHeight: "1.4" }}>
+                          💡 <strong style={{ color: "#38bdf8" }}>Solo apareces tú porque se eliminaron las cuentas demo de prueba.</strong>
+                          <div style={{ marginTop: "4px", color: "#94a3b8" }}>
+                            Los nuevos jugadores aparecerán aquí automáticamente al iniciar sesión en la web, o puedes dar de alta a cualquiera ahora mismo con el botón <strong>+ Registrar Nuevo Jugador</strong> de arriba.
+                          </div>
+                        </div>
+                      )}
                       <div className="dropdown-hint">
                         {userSearchText.trim()
                           ? `Coincidencias (${searchMatches.length})`
-                          : "Selecciona un jugador o escribe para filtrar:"}
+                          : `Jugadores registrados (${users.length}):`}
                       </div>
                       {userSearchText.trim() && (
                         <div
