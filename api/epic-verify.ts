@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 const EPIC_CLIENT_ID = process.env.EPIC_CLIENT_ID || process.env.VITE_EPIC_CLIENT_ID || "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
-const EPIC_CLIENT_SECRET = process.env.EPIC_CLIENT_SECRET || "";
+const EPIC_CLIENT_SECRET = process.env.EPIC_CLIENT_SECRET || "cgmP9sVtz/PvglkOtxGmfwtDXI5JTL8J+WMjNTYHwKo";
 
 interface EpicVerifyPayload {
   code?: string;
