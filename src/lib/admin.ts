@@ -83,11 +83,16 @@ export function getManagedUsers(): ManagedUser[] {
       const parsed: ManagedUser[] = JSON.parse(raw);
       const cleaned = parsed
         .filter((u) => !DEMO_USER_IDS.has(u.id))
-        .map((u) => ({
-          ...u,
-          balance_reserved_wt: u.balance_reserved_wt || 0,
-          balance_disputed_wt: u.balance_disputed_wt || 0,
-        }));
+        .map((u) => {
+          const isFakeEpic = Boolean(u.epic_nickname && u.epic_nickname === u.display_name);
+          return {
+            ...u,
+            epic_nickname: isFakeEpic ? "" : (u.epic_nickname || ""),
+            epic_verified: isFakeEpic ? false : Boolean(u.epic_verified && u.epic_nickname),
+            balance_reserved_wt: u.balance_reserved_wt || 0,
+            balance_disputed_wt: u.balance_disputed_wt || 0,
+          };
+        });
       if (cleaned.length !== parsed.length) {
         saveManagedUsers(cleaned);
       }
@@ -278,7 +283,12 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
   if (existingIndex >= 0) {
     const existing = users[existingIndex]!;
     let changed = false;
-    if (sessionUser.epic_nickname && existing.epic_nickname !== sessionUser.epic_nickname) {
+    const hasValidEpic = Boolean(
+      sessionUser.epic_nickname &&
+      sessionUser.epic_nickname !== sessionUser.display_name &&
+      sessionUser.epic_nickname !== existing.display_name,
+    );
+    if (hasValidEpic && existing.epic_nickname !== sessionUser.epic_nickname) {
       existing.epic_nickname = sessionUser.epic_nickname;
       existing.epic_verified = true;
       changed = true;
@@ -316,11 +326,15 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
     return existing;
   }
 
+  const hasValidEpic = Boolean(
+    sessionUser.epic_nickname &&
+    sessionUser.epic_nickname !== sessionUser.display_name,
+  );
   const newUser: ManagedUser = {
     id: sessionUser.id,
     display_name: sessionUser.display_name || sessionUser.discord_tag || "Jugador",
-    epic_nickname: sessionUser.epic_nickname || sessionUser.display_name || "",
-    epic_verified: Boolean(sessionUser.epic_verified),
+    epic_nickname: hasValidEpic ? sessionUser.epic_nickname : "",
+    epic_verified: hasValidEpic && Boolean(sessionUser.epic_verified),
     epic_account_id: sessionUser.epic_account_id,
     discord_tag: sessionUser.discord_tag || `${sessionUser.display_name || "User"}#0000`,
     avatar_url: sessionUser.avatar_url || "https://cdn.discordapp.com/embed/avatars/0.png",
@@ -370,12 +384,16 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
       const currentMap = new Map<string, ManagedUser>(currentUsers.map((u) => [u.id, u]));
 
       for (const remote of data.users) {
+        const hasValidRemoteEpic = Boolean(
+          remote.epic_nickname && remote.epic_nickname !== remote.display_name,
+        );
+        const remoteEpicNick = hasValidRemoteEpic ? remote.epic_nickname : "";
         if (!currentMap.has(remote.id)) {
           currentMap.set(remote.id, {
             id: remote.id,
             display_name: remote.display_name,
-            epic_nickname: remote.epic_nickname || remote.display_name,
-            epic_verified: true,
+            epic_nickname: remoteEpicNick,
+            epic_verified: hasValidRemoteEpic,
             discord_tag: remote.discord_tag || `${remote.display_name}#0000`,
             avatar_url: remote.avatar_url,
             role: remote.role || "user",
@@ -392,7 +410,14 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
           });
         } else {
           const local = currentMap.get(remote.id)!;
-          if (remote.epic_nickname) local.epic_nickname = remote.epic_nickname;
+          if (local.epic_nickname === local.display_name) {
+            local.epic_nickname = "";
+            local.epic_verified = false;
+          }
+          if (hasValidRemoteEpic) {
+            local.epic_nickname = remote.epic_nickname;
+            local.epic_verified = true;
+          }
           if (remote.discord_tag) local.discord_tag = remote.discord_tag;
           if (remote.display_name) local.display_name = remote.display_name;
           if (remote.balance_wt !== undefined && remote.balance_wt !== local.balance_wt) {
@@ -413,6 +438,45 @@ export function getActiveManagedUser(): ManagedUser | null {
   const users = getManagedUsers();
   const activeId = getActiveUserId();
   return users.find((u) => u.id === activeId) ?? users[0] ?? null;
+}
+
+export function unlinkUserEpic(userId: string): void {
+  const users = getManagedUsers();
+  const u = users.find((user) => user.id === userId);
+  if (u) {
+    u.epic_nickname = "";
+    u.epic_verified = false;
+    saveManagedUsers(users);
+  }
+  try {
+    localStorage.removeItem("wtokens_epic_nick");
+    localStorage.removeItem("wtokens_epic_verified");
+    localStorage.removeItem("wtokens_epic_account_id");
+  } catch {}
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "unlink_epic", userId }),
+    }).catch(() => {});
+  }
+}
+
+export function deleteManagedUser(userId: string): void {
+  const users = getManagedUsers().filter((u) => u.id !== userId);
+  saveManagedUsers(users);
+  try {
+    localStorage.removeItem("wtokens_epic_nick");
+    localStorage.removeItem("wtokens_epic_verified");
+    localStorage.removeItem("wtokens_epic_account_id");
+  } catch {}
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete_user", userId }),
+    }).catch(() => {});
+  }
 }
 
 // Token Operation: Add or adjust WTokens for a user

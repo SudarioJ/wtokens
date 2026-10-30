@@ -69,7 +69,7 @@ const globalState: {
 
 (globalThis as any).__wtokens_sync_state = globalState;
 
-// Purge any legacy demo accounts
+// Purge any legacy demo accounts or stale fake epic nicknames
 const DEMO_IDS = new Set([
   "a1a1a1a1-1111-4111-8111-111111111111",
   "b2b2b2b2-2222-4222-8222-222222222222",
@@ -77,6 +77,11 @@ const DEMO_IDS = new Set([
 ]);
 for (const id of DEMO_IDS) {
   globalState.users.delete(id);
+}
+for (const u of globalState.users.values()) {
+  if (u.epic_nickname && u.epic_nickname === u.display_name) {
+    u.epic_nickname = "";
+  }
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
@@ -120,10 +125,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         if (action === "register_user" && payload.user) {
           const u = payload.user;
           const existing = globalState.users.get(u.id);
+          const rawEpic = u.epic_nickname || existing?.epic_nickname || "";
+          const safeEpic = rawEpic && rawEpic !== u.display_name ? rawEpic : "";
           const updated: SyncedUser = {
             id: u.id || "u_" + Date.now(),
             display_name: u.display_name || u.discord_tag || "Jugador",
-            epic_nickname: u.epic_nickname || existing?.epic_nickname || u.display_name || "",
+            epic_nickname: safeEpic,
             discord_tag: u.discord_tag || existing?.discord_tag || "",
             avatar_url: u.avatar_url || existing?.avatar_url,
             role: existing?.role || u.role || "user",
@@ -257,13 +264,32 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         }
 
         // 5.5. Update Epic Nickname
-        if (action === "update_epic" && payload.userId && payload.epic_nickname) {
+        if (action === "update_epic" && payload.userId) {
           const u = globalState.users.get(payload.userId);
           if (u) {
-            u.epic_nickname = String(payload.epic_nickname);
+            u.epic_nickname = payload.epic_nickname ? String(payload.epic_nickname) : "";
           }
           res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ success: true, epic_nickname: payload.epic_nickname }));
+          res.end(JSON.stringify({ success: true, epic_nickname: u?.epic_nickname || "" }));
+          return;
+        }
+
+        // 5.6. Unlink Epic Nickname
+        if (action === "unlink_epic" && payload.userId) {
+          const u = globalState.users.get(payload.userId);
+          if (u) {
+            u.epic_nickname = "";
+          }
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
+          return;
+        }
+
+        // 5.7. Delete / Reset User
+        if (action === "delete_user" && payload.userId) {
+          globalState.users.delete(payload.userId);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
           return;
         }
 

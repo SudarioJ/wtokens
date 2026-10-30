@@ -56,6 +56,8 @@ import {
   getManagedUsers,
   upsertManagedUserFromSession,
   syncWithServerRegistry,
+  unlinkUserEpic,
+  deleteManagedUser,
 } from "./lib/admin";
 
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
@@ -600,6 +602,48 @@ export function App() {
       setEpicSaving(false);
     }
   }
+
+  function handleUnlinkEpic() {
+    if (!user?.id) return;
+    unlinkUserEpic(user.id);
+    setUser((prev) => (prev ? { ...prev, epic_nickname: undefined, epic_verified: false } : null));
+    notify("Cuenta de Epic Games desvinculada exitosamente.");
+  }
+
+  function handleResetMyAccount() {
+    if (!user?.id) return;
+    if (
+      !window.confirm(
+        "¿Deseas restablecer tu cuenta y eliminar los datos vinculados para registrarte nuevamente desde cero?",
+      )
+    )
+      return;
+    deleteManagedUser(user.id);
+    try {
+      localStorage.removeItem("wtokens_epic_nick");
+      localStorage.removeItem("wtokens_epic_verified");
+      localStorage.removeItem("wtokens_epic_account_id");
+    } catch {}
+    setUser((prev) => (prev ? { ...prev, epic_nickname: undefined, epic_verified: false } : null));
+    notify("Tu cuenta ha sido restablecida. Ya puedes registrar tu cuenta de Epic Games nuevamente.");
+  }
+
+  useEffect(() => {
+    try {
+      const storedEpic = localStorage.getItem("wtokens_epic_nick");
+      if (
+        storedEpic &&
+        user?.display_name &&
+        storedEpic.trim().toLowerCase() === user.display_name.trim().toLowerCase()
+      ) {
+        localStorage.removeItem("wtokens_epic_nick");
+        localStorage.removeItem("wtokens_epic_verified");
+        if (user.id) unlinkUserEpic(user.id);
+        setUser((prev) => (prev ? { ...prev, epic_nickname: undefined, epic_verified: false } : null));
+      }
+    } catch {}
+  }, [user?.display_name]);
+
   function navigate(next: View) {
     setView(next);
     setMobileNav(false);
@@ -1446,23 +1490,54 @@ export function App() {
                             )}
                           </div>
                         </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEpicInputNick(user.epic_nickname || "");
+                              openModal("epic");
+                            }}
+                            className={user.epic_nickname ? "button secondary small" : "button primary small"}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Gamepad2 size={16} />
+                            {user.epic_nickname ? "Cambiar cuenta de Epic" : "Vincular con Epic Games"}
+                            <ArrowUpRight size={14} />
+                          </button>
+                          {user.epic_nickname && (
+                            <button
+                              type="button"
+                              onClick={handleUnlinkEpic}
+                              className="button secondary small"
+                              style={{
+                                color: "#ef4444",
+                                borderColor: "rgba(239, 68, 68, 0.4)",
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                padding: "6px 12px",
+                              }}
+                              title="Desvincular Nickname de Epic Games"
+                            >
+                              ✕ Desvincular
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: "right", marginTop: "-14px", marginBottom: "22px" }}>
                         <button
                           type="button"
-                          onClick={() => {
-                            setEpicInputNick(user.epic_nickname || "");
-                            openModal("epic");
-                          }}
-                          className={user.epic_nickname ? "button secondary small" : "button primary small"}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            cursor: "pointer",
-                          }}
+                          className="text-button"
+                          onClick={handleResetMyAccount}
+                          style={{ fontSize: "12px", color: "#64748b" }}
+                          title="Elimina datos locales y del servidor para reiniciar registro desde cero"
                         >
-                          <Gamepad2 size={16} />
-                          {user.epic_nickname ? "Cambiar cuenta de Epic" : "Vincular con Epic Games"}
-                          <ArrowUpRight size={14} />
+                          ⚙️ ¿Deseas reiniciar tu cuenta desde cero? Haz clic aquí
                         </button>
                       </div>
 
