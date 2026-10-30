@@ -53,6 +53,7 @@ import { AffiliatesPanel } from "./components/AffiliatesPanel";
 import { PaymentsModal } from "./components/PaymentsModal";
 import {
   getManagedUsers,
+  saveManagedUsers,
   upsertManagedUserFromSession,
   syncWithServerRegistry,
   unlinkUserEpic,
@@ -321,7 +322,16 @@ export function App() {
                 role: isAdmin ? "admin" : (loggedUser.role || "user"),
               },
             }),
-          }).catch(() => {});
+          })
+            .then((r) => r.json())
+            .then((syncData) => {
+              if (syncData?.user?.balance_wt !== undefined) {
+                setUser((prev) =>
+                  prev ? { ...prev, balance_wt: syncData.user.balance_wt } : null,
+                );
+              }
+            })
+            .catch(() => {});
         })
         .catch(() => {
           upsertManagedUserFromSession(loggedUser);
@@ -332,7 +342,16 @@ export function App() {
               action: "register_user",
               user: loggedUser,
             }),
-          }).catch(() => {});
+          })
+            .then((r) => r.json())
+            .then((syncData) => {
+              if (syncData?.user?.balance_wt !== undefined) {
+                setUser((prev) =>
+                  prev ? { ...prev, balance_wt: syncData.user.balance_wt } : null,
+                );
+              }
+            })
+            .catch(() => {});
         });
     }
     const [wallet, history, offers] = await Promise.allSettled([
@@ -512,6 +531,65 @@ export function App() {
   useEffect(() => {
     void syncWithServerRegistry();
   }, []);
+
+  // Real-time automatic balance & account sync from server registry
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+
+    const pollBalance = async () => {
+      try {
+        const res = await fetch("/api/sync");
+        if (!res.ok || !active) return;
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.users)) {
+          const match = data.users.find(
+            (u: any) =>
+              u.id === user.id ||
+              (u.discord_tag && user.discord_tag && u.discord_tag.toLowerCase() === user.discord_tag.toLowerCase()) ||
+              (u.display_name && user.display_name && u.display_name.toLowerCase() === user.display_name.toLowerCase()),
+          );
+
+          if (match && match.balance_wt !== undefined) {
+            setUser((prev) => {
+              if (!prev) return null;
+              const prevBal = prev.balance_wt ?? 0;
+              const serverBal = Number(match.balance_wt) || 0;
+              if (prevBal !== serverBal) {
+                const diff = Number((serverBal - prevBal).toFixed(2));
+                if (diff > 0) {
+                  setNotice({
+                    text: `💰 ¡Recarga acreditada con éxito! Se han añadido +${diff.toFixed(2)} WT a tu cuenta. Saldo actual: ${serverBal.toFixed(2)} WT.`,
+                    error: false,
+                  });
+                }
+                return {
+                  ...prev,
+                  balance_wt: serverBal,
+                };
+              }
+              return prev;
+            });
+
+            // Update local registry copy
+            const all = getManagedUsers();
+            const target = all.find((u) => u.id === user.id);
+            if (target && target.balance_wt !== match.balance_wt) {
+              target.balance_wt = match.balance_wt;
+              saveManagedUsers(all);
+            }
+          }
+        }
+      } catch {}
+    };
+
+    void pollBalance();
+    const timer = setInterval(pollBalance, 4000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [user?.id, user?.display_name, user?.discord_tag]);
 
   function enterPanel() {
     if (!user) {

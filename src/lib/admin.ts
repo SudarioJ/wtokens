@@ -297,7 +297,11 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
       existing.display_name = sessionUser.display_name;
       changed = true;
     }
-    if (sessionUser.balance_wt !== undefined && sessionUser.balance_wt !== existing.balance_wt) {
+    if (
+      sessionUser.balance_wt !== undefined &&
+      sessionUser.balance_wt > 0 &&
+      sessionUser.balance_wt !== existing.balance_wt
+    ) {
       existing.balance_wt = sessionUser.balance_wt;
       changed = true;
     }
@@ -522,7 +526,13 @@ export function creditUserTokens(
       body: JSON.stringify({
         action: "credit_user",
         userId: targetUserId,
+        userName: user.display_name,
+        discordTag: user.discord_tag,
+        epicNickname: user.epic_nickname,
+        country: user.country,
+        countryName: user.country_name,
         amount,
+        finalBalance: user.balance_wt,
       }),
     }).catch(() => {});
   }

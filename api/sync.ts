@@ -228,38 +228,40 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
             u = Array.from(globalState.users.values()).find(
               (usr) =>
                 usr.display_name.toLowerCase() === payload.userId.toLowerCase() ||
-                usr.discord_tag.toLowerCase() === payload.userId.toLowerCase() ||
-                usr.epic_nickname.toLowerCase() === payload.userId.toLowerCase(),
+                (usr.discord_tag && usr.discord_tag.toLowerCase() === payload.userId.toLowerCase()) ||
+                (usr.epic_nickname && usr.epic_nickname.toLowerCase() === payload.userId.toLowerCase()),
             );
           }
 
-          if (!u && payload.userName) {
-            // Create user dynamically if registering brand new player
+          if (!u) {
+            // Create user dynamically if registering brand new player or if not yet in server map
             u = {
-              id: "u_" + Date.now(),
-              display_name: payload.userName,
-              epic_nickname: payload.epicNickname || payload.userName,
+              id: payload.userId,
+              display_name: payload.userName || payload.discordTag || "Jugador",
+              epic_nickname: payload.epicNickname || "",
               discord_tag: payload.discordTag || "",
               role: "user",
               country: payload.country || "PE",
               country_name: payload.countryName || "Perú",
-              balance_wt: 0,
+              balance_wt: payload.finalBalance !== undefined ? Number(payload.finalBalance) : Math.max(0, Number(payload.amount) || 0),
               created_at: new Date().toISOString(),
               last_active: "Ahora",
             };
             globalState.users.set(u.id, u);
+          } else {
+            if (payload.finalBalance !== undefined) {
+              u.balance_wt = Number(payload.finalBalance);
+            } else {
+              const amount = Number(payload.amount) || 0;
+              u.balance_wt = Math.max(0, Number((u.balance_wt + amount).toFixed(2)));
+            }
+            if (payload.epicNickname) u.epic_nickname = payload.epicNickname;
+            if (payload.discordTag) u.discord_tag = payload.discordTag;
+            u.last_active = "Ahora";
           }
 
-          if (u) {
-            const amount = Number(payload.amount) || 0;
-            u.balance_wt = Math.max(0, Number((u.balance_wt + amount).toFixed(2)));
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ success: true, user: u }));
-            return;
-          }
-
-          res.writeHead(404, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Usuario no encontrado" }));
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true, user: u }));
           return;
         }
 
