@@ -17,6 +17,7 @@ export interface ManagedUser {
   country_name: string;
   preferred_currency: string;
   referrer_code?: string | undefined;
+  custom_affiliate_code?: string | undefined;
   affiliate_tier?: "standard" | "verified" | "partner" | undefined;
   affiliate_rate?: number | undefined;
   balance_wt: number;
@@ -106,6 +107,65 @@ function notifyStorageChange() {
   }
 }
 
+export interface EsportsPartnerPreset {
+  id: string;
+  name: string;
+  code: string;
+  rate: number;
+}
+
+export const DEFAULT_ESPORTS_PARTNERS: EsportsPartnerPreset[] = [
+  { id: "partner_7rx", name: "7rx Team", code: "7RX", rate: 0.20 },
+  { id: "partner_lexcorp", name: "Lexcorp", code: "LEXCORP", rate: 0.20 },
+  { id: "partner_bld", name: "Bld Team", code: "BLD", rate: 0.20 },
+];
+
+export function ensureDefaultEsportsPartners(users: ManagedUser[]): boolean {
+  let changed = false;
+  for (const preset of DEFAULT_ESPORTS_PARTNERS) {
+    const exists = users.find(
+      (u) =>
+        (u.custom_affiliate_code && u.custom_affiliate_code.toUpperCase() === preset.code) ||
+        u.display_name.toUpperCase() === preset.name.toUpperCase(),
+    );
+    if (!exists) {
+      users.push({
+        id: preset.id,
+        display_name: preset.name,
+        epic_nickname: "",
+        epic_verified: false,
+        discord_tag: `${preset.name}#0000`,
+        role: "user",
+        eligible: true,
+        suspended: false,
+        country: "PE",
+        country_name: "Perú",
+        preferred_currency: "PEN",
+        balance_wt: 0,
+        balance_reserved_wt: 0,
+        balance_disputed_wt: 0,
+        affiliate_tier: "partner",
+        affiliate_rate: preset.rate,
+        custom_affiliate_code: preset.code,
+        created_at: new Date().toISOString(),
+        last_active: "Partner Oficial Esports",
+      });
+      changed = true;
+    } else {
+      if (!exists.custom_affiliate_code) {
+        exists.custom_affiliate_code = preset.code;
+        changed = true;
+      }
+      if (exists.affiliate_tier !== "partner") {
+        exists.affiliate_tier = "partner";
+        exists.affiliate_rate = preset.rate;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
 export function getManagedUsers(): ManagedUser[] {
   try {
     const raw = localStorage.getItem(STORAGE_USERS);
@@ -127,7 +187,8 @@ export function getManagedUsers(): ManagedUser[] {
             affiliate_rate: u.affiliate_rate || (u.affiliate_tier === "partner" ? 0.20 : u.affiliate_tier === "verified" ? 0.15 : 0.10),
           };
         });
-      if (cleaned.length !== parsed.length) {
+      const esportsAdded = ensureDefaultEsportsPartners(cleaned);
+      if (cleaned.length !== parsed.length || esportsAdded) {
         saveManagedUsers(cleaned);
       }
       return cleaned;
@@ -135,7 +196,9 @@ export function getManagedUsers(): ManagedUser[] {
   } catch {
     /* fallback to defaults */
   }
-  return DEFAULT_USERS;
+  const defaults = [...DEFAULT_USERS];
+  ensureDefaultEsportsPartners(defaults);
+  return defaults;
 }
 
 export function saveManagedUsers(users: ManagedUser[]): void {
@@ -457,6 +520,10 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
             balance_wt: remote.balance_wt || 0,
             balance_reserved_wt: 0,
             balance_disputed_wt: 0,
+            referrer_code: remote.referrer_code,
+            custom_affiliate_code: remote.custom_affiliate_code,
+            affiliate_tier: remote.affiliate_tier || "standard",
+            affiliate_rate: remote.affiliate_rate || (remote.affiliate_tier === "partner" ? 0.20 : remote.affiliate_tier === "verified" ? 0.15 : 0.10),
             created_at: remote.created_at || new Date().toISOString(),
             last_active: remote.last_active || "Reciente",
           });
@@ -480,6 +547,10 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
           if (remote.balance_wt !== undefined && remote.balance_wt !== local.balance_wt) {
             local.balance_wt = remote.balance_wt;
           }
+          if (remote.custom_affiliate_code) local.custom_affiliate_code = remote.custom_affiliate_code;
+          if (remote.affiliate_tier) local.affiliate_tier = remote.affiliate_tier;
+          if (remote.affiliate_rate !== undefined) local.affiliate_rate = remote.affiliate_rate;
+          if (remote.referrer_code) local.referrer_code = remote.referrer_code;
         }
       }
 
@@ -733,13 +804,20 @@ export function toggleUserSuspension(
   return { success: true, suspended: user.suspended };
 }
 
-// User Management: Set Affiliate Tier (Standard / Verified / Partner Grande)
+// User Management: Set Affiliate Tier (Standard / Verified / Partner Grande) & Custom Code
 export function setUserAffiliateTier(
   adminName: string,
   userId: string,
   tier: "standard" | "verified" | "partner",
   customRate?: number,
-): { success: boolean; tier: "standard" | "verified" | "partner"; rate: number; message: string } {
+  customCode?: string,
+): {
+  success: boolean;
+  tier: "standard" | "verified" | "partner";
+  rate: number;
+  customCode?: string | undefined;
+  message: string;
+} {
   const users = getManagedUsers();
   const user = users.find((u) => u.id === userId);
   if (!user) {
@@ -757,6 +835,9 @@ export function setUserAffiliateTier(
 
   user.affiliate_tier = tier;
   user.affiliate_rate = rate;
+  if (customCode !== undefined) {
+    user.custom_affiliate_code = customCode.trim().toUpperCase() || undefined;
+  }
   saveManagedUsers(users);
 
   if (typeof fetch !== "undefined") {
@@ -768,6 +849,7 @@ export function setUserAffiliateTier(
         userId,
         tier,
         rate,
+        customCode: user.custom_affiliate_code,
       }),
     }).catch(() => {});
   }
@@ -781,7 +863,7 @@ export function setUserAffiliateTier(
     target_user_name: user.display_name,
     amount: 0,
     reason: `Nivel de Afiliado asignado: ${tier.toUpperCase()} (${Math.round(rate * 100)}%)`,
-    note: `Nivel: ${tier === "partner" ? "Partner Grande (20%)" : tier === "verified" ? "Creador Verificado (15%)" : "Estándar (10%)"}`,
+    note: `Nivel: ${tier === "partner" ? "Partner Grande (20%)" : tier === "verified" ? "Creador Verificado (15%)" : "Estándar (10%)"}${user.custom_affiliate_code ? ` | Código Vanity: ${user.custom_affiliate_code}` : ""}`,
     created_at: new Date().toISOString(),
   });
   saveAuditLog(audit);
@@ -790,7 +872,89 @@ export function setUserAffiliateTier(
     success: true,
     tier,
     rate,
-    message: `Nivel de afiliado de ${user.display_name} actualizado a ${tier === "partner" ? "Partner Grande" : tier === "verified" ? "Creador Verificado" : "Estándar"} (${Math.round(rate * 100)}%).`,
+    customCode: user.custom_affiliate_code,
+    message: `Nivel de afiliado de ${user.display_name} actualizado a ${tier === "partner" ? "Partner Grande" : tier === "verified" ? "Creador Verificado" : "Estándar"} (${Math.round(rate * 100)}%)${user.custom_affiliate_code ? ` con código '${user.custom_affiliate_code}'` : ""}.`,
+  };
+}
+
+// User Management: Create or Update Esports Partner Team with Custom Vanity Code
+export function createOrUpdateEsportsPartner(
+  adminName: string,
+  teamName: string,
+  customCode: string,
+  rate = 0.20,
+): { success: boolean; partner: ManagedUser; message: string } {
+  const users = getManagedUsers();
+  const cleanCode = customCode.trim().toUpperCase();
+  const cleanName = teamName.trim();
+
+  let partner = users.find(
+    (u) =>
+      (u.custom_affiliate_code && u.custom_affiliate_code.toUpperCase() === cleanCode) ||
+      u.display_name.toUpperCase() === cleanName.toUpperCase(),
+  );
+
+  if (partner) {
+    partner.display_name = cleanName;
+    partner.custom_affiliate_code = cleanCode;
+    partner.affiliate_tier = "partner";
+    partner.affiliate_rate = rate;
+  } else {
+    partner = {
+      id: `partner_${cleanCode.toLowerCase()}_${Date.now()}`,
+      display_name: cleanName,
+      epic_nickname: "",
+      epic_verified: false,
+      discord_tag: `${cleanName}#0000`,
+      role: "user",
+      eligible: true,
+      suspended: false,
+      country: "PE",
+      country_name: "Perú",
+      preferred_currency: "PEN",
+      balance_wt: 0,
+      balance_reserved_wt: 0,
+      balance_disputed_wt: 0,
+      affiliate_tier: "partner",
+      affiliate_rate: rate,
+      custom_affiliate_code: cleanCode,
+      created_at: new Date().toISOString(),
+      last_active: "Partner Oficial Esports",
+    };
+    users.unshift(partner);
+  }
+
+  saveManagedUsers(users);
+
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "register_user",
+        user: partner,
+      }),
+    }).catch(() => {});
+  }
+
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: adminName,
+    target_user_id: partner.id,
+    target_user_name: partner.display_name,
+    amount: 0,
+    reason: `Configuración Partner Esports: ${cleanName}`,
+    note: `Código Vanity: ${cleanCode} | Comisión: ${Math.round(rate * 100)}% (Partner Grande)`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    partner,
+    message: `Partner de Esports '${cleanName}' con código '${cleanCode}' configurado con éxito al ${Math.round(rate * 100)}% de comisión.`,
   };
 }
 
@@ -998,7 +1162,10 @@ export function settleDuelPayout(
     if (player.referrer_code) {
       // Find creator by code or display_name
       const creator = users.find(
-        (c) => c.referrer_code === player.referrer_code || c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
+        (c) =>
+          (c.custom_affiliate_code && c.custom_affiliate_code.toUpperCase() === player.referrer_code?.toUpperCase()) ||
+          c.referrer_code === player.referrer_code ||
+          c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
       );
       if (creator && creator.id !== player.id) {
         // Normal affiliate: 10% of player fee part. Verified: 15%. Partner Grande: 20%.
@@ -1177,6 +1344,7 @@ export function resolveDisputePayout(
     if (player.referrer_code) {
       const creator = users.find(
         (c) =>
+          (c.custom_affiliate_code && c.custom_affiliate_code.toUpperCase() === player.referrer_code?.toUpperCase()) ||
           c.referrer_code === player.referrer_code ||
           c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
       );

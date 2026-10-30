@@ -13,9 +13,10 @@ interface SyncedUser {
   country: string;
   country_name: string;
   balance_wt: number;
-  referrer_code?: string;
-  affiliate_tier?: "standard" | "verified" | "partner";
-  affiliate_rate?: number;
+  referrer_code?: string | undefined;
+  custom_affiliate_code?: string | undefined;
+  affiliate_tier?: ("standard" | "verified" | "partner") | undefined;
+  affiliate_rate?: number | undefined;
   last_active: string;
   created_at: string;
 }
@@ -93,6 +94,43 @@ for (const u of globalState.users.values()) {
   }
 }
 
+// Seed default esports partners
+const DEFAULT_ESPORTS = [
+  { id: "partner_7rx", name: "7rx Team", code: "7RX", rate: 0.20 },
+  { id: "partner_lexcorp", name: "Lexcorp", code: "LEXCORP", rate: 0.20 },
+  { id: "partner_bld", name: "Bld Team", code: "BLD", rate: 0.20 },
+];
+for (const p of DEFAULT_ESPORTS) {
+  const existing = Array.from(globalState.users.values()).find(
+    (u) =>
+      (u.custom_affiliate_code && u.custom_affiliate_code.toUpperCase() === p.code) ||
+      u.display_name.toUpperCase() === p.name.toUpperCase(),
+  );
+  if (!existing) {
+    globalState.users.set(p.id, {
+      id: p.id,
+      display_name: p.name,
+      epic_nickname: "",
+      discord_tag: `${p.name}#0000`,
+      role: "user",
+      country: "PE",
+      country_name: "Perú",
+      balance_wt: 0,
+      affiliate_tier: "partner",
+      affiliate_rate: p.rate,
+      custom_affiliate_code: p.code,
+      last_active: "Partner Oficial Esports",
+      created_at: new Date().toISOString(),
+    });
+  } else {
+    if (!existing.custom_affiliate_code) existing.custom_affiliate_code = p.code;
+    if (existing.affiliate_tier !== "partner") {
+      existing.affiliate_tier = "partner";
+      existing.affiliate_rate = p.rate;
+    }
+  }
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -147,6 +185,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
             country: u.country || existing?.country || "PE",
             country_name: u.country_name || existing?.country_name || "Perú",
             balance_wt: existing ? existing.balance_wt : (u.balance_wt ?? 0),
+            referrer_code: u.referrer_code || existing?.referrer_code,
+            custom_affiliate_code: u.custom_affiliate_code || existing?.custom_affiliate_code,
+            affiliate_tier: u.affiliate_tier || existing?.affiliate_tier || "standard",
+            affiliate_rate: u.affiliate_rate || existing?.affiliate_rate || (existing?.affiliate_tier === "partner" ? 0.20 : existing?.affiliate_tier === "verified" ? 0.15 : 0.10),
             created_at: existing?.created_at || new Date().toISOString(),
             last_active: "Ahora",
           };
@@ -318,6 +360,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
               if (refCode) {
                 const creator = Array.from(globalState.users.values()).find(
                   (c) =>
+                    (c.custom_affiliate_code && c.custom_affiliate_code.toUpperCase() === refCode) ||
                     c.display_name.toUpperCase() === refCode ||
                     (c.discord_tag && c.discord_tag.toUpperCase().includes(refCode)) ||
                     c.id.toUpperCase() === refCode,
@@ -349,7 +392,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           return;
         }
 
-        // 5.2 Set Affiliate Tier
+        // 5.2 Set Affiliate Tier & Custom Code
         if (action === "set_affiliate_tier" && payload.userId) {
           const u = globalState.users.get(payload.userId);
           if (u) {
@@ -361,6 +404,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
                 : u.affiliate_tier === "verified"
                   ? 0.15
                   : 0.10);
+            if (payload.customCode !== undefined) {
+              u.custom_affiliate_code = payload.customCode
+                ? String(payload.customCode).trim().toUpperCase()
+                : undefined;
+            }
           }
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(
@@ -368,6 +416,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
               success: true,
               tier: u?.affiliate_tier || "standard",
               rate: u?.affiliate_rate || 0.10,
+              customCode: u?.custom_affiliate_code,
             }),
           );
           return;

@@ -34,6 +34,7 @@ import {
   syncWithServerRegistry,
   isOwnerUser,
   setUserAffiliateTier,
+  createOrUpdateEsportsPartner,
 } from "../lib/admin";
 import "./admin.css";
 
@@ -130,10 +131,17 @@ export function AdminPanel({
   const [newUserCountry, setNewUserCountry] = useState("PE");
   const [newUserInitialBalance, setNewUserInitialBalance] = useState("10");
 
-  // Affiliate tier modal state
+  // Affiliate tier & custom vanity code modal state
   const [affiliateModalUser, setAffiliateModalUser] = useState<ManagedUser | null>(null);
   const [selectedTier, setSelectedTier] = useState<"standard" | "verified" | "partner">("partner");
   const [customTierRate, setCustomTierRate] = useState<string>("20");
+  const [customAffiliateCode, setCustomAffiliateCode] = useState<string>("");
+
+  // Esports partner management modal
+  const [isEsportsModalOpen, setIsEsportsModalOpen] = useState(false);
+  const [newEsportsTeamName, setNewEsportsTeamName] = useState("");
+  const [newEsportsCode, setNewEsportsCode] = useState("");
+  const [newEsportsRate, setNewEsportsRate] = useState("20");
 
   function handleOpenAffiliateModal(u: ManagedUser) {
     setAffiliateModalUser(u);
@@ -147,6 +155,7 @@ export function AdminPanel({
           ? 15
           : 10;
     setCustomTierRate(String(rate));
+    setCustomAffiliateCode(u.custom_affiliate_code || "");
   }
 
   function handleSaveAffiliateTier() {
@@ -157,6 +166,7 @@ export function AdminPanel({
       affiliateModalUser.id,
       selectedTier,
       numRate,
+      customAffiliateCode.trim() ? customAffiliateCode.trim().toUpperCase() : undefined,
     );
     if (res.success) {
       reloadAll();
@@ -164,6 +174,24 @@ export function AdminPanel({
       setAffiliateModalUser(null);
     } else {
       setFeedback({ text: res.message, error: true });
+    }
+  }
+
+  function handleSetupEsportsPartner(name: string, code: string, ratePercent = 20) {
+    const rate = (ratePercent || 20) / 100;
+    const res = createOrUpdateEsportsPartner(
+      currentAdmin.display_name,
+      name,
+      code,
+      rate,
+    );
+    if (res.success) {
+      reloadAll();
+      setFeedback({ text: res.message, error: false });
+      setNewEsportsTeamName("");
+      setNewEsportsCode("");
+    } else {
+      setFeedback({ text: "Error configurando partner de esports", error: true });
     }
   }
 
@@ -440,7 +468,8 @@ export function AdminPanel({
         u.epic_nickname.toLowerCase().includes(q) ||
         u.discord_tag.toLowerCase().includes(q) ||
         u.id.toLowerCase().includes(q) ||
-        (u.referrer_code && u.referrer_code.toLowerCase().includes(q));
+        (u.referrer_code && u.referrer_code.toLowerCase().includes(q)) ||
+        (u.custom_affiliate_code && u.custom_affiliate_code.toLowerCase().includes(q));
       const matchesRole =
         roleFilter === "all" ||
         (roleFilter === "owner" ? u.role === "owner" || isOwnerUser(u) : u.role === roleFilter);
@@ -1269,6 +1298,25 @@ export function AdminPanel({
 
               <button
                 type="button"
+                className="button secondary small"
+                onClick={() => setIsEsportsModalOpen((prev) => !prev)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  whiteSpace: "nowrap",
+                  background: isEsportsModalOpen ? "rgba(94, 234, 255, 0.25)" : "rgba(94, 234, 255, 0.12)",
+                  border: "1px solid #5eeaff",
+                  color: "#5eeaff",
+                  fontWeight: 800,
+                }}
+              >
+                <Sparkles size={15} />
+                <span>🏆 Partners Esports</span>
+              </button>
+
+              <button
+                type="button"
                 className="button primary small"
                 onClick={() => setIsRegisterModalOpen((prev) => !prev)}
                 style={{ display: "inline-flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}
@@ -1278,6 +1326,184 @@ export function AdminPanel({
               </button>
             </div>
           </div>
+
+          {/* Modal / Panel de Gestión de Partners Esports */}
+          {isEsportsModalOpen && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(8, 24, 44, 0.98) 0%, rgba(4, 14, 28, 0.98) 100%)",
+                border: "1px solid #5eeaff",
+                borderRadius: "12px",
+                padding: "20px",
+                marginBottom: "20px",
+                boxShadow: "0 10px 35px rgba(0,0,0,0.6)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <div>
+                  <h4 style={{ margin: 0, color: "#5eeaff", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Sparkles size={18} />
+                    Gestión de Partners Oficiales de Esports y Vanity Codes
+                  </h4>
+                  <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "3px" }}>
+                    Configura códigos cortos personalizados para equipos y organizaciones (comisión automática del 20%).
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEsportsModalOpen(false)}
+                  style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Botones de acción rápida para los 3 equipos solicitados */}
+              <div style={{ marginBottom: "18px", background: "rgba(15, 30, 52, 0.6)", padding: "12px", borderRadius: "8px", border: "1px solid #1e3a5f" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#cbd5e1", marginBottom: "8px" }}>
+                  ⚡ Acceso Rápido / Preset para Equipos Solicitados:
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="button secondary small"
+                    onClick={() => handleSetupEsportsPartner("7rx Team", "7RX", 20)}
+                    style={{ background: "rgba(94, 234, 255, 0.15)", borderColor: "#5eeaff", color: "#5eeaff", fontWeight: 700 }}
+                  >
+                    👑 7rx Team (Código: 7RX) - 20%
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary small"
+                    onClick={() => handleSetupEsportsPartner("Lexcorp", "LEXCORP", 20)}
+                    style={{ background: "rgba(94, 234, 255, 0.15)", borderColor: "#5eeaff", color: "#5eeaff", fontWeight: 700 }}
+                  >
+                    👑 Lexcorp (Código: LEXCORP) - 20%
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary small"
+                    onClick={() => handleSetupEsportsPartner("Bld Team", "BLD", 20)}
+                    style={{ background: "rgba(94, 234, 255, 0.15)", borderColor: "#5eeaff", color: "#5eeaff", fontWeight: 700 }}
+                  >
+                    👑 Bld Team (Código: BLD) - 20%
+                  </button>
+                </div>
+              </div>
+
+              {/* Formulario para agregar cualquier nuevo equipo */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!newEsportsTeamName.trim() || !newEsportsCode.trim()) return;
+                  handleSetupEsportsPartner(newEsportsTeamName.trim(), newEsportsCode.trim(), parseFloat(newEsportsRate) || 20);
+                }}
+                style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "16px" }}
+              >
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Nombre del Equipo / Org *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. KRÜ Esports, 9z, etc."
+                    value={newEsportsTeamName}
+                    onChange={(e) => setNewEsportsTeamName(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Código Vanity Personalizado *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. KRU, 9Z, CODE..."
+                    value={newEsportsCode}
+                    onChange={(e) => setNewEsportsCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#5eeaff", fontWeight: 800 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "12px", color: "#cbd5e1", display: "block", marginBottom: "4px" }}>
+                    Comisión (% WT)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={newEsportsRate}
+                    onChange={(e) => setNewEsportsRate(e.target.value)}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", background: "#0a1320", border: "1px solid #1e3a5f", color: "#f8fafc" }}
+                  />
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  <button type="submit" className="button primary full" style={{ height: "38px", background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" }}>
+                    + Guardar Partner
+                  </button>
+                </div>
+              </form>
+
+              {/* Lista actual de partners y sus enlaces */}
+              <div style={{ borderTop: "1px solid #1e3a5f", paddingTop: "12px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", marginBottom: "8px" }}>
+                  Partners y Códigos Activos en el Sistema:
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
+                  {users
+                    .filter((u) => u.custom_affiliate_code || u.affiliate_tier === "partner")
+                    .map((p) => {
+                      const code = p.custom_affiliate_code || p.display_name.toUpperCase();
+                      const url = `https://wtokens.net/?ref=${code}`;
+                      const countReferred = users.filter((u) => u.id !== p.id && u.referrer_code && u.referrer_code.toUpperCase() === code).length;
+                      return (
+                        <div
+                          key={p.id}
+                          style={{
+                            background: "rgba(10, 22, 40, 0.7)",
+                            border: "1px solid rgba(94, 234, 255, 0.2)",
+                            borderRadius: "8px",
+                            padding: "10px 12px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#f8fafc", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span>👑 {p.display_name}</span>
+                              <span style={{ fontSize: "10px", color: "#5eeaff", background: "rgba(94, 234, 255, 0.15)", padding: "1px 5px", borderRadius: "4px" }}>
+                                {code}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
+                              Comisión: <strong style={{ color: "#34d399" }}>{Math.round((p.affiliate_rate || 0.2) * 100)}%</strong> | Referidos: <strong style={{ color: "#5eeaff" }}>{countReferred}</strong> | Saldo: <strong style={{ color: "#f59e0b" }}>{p.balance_wt.toFixed(2)} WT</strong>
+                            </div>
+                            <div style={{ fontSize: "10px", color: "#64748b", marginTop: "2px" }}>
+                              {url}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="button secondary small"
+                            onClick={() => {
+                              void navigator.clipboard.writeText(url);
+                              setFeedback({ text: `¡Enlace de ${p.display_name} (${url}) copiado!`, error: false });
+                            }}
+                            title="Copiar enlace de referido"
+                            style={{ padding: "4px 8px", fontSize: "11px" }}
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Modal / Formulario para registrar nuevo jugador */}
           {isRegisterModalOpen && (
@@ -1429,8 +1655,25 @@ export function AdminPanel({
                         <div>
                           <strong>{u.display_name}</strong>
                           <small>{u.discord_tag}</small>
-                          {u.referrer_code && (
-                            <div style={{ marginTop: "3px" }}>
+                          <div style={{ marginTop: "3px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                            {u.custom_affiliate_code && (
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  fontSize: "9px",
+                                  fontWeight: 800,
+                                  color: "#5eeaff",
+                                  background: "rgba(94, 234, 255, 0.15)",
+                                  border: "1px solid rgba(94, 234, 255, 0.4)",
+                                  padding: "1px 6px",
+                                  borderRadius: "4px",
+                                  letterSpacing: "0.5px",
+                                }}
+                              >
+                                👑 Partner: {u.custom_affiliate_code}
+                              </span>
+                            )}
+                            {u.referrer_code && (
                               <span
                                 style={{
                                   display: "inline-block",
@@ -1446,8 +1689,8 @@ export function AdminPanel({
                               >
                                 🎁 Ref: {u.referrer_code}
                               </span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -2115,6 +2358,43 @@ export function AdminPanel({
                   </span>
                 </div>
               </label>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  fontSize: "12px",
+                  color: "#94a3b8",
+                  display: "block",
+                  marginBottom: "6px",
+                }}
+              >
+                Código Vanity / Creador Personalizado (ej: 7RX, LEXCORP, BLD):
+              </label>
+              <input
+                type="text"
+                placeholder="Ej: 7RX, LEXCORP, BLD..."
+                value={customAffiliateCode}
+                onChange={(e) =>
+                  setCustomAffiliateCode(
+                    e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""),
+                  )
+                }
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  background: "#1e293b",
+                  border: "1px solid #38bdf8",
+                  color: "#5eeaff",
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  boxSizing: "border-box",
+                }}
+              />
+              <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
+                Permite a los usuarios vincularse con <code style={{ color: "#5eeaff" }}>?ref={customAffiliateCode || "CODIGO"}</code> y acreditarle comisiones automáticamente.
+              </div>
             </div>
 
             <div style={{ marginBottom: "20px" }}>

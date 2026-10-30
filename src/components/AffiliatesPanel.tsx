@@ -37,10 +37,12 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
         ? `Creador Verificado (${currentRatePercent}%)`
         : `Afiliado Normal (${currentRatePercent}%)`;
 
-  // Default affiliate code is user display_name or fallback
-  const userCode = user?.display_name
-    ? user.display_name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
-    : "MI-CODIGO";
+  // Default affiliate code is custom vanity code, user display_name, or fallback
+  const userCode = user?.custom_affiliate_code
+    ? user.custom_affiliate_code.toUpperCase()
+    : user?.display_name
+      ? user.display_name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+      : "MI-CODIGO";
 
   const referredUsers = useMemo(() => {
     if (!user) return [];
@@ -51,6 +53,8 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
           u.id !== user.id &&
           u.referrer_code &&
           (u.referrer_code.toUpperCase() === userCode.toUpperCase() ||
+            (user.custom_affiliate_code &&
+              u.referrer_code.toUpperCase() === user.custom_affiliate_code.toUpperCase()) ||
             u.referrer_code.toUpperCase() === (user.display_name || "").toUpperCase()),
       );
     } catch {
@@ -102,7 +106,25 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
           <h3>
             <Gift size={18} color="#5eeaff" /> Tu Código y Enlace de Referido
           </h3>
-          <span className={`tier-pill ${currentTier}`}>Rango: {tierName}</span>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {user?.custom_affiliate_code && (
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  color: "#5eeaff",
+                  background: "rgba(94, 234, 255, 0.15)",
+                  border: "1px solid #5eeaff",
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                👑 Código Vanity: {user.custom_affiliate_code}
+              </span>
+            )}
+            <span className={`tier-pill ${currentTier}`}>Rango: {tierName}</span>
+          </div>
         </div>
         <div className="affiliate-link-box">
           <input
