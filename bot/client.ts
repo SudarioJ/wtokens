@@ -13,7 +13,7 @@ import {
   ChannelType,
   PermissionFlagsBits,
 } from "discord.js";
-import { botConfig } from "./config";
+import { botConfig, FORTNITE_MAPS } from "./config";
 import { registerCommands, handleSlashCommand } from "./commands";
 import { convertRoomToDispute } from "./rooms";
 import { isStaffMember, assignGuildRole, removeGuildRole } from "./roles";
@@ -398,5 +398,54 @@ async function handleButtonInteraction(
       }
     }, 5000);
     return;
+  }
+
+  // 11. Botones de Cola de Duelos (1v1, 2v2, 3v3/4v4)
+  if (customId.startsWith("queue_")) {
+    await interaction.deferReply({ ephemeral: true });
+
+    // Format: queue_MODE_FORMAT (ej: queue_REALISTICS_1v1)
+    const parts = customId.split("_");
+    const format = parts.pop() || "1v1";
+    const modeKey = parts.slice(1).join("_");
+    const map = FORTNITE_MAPS[modeKey] || {
+      name: modeKey || "Fortnite Competitivo",
+      code: "7620-0771-9529",
+    };
+
+    const formatLabel = format === "squad" ? "3v3 / 4v4" : format.toUpperCase();
+
+    const embed = new EmbedBuilder()
+      .setTitle(`⚔️ Cola de Duelo: ${formatLabel} · ${map.name}`)
+      .setDescription(
+        `¡Has seleccionado la modalidad **${formatLabel}** en **${map.name}**!\n\n` +
+          `📍 **Código Oficial de Isla:** \`${map.code}\`\n\n` +
+          `🎮 **¿Cómo jugar ahora?**\n` +
+          `• **Desafiar directamente en Discord:** Escribe \`/duelo @usuario\` indicando el monto en WT.\n` +
+          `• **Jugar en la Web Oficial:** Entra a la Arena para crear tu sala pública o aceptar los retos de otros jugadores.`,
+      )
+      .setColor(0x38bdf8)
+      .setFooter({ text: "WTokens · Duelos Automatizados con Bóveda Escrow" });
+
+    const linkRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel("🌐 Abrir Sala en WTOKENS.NET")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`https://wtokens.net/?mode=${modeKey}`),
+    );
+
+    await interaction.editReply({
+      embeds: [embed],
+      components: [linkRow],
+    });
+    return;
+  }
+
+  // Fallback de seguridad: si llega cualquier botón no reconocido, responder siempre
+  if (!interaction.replied && !interaction.deferred) {
+    await interaction.reply({
+      content: "✅ Acción recibida correctamente.",
+      ephemeral: true,
+    });
   }
 }
