@@ -439,7 +439,8 @@ export function AdminPanel({
         u.display_name.toLowerCase().includes(q) ||
         u.epic_nickname.toLowerCase().includes(q) ||
         u.discord_tag.toLowerCase().includes(q) ||
-        u.id.toLowerCase().includes(q);
+        u.id.toLowerCase().includes(q) ||
+        (u.referrer_code && u.referrer_code.toLowerCase().includes(q));
       const matchesRole =
         roleFilter === "all" ||
         (roleFilter === "owner" ? u.role === "owner" || isOwnerUser(u) : u.role === roleFilter);
@@ -1428,6 +1429,25 @@ export function AdminPanel({
                         <div>
                           <strong>{u.display_name}</strong>
                           <small>{u.discord_tag}</small>
+                          {u.referrer_code && (
+                            <div style={{ marginTop: "3px" }}>
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  fontSize: "9px",
+                                  fontWeight: 700,
+                                  color: "#38bdf8",
+                                  background: "rgba(56, 189, 248, 0.12)",
+                                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                                  padding: "1px 5px",
+                                  borderRadius: "4px",
+                                  letterSpacing: "0.5px",
+                                }}
+                              >
+                                🎁 Ref: {u.referrer_code}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

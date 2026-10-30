@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Check,
   Copy,
@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { User } from "../lib/contracts";
 import { discordCommunityUrl } from "../lib/community";
+import { getManagedUsers } from "../lib/admin";
 import "./affiliates.css";
 
 type Props = {
@@ -40,6 +41,22 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
   const userCode = user?.display_name
     ? user.display_name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
     : "MI-CODIGO";
+
+  const referredUsers = useMemo(() => {
+    if (!user) return [];
+    try {
+      const all = getManagedUsers();
+      return all.filter(
+        (u) =>
+          u.id !== user.id &&
+          u.referrer_code &&
+          (u.referrer_code.toUpperCase() === userCode.toUpperCase() ||
+            u.referrer_code.toUpperCase() === (user.display_name || "").toUpperCase()),
+      );
+    } catch {
+      return [];
+    }
+  }, [user, userCode]);
 
   const referralUrl = `https://wtokens.net/?ref=${userCode}`;
 
@@ -109,7 +126,7 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
       <div className="affiliate-stats-grid">
         <div className="affiliate-stat-card">
           <div className="stat-label">Jugadores Referidos</div>
-          <div className="stat-val">0</div>
+          <div className="stat-val">{referredUsers.length}</div>
           <div className="stat-hint">Vinculados con tu código</div>
         </div>
         <div className="affiliate-stat-card">
