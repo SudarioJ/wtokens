@@ -48,10 +48,5 @@ export const botBridge = {
   isStaff: (userId: string) => isStaffMember(discordBot, userId),
 };
 
-// If run directly: node/tsx bot/index.ts
-if (
-  import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}` ||
-  process.argv[1]?.includes("bot")
-) {
-  startBot();
-}
+// Iniciar el bot siempre al ejecutarse
+startBot();

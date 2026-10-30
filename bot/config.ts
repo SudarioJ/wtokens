@@ -18,17 +18,17 @@ export interface BotConfig {
 
 export const botConfig: BotConfig = {
   token: process.env.DISCORD_BOT_TOKEN || "",
-  clientId: process.env.DISCORD_CLIENT_ID || "",
-  guildId: process.env.DISCORD_GUILD_ID || "",
-  staffRoleId: process.env.DISCORD_STAFF_ROLE_ID || "",
-  verifiedRoleId: process.env.DISCORD_VERIFIED_ROLE_ID || "",
-  inDuelRoleId: process.env.DISCORD_IN_DUEL_ROLE_ID || "",
-  creatorRoleId: process.env.DISCORD_CREATOR_ROLE_ID || "",
-  creatorPlusRoleId: process.env.DISCORD_CREATOR_PLUS_ROLE_ID || "",
-  duelCategoryId: process.env.DISCORD_DUEL_CATEGORY_ID || "",
-  duelResultsChannelId: process.env.DISCORD_RESULTS_CHANNEL_ID || "",
-  staffAlertsChannelId: process.env.DISCORD_STAFF_ALERTS_CHANNEL_ID || "",
-  affiliatesChannelId: process.env.DISCORD_AFFILIATES_CHANNEL_ID || "",
+  clientId: process.env.DISCORD_CLIENT_ID || "1562186330841161838",
+  guildId: process.env.DISCORD_GUILD_ID || "1562177277821718539",
+  staffRoleId: process.env.DISCORD_STAFF_ROLE_ID || "1562188681383776461",
+  verifiedRoleId: process.env.DISCORD_VERIFIED_ROLE_ID || "1562188696554446848",
+  inDuelRoleId: process.env.DISCORD_IN_DUEL_ROLE_ID || "1562188702703427595",
+  creatorRoleId: process.env.DISCORD_CREATOR_ROLE_ID || "1562188690791596202",
+  creatorPlusRoleId: process.env.DISCORD_CREATOR_PLUS_ROLE_ID || "1562188690791596202",
+  duelCategoryId: process.env.DISCORD_DUEL_CATEGORY_ID || "1563263460643578018",
+  duelResultsChannelId: process.env.DISCORD_RESULTS_CHANNEL_ID || "1565732789779828919",
+  staffAlertsChannelId: process.env.DISCORD_STAFF_ALERTS_CHANNEL_ID || "1562188850279743729",
+  affiliatesChannelId: process.env.DISCORD_AFFILIATES_CHANNEL_ID || "1562188764602835177",
 };
 
 export const FORTNITE_MAPS: Record<string, { name: string; code: string }> = {
