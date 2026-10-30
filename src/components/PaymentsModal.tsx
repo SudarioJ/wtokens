@@ -21,6 +21,7 @@ import {
   saveWithdrawalRequests,
   type WithdrawalRequest,
 } from "../lib/admin";
+import { discordCommunityUrl } from "../lib/community";
 import "./payments.css";
 
 const EPIC_CLIENT_ID = "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
@@ -355,7 +356,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
             </div>
             <div style={{ display: "flex", gap: "10px", width: "100%", marginTop: "6px" }}>
               <a
-                href="https://discord.gg/w8h6Yvd28h"
+                href={discordCommunityUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="button primary full"
@@ -788,7 +789,7 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
                                 al Staff!
                                 <div style={{ marginTop: "6px" }}>
                                   <a
-                                    href="https://discord.gg/w8h6Yvd28h"
+                                    href={discordCommunityUrl}
                                     target="_blank"
                                     rel="noreferrer"
                                     style={{

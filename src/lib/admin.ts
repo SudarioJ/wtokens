@@ -19,6 +19,7 @@ export interface ManagedUser {
   referrer_code?: string | undefined;
   balance_wt: number;
   balance_reserved_wt: number;
+  balance_disputed_wt: number;
   created_at: string;
   last_active: string;
 }
@@ -80,7 +81,13 @@ export function getManagedUsers(): ManagedUser[] {
     const raw = localStorage.getItem(STORAGE_USERS);
     if (raw) {
       const parsed: ManagedUser[] = JSON.parse(raw);
-      const cleaned = parsed.filter((u) => !DEMO_USER_IDS.has(u.id));
+      const cleaned = parsed
+        .filter((u) => !DEMO_USER_IDS.has(u.id))
+        .map((u) => ({
+          ...u,
+          balance_reserved_wt: u.balance_reserved_wt || 0,
+          balance_disputed_wt: u.balance_disputed_wt || 0,
+        }));
       if (cleaned.length !== parsed.length) {
         saveManagedUsers(cleaned);
       }
@@ -240,6 +247,7 @@ export function registerNewUser(
               : "USD",
     balance_wt: initialBalance > 0 ? Number(initialBalance.toFixed(2)) : 0,
     balance_reserved_wt: 0,
+    balance_disputed_wt: 0,
     created_at: new Date().toISOString(),
     last_active: "Ahora",
   };
@@ -318,7 +326,8 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
           ? "BRL"
           : "PEN",
     balance_wt: sessionUser.balance_wt ?? 0,
-    balance_reserved_wt: 0,
+    balance_reserved_wt: sessionUser.balance_reserved_wt ?? 0,
+    balance_disputed_wt: sessionUser.balance_disputed_wt ?? 0,
     created_at: new Date().toISOString(),
     last_active: "Ahora",
   };
@@ -367,6 +376,7 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
             preferred_currency: "PEN",
             balance_wt: remote.balance_wt || 0,
             balance_reserved_wt: 0,
+            balance_disputed_wt: 0,
             created_at: remote.created_at || new Date().toISOString(),
             last_active: remote.last_active || "Reciente",
           });
@@ -808,5 +818,177 @@ export function cancelDuelEscrow(
   return {
     success: true,
     message: `Tokens retenidos de duelo reembolsados exitosamente (${stakeWt.toFixed(2)} WT por jugador).`,
+  };
+}
+
+// Duel Dispute Lock: Move stake from active duel (reserved) to dispute lock
+export function markDuelDisputed(
+  user1Id: string,
+  user2Id: string,
+  stakeWt: number,
+  reason = "Conflicto en reporte de resultado / llamado de árbitro",
+): { success: boolean; message: string } {
+  const users = getManagedUsers();
+  const u1 = users.find((u) => u.id === user1Id);
+  const u2 = users.find((u) => u.id === user2Id);
+
+  if (u1) {
+    u1.balance_reserved_wt = Math.max(0, Number(((u1.balance_reserved_wt || 0) - stakeWt).toFixed(2)));
+    u1.balance_disputed_wt = Number(((u1.balance_disputed_wt || 0) + stakeWt).toFixed(2));
+  }
+  if (u2) {
+    u2.balance_reserved_wt = Math.max(0, Number(((u2.balance_reserved_wt || 0) - stakeWt).toFixed(2)));
+    u2.balance_disputed_wt = Number(((u2.balance_disputed_wt || 0) + stakeWt).toFixed(2));
+  }
+
+  saveManagedUsers(users);
+
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: "DisputeEscrow",
+    target_user_id: u1?.id || user1Id,
+    target_user_name: u1?.display_name || "Jugador",
+    amount: stakeWt,
+    reason: `Duelo en disputa: ${stakeWt.toFixed(2)} WT bloqueados en arbitraje (${reason})`,
+    note: `Saldo restante disponible para nuevos duelos. Fondos en disputa protegidos.`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    message: `Duelo marcado en disputa. Fondos bloqueados en arbitraje (${stakeWt.toFixed(2)} WT por jugador). Los jugadores pueden seguir usando su saldo restante.`,
+  };
+}
+
+// Dispute Resolution: Award pot to validated winner from disputed escrow
+export function resolveDisputePayout(
+  winnerId: string,
+  loserId: string,
+  stakeWt: number,
+  feeBps = 1000,
+): {
+  success: boolean;
+  message: string;
+  pot: number;
+  fee: number;
+  prize: number;
+  winnerNewBalance: number;
+  loserNewBalance: number;
+} {
+  const users = getManagedUsers();
+  const winner = users.find((u) => u.id === winnerId);
+  const loser = users.find((u) => u.id === loserId);
+
+  if (!winner || !loser) {
+    return {
+      success: false,
+      message: "No se encontraron los participantes de la disputa.",
+      pot: 0,
+      fee: 0,
+      prize: 0,
+      winnerNewBalance: 0,
+      loserNewBalance: 0,
+    };
+  }
+
+  const pot = Number((stakeWt * 2).toFixed(2));
+  const fee = Number(((pot * feeBps) / 10000).toFixed(2));
+  const prize = Number((pot - fee).toFixed(2));
+
+  // Clear disputed escrow
+  winner.balance_disputed_wt = Math.max(0, Number(((winner.balance_disputed_wt || 0) - stakeWt).toFixed(2)));
+  loser.balance_disputed_wt = Math.max(0, Number(((loser.balance_disputed_wt || 0) - stakeWt).toFixed(2)));
+
+  // Winner receives net prize into available balance
+  winner.balance_wt = Number((winner.balance_wt + prize).toFixed(2));
+
+  // Affiliate commission distribution
+  const feePerPlayer = fee / 2;
+  [winner, loser].forEach((player) => {
+    if (player.referrer_code) {
+      const creator = users.find(
+        (c) =>
+          c.referrer_code === player.referrer_code ||
+          c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
+      );
+      if (creator && creator.id !== player.id) {
+        const commRate = creator.role === "admin" ? 0.15 : 0.1;
+        const comm = Number((feePerPlayer * commRate).toFixed(4));
+        if (comm > 0) {
+          creator.balance_wt = Number((creator.balance_wt + comm).toFixed(2));
+        }
+      }
+    }
+  });
+
+  saveManagedUsers(users);
+
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: "DisputeEscrow",
+    target_user_id: winner.id,
+    target_user_name: winner.display_name,
+    amount: prize,
+    reason: `Disputa resuelta a favor de ${winner.display_name} (Pozo: ${pot} WT, Premio: ${prize} WT)`,
+    note: `Fondos de arbitraje liberados exitosamente.`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    message: `Disputa resuelta: ${winner.display_name} recibió ${prize.toFixed(2)} WT.`,
+    pot,
+    fee,
+    prize,
+    winnerNewBalance: winner.balance_wt,
+    loserNewBalance: loser.balance_wt,
+  };
+}
+
+// Dispute Cancellation: Refund disputed escrow tokens back to players' available balance
+export function cancelDisputedDuel(
+  user1Id: string,
+  user2Id: string,
+  stakeWt: number,
+  reason = "Disputa cancelada / reembolso por árbitro",
+): { success: boolean; message: string } {
+  const users = getManagedUsers();
+  const u1 = users.find((u) => u.id === user1Id);
+  const u2 = users.find((u) => u.id === user2Id);
+
+  if (u1) {
+    u1.balance_disputed_wt = Math.max(0, Number(((u1.balance_disputed_wt || 0) - stakeWt).toFixed(2)));
+    u1.balance_wt = Number((u1.balance_wt + stakeWt).toFixed(2));
+  }
+  if (u2) {
+    u2.balance_disputed_wt = Math.max(0, Number(((u2.balance_disputed_wt || 0) - stakeWt).toFixed(2)));
+    u2.balance_wt = Number((u2.balance_wt + stakeWt).toFixed(2));
+  }
+
+  saveManagedUsers(users);
+
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: "DisputeEscrow",
+    target_user_id: u1?.id || "unknown",
+    target_user_name: u1?.display_name || "Jugador",
+    amount: stakeWt,
+    reason: `Reembolso de disputa cancelada (${reason})`,
+    note: `Fondos devueltos a saldo disponible`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    message: `Fondos en disputa reembolsados exitosamente (${stakeWt.toFixed(2)} WT por jugador).`,
   };
 }

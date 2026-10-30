@@ -28,6 +28,7 @@ import {
   Plus,
   RefreshCw,
   Share2,
+  ShieldAlert,
   ShieldCheck,
   Swords,
   Target,
@@ -591,18 +592,10 @@ export function App() {
   }
   const exponent =
     regionalCurrencies.find((item) => item.code === asset)?.exponent ?? 2;
-  const walletAmount = (kind: Balance["kind"]) =>
-    balances?.find((item) => item.asset === asset && item.kind === kind)
-      ?.amount_minor;
-  const displayBalance = (kind: Balance["kind"]) => {
-    const value = walletAmount(kind);
-    if (value !== undefined) {
-      return formatMoney(value, asset, exponent);
-    }
+  const walletAmount = (kind: Balance["kind"] | "DISPUTED") => {
+    const fromBalances = balances?.find((item) => item.asset === asset && item.kind === kind)?.amount_minor;
+    if (fromBalances !== undefined) return fromBalances;
     if (user?.balance_wt !== undefined) {
-      if (kind === "RESERVED") {
-        return formatMoney("0", asset, exponent);
-      }
       const rates: Record<string, number> = {
         PEN: 3.8,
         ARS: 1150,
@@ -611,8 +604,44 @@ export function App() {
         PYG: 7800,
         UYU: 42,
         BRL: 5.6,
+        USD: 1,
       };
       const rate = rates[asset] ?? 1;
+      let wt = user.balance_wt;
+      if (kind === "RESERVED") wt = user.balance_reserved_wt ?? 0;
+      if (kind === "DISPUTED") wt = user.balance_disputed_wt ?? 0;
+      const converted = wt * rate;
+      return Math.round(converted * Math.pow(10, exponent)).toString();
+    }
+    return undefined;
+  };
+  const displayBalance = (kind: Balance["kind"] | "DISPUTED") => {
+    const value = walletAmount(kind);
+    if (value !== undefined) {
+      return formatMoney(value, asset, exponent);
+    }
+    if (user?.balance_wt !== undefined) {
+      const rates: Record<string, number> = {
+        PEN: 3.8,
+        ARS: 1150,
+        CLP: 980,
+        BOB: 6.9,
+        PYG: 7800,
+        UYU: 42,
+        BRL: 5.6,
+        USD: 1,
+      };
+      const rate = rates[asset] ?? 1;
+      if (kind === "RESERVED") {
+        const reservedWt = user.balance_reserved_wt ?? 0;
+        const converted = reservedWt * rate;
+        return `${converted.toLocaleString("es", { minimumFractionDigits: exponent, maximumFractionDigits: exponent })}`;
+      }
+      if (kind === "DISPUTED") {
+        const disputedWt = user.balance_disputed_wt ?? 0;
+        const converted = disputedWt * rate;
+        return `${converted.toLocaleString("es", { minimumFractionDigits: exponent, maximumFractionDigits: exponent })}`;
+      }
       const converted = user.balance_wt * rate;
       return `${converted.toLocaleString("es", { minimumFractionDigits: exponent, maximumFractionDigits: exponent })}`;
     }
@@ -1140,6 +1169,17 @@ export function App() {
                             {user ? displayBalance("RESERVED") : "—"}
                           </strong>
                         </div>
+                        {(user?.balance_disputed_wt ?? 0) > 0 && (
+                          <div className="reserved" style={{ color: "#fbbf24", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+                            <span>
+                              <ShieldAlert size={13} />
+                              En disputa
+                            </span>
+                            <strong>
+                              {displayBalance("DISPUTED")}
+                            </strong>
+                          </div>
+                        )}
                         <button
                           className="button primary full"
                           onClick={() =>
@@ -1236,14 +1276,21 @@ export function App() {
                           <h2>{displayBalance("AVAILABLE")}</h2>
                           <p>
                             {user.balance_wt !== undefined
-                              ? `Saldo asignado: ${user.balance_wt.toFixed(2)} WT (Intransferible)`
+                              ? `Saldo asignado: ${user.balance_wt.toFixed(2)} WT (Libre para jugar)`
                               : "Saldo registrado en tu cuenta"}
                           </p>
                         </div>
                         <div>
-                          <span className="eyebrow">RESERVADO EN PARTIDAS</span>
+                          <span className="eyebrow">EN PARTIDAS ACTIVAS</span>
                           <h2>{displayBalance("RESERVED")}</h2>
-                          <p>Se libera al resolver cada desafío</p>
+                          <p>Se libera al resolver el resultado</p>
+                        </div>
+                        <div>
+                          <span className="eyebrow" style={{ color: "#fbbf24" }}>EN DISPUTA / RETENIDO</span>
+                          <h2 style={{ color: (user.balance_disputed_wt ?? 0) > 0 ? "#fbbf24" : undefined }}>
+                            {displayBalance("DISPUTED")}
+                          </h2>
+                          <p>En revisión arbitral (no afecta tu saldo disponible)</p>
                         </div>
                         <div className="wallet-actions">
                           <button

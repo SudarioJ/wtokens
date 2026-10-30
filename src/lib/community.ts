@@ -1,1 +1,1 @@
-export const discordCommunityUrl = "https://discord.gg/GTwH2C2A";
+export const discordCommunityUrl = "https://discord.gg/vS7hjZmyma";

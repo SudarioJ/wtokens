@@ -223,6 +223,23 @@ export async function closeDuelRoom(
 
     await channel.send({ embeds: [closeEmbed] });
 
+    // Public announcement in duelos-finalizados channel
+    try {
+      const { announceDuelResult } = await import("./announcements");
+      const matchIdMatch = channel.name.match(/[a-f0-9]{8}/i);
+      await announceDuelResult(client, {
+        playerA: winnerName,
+        playerB: "Rival",
+        winnerName,
+        loserName: "Rival",
+        mode: "Box Fight 1v1",
+        prizeWt,
+        matchId: matchIdMatch ? matchIdMatch[0] : channel.id.slice(0, 8),
+      });
+    } catch (err) {
+      console.error("[Bot Rooms] Error enviando anuncio público de resultado:", err);
+    }
+
     // Schedule deletion
     setTimeout(
       async () => {

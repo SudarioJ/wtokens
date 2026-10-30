@@ -14,6 +14,9 @@ import {
   escrowDuelStake,
   settleDuelPayout,
   cancelDuelEscrow,
+  markDuelDisputed,
+  resolveDisputePayout,
+  cancelDisputedDuel,
 } from "../../src/lib/admin";
 
 describe("WTokens Admin & Token Management Engine", () => {
@@ -307,5 +310,107 @@ describe("WTokens Admin & Token Management Engine", () => {
     expect(refreshedP2.balance_wt).toBe(initialP2Avail);
     expect(refreshedP1.balance_reserved_wt).toBe(initialP1Reserved);
     expect(refreshedP2.balance_reserved_wt).toBe(initialP2Reserved);
+  });
+
+  it("handles disputed duel correctly: moves stake to dispute lock, keeps remaining balance available for new duels, and prevents double-spending", () => {
+    const users = getManagedUsers();
+    const p1 = users.find((u) => u.role === "user")!;
+    const p2 = users.find((u) => u.id !== p1.id && u.role === "user")!;
+
+    // Set starting balance for p1 = 20 WT
+    p1.balance_wt = 20;
+    p1.balance_reserved_wt = 0;
+    p1.balance_disputed_wt = 0;
+    p2.balance_wt = 20;
+    p2.balance_reserved_wt = 0;
+    p2.balance_disputed_wt = 0;
+    saveManagedUsers(users);
+
+    // Duel 1: 5 WT stake
+    const stake1 = 5;
+    escrowDuelStake(p1.id, stake1);
+    escrowDuelStake(p2.id, stake1);
+
+    // Both now have 15 available, 5 reserved
+    let p1State = getManagedUsers().find((u) => u.id === p1.id)!;
+    expect(p1State.balance_wt).toBe(15);
+    expect(p1State.balance_reserved_wt).toBe(5);
+    expect(p1State.balance_disputed_wt).toBe(0);
+
+    // Match 1 enters DISPUTE / MODERATION
+    const disputeRes = markDuelDisputed(p1.id, p2.id, stake1, "Reportes discordantes");
+    expect(disputeRes.success).toBe(true);
+
+    p1State = getManagedUsers().find((u) => u.id === p1.id)!;
+    const p2State = getManagedUsers().find((u) => u.id === p2.id)!;
+
+    // Stake moved from reserved to disputed; available remains 15 WT!
+    expect(p1State.balance_wt).toBe(15); // Available for other duels!
+    expect(p1State.balance_reserved_wt).toBe(0);
+    expect(p1State.balance_disputed_wt).toBe(5); // Locked in dispute
+    expect(p2State.balance_wt).toBe(15);
+    expect(p2State.balance_disputed_wt).toBe(5);
+
+    // p1 can STILL enter a second duel using their remaining available balance (10 WT <= 15 WT)
+    const secondStake = 10;
+    const secondDuelRes = escrowDuelStake(p1.id, secondStake);
+    expect(secondDuelRes.success).toBe(true);
+    expect(secondDuelRes.balance_wt).toBe(5); // 15 - 10 = 5 WT available
+    expect(secondDuelRes.balance_reserved_wt).toBe(10); // 10 WT reserved in duel 2
+
+    // But p1 CANNOT spend the 5 WT locked in dispute (trying to stake 10 WT when only 5 WT available)
+    const overspendRes = escrowDuelStake(p1.id, 10);
+    expect(overspendRes.success).toBe(false);
+    expect(overspendRes.message).toContain("Saldo insuficiente");
+
+    // Later, Match 1 dispute is resolved in favor of p1
+    const resolveRes = resolveDisputePayout(p1.id, p2.id, stake1, 1000);
+    expect(resolveRes.success).toBe(true);
+    expect(resolveRes.prize).toBe(9); // Pot 10 WT - 10% fee = 9 WT net prize
+
+    const finalP1 = getManagedUsers().find((u) => u.id === p1.id)!;
+    const finalP2 = getManagedUsers().find((u) => u.id === p2.id)!;
+
+    // p1's dispute lock is cleared, and they receive the 9 WT prize (5 + 9 = 14 WT available)
+    expect(finalP1.balance_disputed_wt).toBe(0);
+    expect(finalP1.balance_wt).toBe(14);
+    // p2's dispute lock is cleared, balance_wt remains 15 WT
+    expect(finalP2.balance_disputed_wt).toBe(0);
+    expect(finalP2.balance_wt).toBe(15);
+  });
+
+  it("refunds disputed stake correctly back to available balance when dispute is cancelled", () => {
+    const users = getManagedUsers();
+    const p1 = users.find((u) => u.role === "user")!;
+    const p2 = users.find((u) => u.id !== p1.id && u.role === "user")!;
+
+    p1.balance_wt = 20;
+    p1.balance_reserved_wt = 0;
+    p1.balance_disputed_wt = 0;
+    p2.balance_wt = 20;
+    p2.balance_reserved_wt = 0;
+    p2.balance_disputed_wt = 0;
+    saveManagedUsers(users);
+
+    const stake = 8;
+    escrowDuelStake(p1.id, stake);
+    escrowDuelStake(p2.id, stake);
+    markDuelDisputed(p1.id, p2.id, stake, "Problemas de red");
+
+    // Both have 12 available, 8 in dispute
+    expect(getManagedUsers().find((u) => u.id === p1.id)!.balance_wt).toBe(12);
+    expect(getManagedUsers().find((u) => u.id === p1.id)!.balance_disputed_wt).toBe(8);
+
+    // Cancel dispute
+    const cancelRes = cancelDisputedDuel(p1.id, p2.id, stake, "Cancelado por árbitro");
+    expect(cancelRes.success).toBe(true);
+
+    const p1After = getManagedUsers().find((u) => u.id === p1.id)!;
+    const p2After = getManagedUsers().find((u) => u.id === p2.id)!;
+
+    expect(p1After.balance_disputed_wt).toBe(0);
+    expect(p1After.balance_wt).toBe(20); // 12 + 8 = 20 WT restored
+    expect(p2After.balance_disputed_wt).toBe(0);
+    expect(p2After.balance_wt).toBe(20);
   });
 });

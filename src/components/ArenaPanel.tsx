@@ -172,6 +172,7 @@ export function ArenaPanel({
   const [reason, setReason] = useState("");
   const [mode, setMode] = useState(initialMode);
   const [payment, setPayment] = useState("INDIVIDUAL");
+  const [viewDisputeDetails, setViewDisputeDetails] = useState(false);
 
   // Stake / Wager state
   const STAKE_PRESETS = [1, 2, 3, 5, 10, 20];
@@ -296,7 +297,8 @@ export function ArenaPanel({
     player = d?.players.find((p) => p.id === userId),
     captain = !!player?.captain,
     terminal = d?.state === "COMPLETED" || d?.state === "CANCELLED",
-    playing = d?.state === "IN_PROGRESS" || d?.state === "RESULT_PENDING";
+    playing = d?.state === "IN_PROGRESS" || d?.state === "RESULT_PENDING",
+    isDisputed = d?.state === "MODERATION";
   return (
     <section
       className="duel-panel"
@@ -305,7 +307,13 @@ export function ArenaPanel({
     >
       <div className="team-heading">
         <h2 id="duel-title">
-          {d ? "Tu duelo" : arena?.queue ? "Buscando rival" : "Matchmaking"}
+          {d && (!isDisputed || viewDisputeDetails)
+            ? isDisputed
+              ? "Duelo en Disputa / Arbitraje"
+              : "Tu duelo"
+            : arena?.queue
+              ? "Buscando rival"
+              : "Matchmaking"}
         </h2>
         <button
           className="button secondary small"
@@ -334,8 +342,38 @@ export function ArenaPanel({
       )}
       {!arena ? (
         <p>Cargando matchmaking…</p>
-      ) : d ? (
+      ) : d && (!isDisputed || viewDisputeDetails) ? (
         <>
+          {isDisputed && (
+            <div
+              style={{
+                background: "rgba(245, 158, 11, 0.12)",
+                border: "1px solid rgba(245, 158, 11, 0.4)",
+                borderRadius: "12px",
+                padding: "14px 18px",
+                marginBottom: "16px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              <div>
+                <strong style={{ color: "#fbbf24" }}>⚠️ Partida en Revisión / Disputa</strong>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
+                  Los fondos de esta partida están asegurados en arbitraje. Puedes seguir jugando otros duelos con tu saldo restante.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button primary small"
+                onClick={() => setViewDisputeDetails(false)}
+              >
+                ⚔️ Ir a Matchmaking / Buscar Rival
+              </button>
+            </div>
+          )}
           <DuelDetails duel={d} />
           {d.state === "CONFIRMING" && player && (
             <MatchFound
@@ -498,17 +536,23 @@ export function ArenaPanel({
               </button>
             </div>
           )}
-          {terminal && (
-            <button
-              className="button primary"
-              onClick={() => {
-                last.current = null;
-                setArena({ ...arena, duel: null });
-                void load();
-              }}
-            >
-              Buscar otro duelo
-            </button>
+          {(terminal || isDisputed) && (
+            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+              <button
+                className="button primary full"
+                onClick={() => {
+                  if (terminal) {
+                    last.current = null;
+                    setArena({ ...arena, duel: null });
+                    void load();
+                  } else {
+                    setViewDisputeDetails(false);
+                  }
+                }}
+              >
+                ⚔️ {isDisputed ? "Ir a Matchmaking (Jugar con saldo disponible)" : "Buscar otro duelo"}
+              </button>
+            </div>
           )}
         </>
       ) : arena.queue ? (
@@ -520,6 +564,39 @@ export function ArenaPanel({
         />
       ) : !team || team.size === 1 ? (
         <div className="solo-matchmaking">
+          {/* Aviso informativo si existe un duelo en disputa simultáneo */}
+          {isDisputed && d && (
+            <div
+              style={{
+                background: "rgba(245, 158, 11, 0.12)",
+                border: "1px solid rgba(245, 158, 11, 0.4)",
+                borderRadius: "12px",
+                padding: "14px 18px",
+                marginBottom: "20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              <div>
+                <strong style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "6px" }}>
+                  ⚠️ Tienes una partida en arbitraje (Match #{d.id.slice(0, 8)})
+                </strong>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
+                  Tus fondos en disputa están protegidos. Tu saldo disponible para jugar nuevos duelos es de <strong>{effectiveBalance.toFixed(2)} WT</strong>.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button secondary small"
+                onClick={() => setViewDisputeDetails(true)}
+              >
+                📋 Ver Duelo en Disputa
+              </button>
+            </div>
+          )}
           <div className="solo-matchmaking-heading">
             <span className="solo-format">1v1</span>
             <div>

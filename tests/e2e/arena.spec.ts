@@ -541,11 +541,11 @@ test("community renders crisp server channels and a working invitation", async (
   await expect(section.locator('img[src*="discord-wtokens"]')).toHaveCount(0);
   await expect(
     directory.getByRole("link", { name: "Ver el servidor" }),
-  ).toHaveAttribute("href", "https://discord.gg/GTwH2C2A");
+  ).toHaveAttribute("href", "https://discord.gg/vS7hjZmyma");
   await expect(section.locator(".lp-channel")).toHaveCount(0);
   await expect(
     section.getByRole("link", { name: "Unirme al Discord" }),
-  ).toHaveAttribute("href", "https://discord.gg/GTwH2C2A");
+  ).toHaveAttribute("href", "https://discord.gg/vS7hjZmyma");
   await expect
     .poll(() =>
       section

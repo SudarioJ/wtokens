@@ -28,6 +28,8 @@ export const userSchema = z.object({
   epic_account_id: z.string().optional(),
   discord_tag: z.string().max(100).optional(),
   balance_wt: z.number().optional(),
+  balance_reserved_wt: z.number().optional(),
+  balance_disputed_wt: z.number().optional(),
   referrer_code: z.string().max(40).optional(),
   ranking: z
     .object({

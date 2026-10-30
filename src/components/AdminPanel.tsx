@@ -1108,6 +1108,12 @@ export function AdminPanel({
                       {targetUser.balance_reserved_wt.toFixed(2)} WT
                     </strong>
                   </div>
+                  <div>
+                    <span>Saldo en arbitraje (disputa):</span>
+                    <strong style={{ color: (targetUser.balance_disputed_wt || 0) > 0 ? "#fbbf24" : undefined }}>
+                      {(targetUser.balance_disputed_wt || 0).toFixed(2)} WT
+                    </strong>
+                  </div>
                 </div>
 
                 <div className="quick-account-actions">
@@ -1372,6 +1378,11 @@ export function AdminPanel({
                         {u.balance_reserved_wt > 0 && (
                           <small>
                             +{u.balance_reserved_wt.toFixed(2)} en duelo
+                          </small>
+                        )}
+                        {(u.balance_disputed_wt || 0) > 0 && (
+                          <small style={{ color: "#fbbf24" }}>
+                            +{(u.balance_disputed_wt || 0).toFixed(2)} en disputa
                           </small>
                         )}
                       </div>
