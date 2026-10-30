@@ -74,8 +74,66 @@ export function TeamPanel({
       if (mounted.current) setBusy(false);
     }
   }
+  async function handleDisbandOrLeave() {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    version.current++;
+    try {
+      try {
+        if (team?.captainId === userId) {
+          await api.disbandTeam();
+        } else {
+          await api.leaveTeam();
+        }
+      } catch {}
+      setTeam(null);
+      setNotice("Equipo disuelto correctamente.");
+      await load();
+    } catch (e) {
+      if (mounted.current) setError(friendlyError(e));
+    } finally {
+      busyRef.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  }
+
+  async function handleCreateTeam(event: React.FormEvent) {
+    event.preventDefault();
+    void act(async () => {
+      if (team) {
+        try {
+          if (team.captainId === userId) {
+            await api.disbandTeam();
+          } else {
+            await api.leaveTeam();
+          }
+        } catch {}
+      }
+      return api.createTeam(mode, size);
+    });
+  }
+
+  async function handleJoinTeam(event: React.FormEvent) {
+    event.preventDefault();
+    void act(async () => {
+      if (team) {
+        try {
+          if (team.captainId === userId) {
+            await api.disbandTeam();
+          } else {
+            await api.leaveTeam();
+          }
+        } catch {}
+      }
+      return api.joinTeam(code.trim().toLowerCase());
+    });
+  }
+
   const captain = team?.captainId === userId;
-  const locked = !!team?.state && team.state !== "FORMING";
+  const locked = Boolean(team?.state && team.state !== "FORMING");
   return (
     <section
       className="team-panel"
@@ -90,15 +148,36 @@ export function TeamPanel({
             Tu formación
           </h2>
         </div>
-        <button
-          className="icon-button"
-          type="button"
-          aria-label="Actualizar equipo"
-          onClick={() => void load()}
-          disabled={busy}
-        >
-          <RefreshCw size={16} />
-        </button>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {team && (
+            <button
+              className="button danger small"
+              type="button"
+              disabled={busy}
+              onClick={() => void handleDisbandOrLeave()}
+              title="Disolver equipo / salir de la formación"
+              style={{
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+                border: "none",
+                fontWeight: 600,
+                fontSize: "12px",
+                padding: "4px 10px",
+              }}
+            >
+              ❌ Disolver equipo
+            </button>
+          )}
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Actualizar equipo"
+            onClick={() => void load()}
+            disabled={busy}
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
       </div>
       {error && (
         <p role="alert" className="team-error">
@@ -116,14 +195,41 @@ export function TeamPanel({
             ? "No pudimos cargar tu equipo. Usa Actualizar equipo para reintentar."
             : "Cargando tu equipo…"}
         </p>
-      ) : team === null || (team?.size === 1 && !locked) ? (
+      ) : !team || team.size === 1 ? (
         <div className="team-setup">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void act(() => api.createTeam(mode, size));
-            }}
-          >
+          {team?.size === 1 && (
+            <div
+              style={{
+                background: "rgba(59, 130, 246, 0.12)",
+                border: "1px solid rgba(59, 130, 246, 0.35)",
+                borderRadius: "10px",
+                padding: "12px 16px",
+                marginBottom: "18px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              <div>
+                <strong style={{ color: "#60a5fa" }}>ℹ️ Formación 1v1 previa detectada</strong>
+                <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
+                  Al crear o unirte a un equipo (2v2, 3v3, 4v4), tu formación individual se liberará automáticamente.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button secondary small"
+                disabled={busy}
+                onClick={() => void handleDisbandOrLeave()}
+                style={{ fontSize: "12px", padding: "6px 12px" }}
+              >
+                🔄 Liberar y limpiar
+              </button>
+            </div>
+          )}
+          <form onSubmit={handleCreateTeam}>
             <h3>Crea tu equipo</h3>
             <p className="team-copy">
               Serás el capitán. Invita a tus compañeros para completar la
@@ -163,12 +269,7 @@ export function TeamPanel({
               Crear equipo
             </button>
           </form>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void act(() => api.joinTeam(code.trim().toLowerCase()));
-            }}
-          >
+          <form onSubmit={handleJoinTeam}>
             <h3>¿Te invitaron?</h3>
             <p className="team-copy">
               Pide al capitán el código y confirma que quieres unirte.
@@ -191,18 +292,6 @@ export function TeamPanel({
               Unirme al equipo
             </button>
           </form>
-        </div>
-      ) : team.size === 1 ? (
-        <div className="team-solo-notice">
-          <p className="team-copy">
-            Tienes una búsqueda o un duelo 1v1 en curso. Puedes seguirlo o
-            cancelar la búsqueda desde Duelos.
-          </p>
-          {onFind && (
-            <button className="button primary" onClick={onFind}>
-              Ver mi 1v1
-            </button>
-          )}
         </div>
       ) : (
         <>
@@ -255,9 +344,8 @@ export function TeamPanel({
               : "Faltan compañeros para completar tu equipo."}{" "}
             El rango del grupo corresponde al integrante de mayor nivel.
           </p>
-          {!locked && (
             <div className="team-actions">
-              {captain && !team.complete && (
+              {!locked && captain && !team.complete && (
                 <button
                   type="button"
                   className="button primary"
@@ -271,16 +359,11 @@ export function TeamPanel({
                 type="button"
                 className="button secondary"
                 disabled={busy}
-                onClick={() =>
-                  void act(() =>
-                    captain ? api.disbandTeam() : api.leaveTeam(),
-                  )
-                }
+                onClick={() => void handleDisbandOrLeave()}
               >
                 {captain ? "Cerrar equipo" : "Salir del equipo"}
               </button>
             </div>
-          )}
           {onFind && (
             <button className="button primary" onClick={onFind}>
               {locked ? "Ver búsqueda o duelo" : "Buscar rival"}

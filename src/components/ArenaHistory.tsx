@@ -193,6 +193,40 @@ export function ArenaHistory({ currentUser }: { currentUser?: User | null }) {
               </time>
             </summary>
             <DuelDetails duel={d} />
+            <div style={{ marginTop: "12px", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="button secondary small"
+                style={{
+                  backgroundColor: "rgba(239, 68, 68, 0.12)",
+                  borderColor: "#ef4444",
+                  color: "#fca5a5",
+                  fontSize: "11px",
+                  padding: "4px 10px",
+                }}
+                onClick={async () => {
+                  try {
+                    const raw = localStorage.getItem("wtokens_closed_duels");
+                    const list: string[] = raw ? JSON.parse(raw) : [];
+                    if (!list.includes(d.id)) {
+                      list.push(d.id);
+                      localStorage.setItem("wtokens_closed_duels", JSON.stringify(list));
+                    }
+                    if (typeof fetch !== "undefined") {
+                      fetch("/api/sync", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "force_close_duel", duelId: d.id }),
+                      }).catch(() => {});
+                    }
+                    setItems((prev) => prev.filter((item) => item.id !== d.id));
+                    window.dispatchEvent(new Event("wtokens-duel-resolved"));
+                  } catch {}
+                }}
+              >
+                🗑️ Ocultar / Cerrar partida
+              </button>
+            </div>
           </details>
         );
       })}
