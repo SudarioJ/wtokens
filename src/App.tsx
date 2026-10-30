@@ -188,7 +188,24 @@ export function App() {
   const [connection, setConnection] = useState<
     "loading" | "online" | "offline"
   >("loading");
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem("wtokens_user_session");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.id || parsed.display_name)) return parsed;
+      }
+    } catch {}
+    return null;
+  });
+
+  useEffect(() => {
+    if (user) {
+      try {
+        localStorage.setItem("wtokens_user_session", JSON.stringify(user));
+      } catch {}
+    }
+  }, [user]);
   const revealRef = useScrollReveal<HTMLElement>(
     `${panelRequested}:${view}:${user?.id ?? ""}`,
   );
@@ -277,6 +294,46 @@ export function App() {
     setAssets(currencies.status === "fulfilled" ? currencies.value : []);
     setPlatform(settings.status === "fulfilled" ? settings.value : null);
     if (profile.status !== "fulfilled") {
+      let cachedUser: User | null = null;
+      try {
+        const raw = localStorage.getItem("wtokens_user_session");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && (parsed.id || parsed.display_name)) cachedUser = parsed;
+        }
+      } catch {}
+
+      if (cachedUser) {
+        setUser(cachedUser);
+        // Sync live balance, role and epic nickname from server registry
+        fetch("/api/sync")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.users && Array.isArray(data.users)) {
+              const live = data.users.find(
+                (u: any) =>
+                  u.id === cachedUser!.id ||
+                  (cachedUser!.discord_tag && u.discord_tag === cachedUser!.discord_tag),
+              );
+              if (live) {
+                setUser((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        balance_wt: live.balance_wt ?? prev.balance_wt,
+                        role: live.role ?? prev.role,
+                        epic_nickname: live.epic_nickname || prev.epic_nickname,
+                        epic_verified: Boolean(live.epic_nickname) || prev.epic_verified,
+                      }
+                    : null,
+                );
+              }
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+
       setUser(null);
       setBalances(null);
       setTransactions(null);
@@ -286,6 +343,9 @@ export function App() {
     }
     const loggedUser = profile.value;
     setUser(loggedUser);
+    try {
+      localStorage.setItem("wtokens_user_session", JSON.stringify(loggedUser));
+    } catch {}
 
     // Verify if user has Administrator role in Discord and sync to registry
     if (loggedUser) {
@@ -386,6 +446,20 @@ export function App() {
   }, []);
   useEffect(() => {
     if (panelRequested && connection !== "loading" && !user) {
+      let cached: User | null = null;
+      try {
+        const raw = localStorage.getItem("wtokens_user_session");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && (parsed.id || parsed.display_name)) cached = parsed;
+        }
+      } catch {}
+
+      if (cached) {
+        setUser(cached);
+        return;
+      }
+
       window.history.replaceState(null, "", "/");
       setPanelRequested(false);
       setModal("login");
@@ -1687,10 +1761,12 @@ export function App() {
                               /* ignore */
                             }
                             try {
+                              localStorage.removeItem("wtokens_user_session");
                               localStorage.removeItem("wtokens_demo_logged_in");
                             } catch {
                               /* ignore */
                             }
+                            setUser(null);
                             returnToSite();
                             await refresh();
                             notify("Sesión cerrada.");

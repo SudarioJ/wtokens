@@ -89,13 +89,33 @@ export function proxyRequest(
             "x-content-type-options",
             "referrer-policy",
           ].includes(name)
-        )
-          res.setHeader(
-            name,
-            name === "location" && typeof value === "string"
-              ? browserLocation(value, target)
-              : value,
-          );
+        ) {
+          if (name === "set-cookie") {
+            const rawCookies = Array.isArray(value) ? value : [String(value)];
+            const persistentCookies = rawCookies.map((cookieStr) => {
+              let c = cookieStr;
+              // Strip upstream domain attribute so cookie binds cleanly to wtokens.net
+              c = c.replace(/;\s*Domain=[^;]+/gi, "");
+              // Add Max-Age (30 days) if not already set, preventing premature session loss
+              if (!/Max-Age=/i.test(c) && !/Expires=/i.test(c)) {
+                c += "; Max-Age=2592000";
+              }
+              // Enforce SameSite=Lax for OAuth flow preservation
+              if (!/SameSite=/i.test(c)) {
+                c += "; SameSite=Lax";
+              }
+              return c;
+            });
+            res.setHeader("set-cookie", persistentCookies);
+          } else {
+            res.setHeader(
+              name,
+              name === "location" && typeof value === "string"
+                ? browserLocation(value, target)
+                : value,
+            );
+          }
+        }
       }
       res.setHeader("Cache-Control", "no-store");
       res.statusCode = response.statusCode ?? 502;
