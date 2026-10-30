@@ -13,6 +13,7 @@ interface SyncedUser {
   country: string;
   country_name: string;
   balance_wt: number;
+  referrer_code?: string;
   last_active: string;
   created_at: string;
 }
@@ -60,12 +61,18 @@ const globalState: {
   deposits: SyncedDeposit[];
   pixRequests: SyncedPixRequest[];
   withdrawals: SyncedWithdrawal[];
+  resolvedDuels: Set<string>;
 } = (globalThis as any).__wtokens_sync_state || {
   users: new Map<string, SyncedUser>(),
   deposits: [],
   pixRequests: [],
   withdrawals: [],
+  resolvedDuels: new Set<string>(),
 };
+
+if (!globalState.resolvedDuels) {
+  globalState.resolvedDuels = new Set<string>();
+}
 
 (globalThis as any).__wtokens_sync_state = globalState;
 
@@ -105,6 +112,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         deposits: globalState.deposits.filter((d) => d.status === "pending"),
         pixRequests: globalState.pixRequests.filter((p) => p.status === "pending"),
         withdrawals: globalState.withdrawals,
+        resolvedDuels: Array.from(globalState.resolvedDuels),
       }),
     );
     return;
@@ -262,6 +270,73 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ success: true, user: u }));
+          return;
+        }
+
+        // 5.1 Force Close Duel & Automatic Affiliate Commission
+        if (action === "force_close_duel" && payload.duelId) {
+          globalState.resolvedDuels.add(payload.duelId);
+          const winnerId = payload.winnerId;
+          const winnerName = payload.winnerName;
+          const amount = Number(payload.amount) || 0;
+
+          if ((winnerId || winnerName) && amount > 0) {
+            let u = winnerId ? globalState.users.get(winnerId) : undefined;
+            if (!u) {
+              const query = (winnerId || winnerName || "").toLowerCase();
+              u = Array.from(globalState.users.values()).find(
+                (usr) =>
+                  usr.id.toLowerCase() === query ||
+                  usr.display_name.toLowerCase() === query ||
+                  (usr.discord_tag && usr.discord_tag.toLowerCase().includes(query)) ||
+                  (usr.epic_nickname && usr.epic_nickname.toLowerCase() === query),
+              );
+            }
+            if (u) {
+              u.balance_wt = Number((u.balance_wt + amount).toFixed(2));
+              u.last_active = "Ahora";
+            }
+          }
+
+          // 🎁 Automatic Affiliate Commission Distribution
+          if (payload.players && Array.isArray(payload.players)) {
+            for (const pl of payload.players) {
+              const playerUser =
+                globalState.users.get(pl.id) ||
+                Array.from(globalState.users.values()).find(
+                  (u) => u.display_name.toLowerCase() === (pl.name || "").toLowerCase(),
+                );
+              const refCode = (
+                playerUser?.referrer_code ||
+                pl.referrer_code ||
+                ""
+              )
+                .trim()
+                .toUpperCase();
+              if (refCode) {
+                const creator = Array.from(globalState.users.values()).find(
+                  (c) =>
+                    c.display_name.toUpperCase() === refCode ||
+                    (c.discord_tag && c.discord_tag.toUpperCase().includes(refCode)) ||
+                    c.id.toUpperCase() === refCode,
+                );
+                if (creator && creator.id !== playerUser?.id) {
+                  // Creator earns direct recurring commission per completed match
+                  const commission = Math.max(0.05, Number((amount * 0.08).toFixed(2)));
+                  creator.balance_wt = Number((creator.balance_wt + commission).toFixed(2));
+                  creator.last_active = "Ahora";
+                }
+              }
+            }
+          }
+
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              success: true,
+              resolvedDuels: Array.from(globalState.resolvedDuels),
+            }),
+          );
           return;
         }
 

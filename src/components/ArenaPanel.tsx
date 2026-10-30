@@ -235,7 +235,19 @@ export function ArenaPanel({
         arenaApi.current(),
         api.team(),
       ]);
-      if (!current.duel && last.current) {
+      let closedArr: string[] = [];
+      try {
+        const raw = localStorage.getItem("wtokens_closed_duels");
+        if (raw) closedArr = JSON.parse(raw);
+      } catch {}
+      const closedSet = new Set(closedArr);
+
+      if (current.duel && closedSet.has(current.duel.id)) {
+        current.duel = null;
+        last.current = null;
+      }
+
+      if (!current.duel && last.current && !closedSet.has(last.current.id)) {
         current.duel = await arenaApi.get(last.current.id);
       }
       if (mounted.current && stamp === version.current) {
@@ -252,6 +264,12 @@ export function ArenaPanel({
   useEffect(() => {
     mounted.current = true;
     void load();
+    const handleDuelResolved = () => {
+      last.current = null;
+      setArena((prev) => (prev ? { ...prev, duel: null } : prev));
+      void load();
+    };
+    window.addEventListener("wtokens-duel-resolved", handleDuelResolved);
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible" || searching.current)
         void load();
@@ -259,6 +277,7 @@ export function ArenaPanel({
     return () => {
       mounted.current = false;
       version.current++;
+      window.removeEventListener("wtokens-duel-resolved", handleDuelResolved);
       window.clearInterval(timer);
     };
   }, [load]);

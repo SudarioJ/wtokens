@@ -208,7 +208,24 @@ export function ModerationPanel() {
     [cancel, setCancel] = useState(false);
   const load = useCallback(async () => {
     try {
-      setItems(await arenaApi.cases());
+      const cases = await arenaApi.cases();
+      let closedArr: string[] = [];
+      try {
+        const raw = localStorage.getItem("wtokens_closed_duels");
+        if (raw) closedArr = JSON.parse(raw);
+      } catch {}
+
+      try {
+        const syncRes = await fetch("/api/sync").then((r) => r.json());
+        if (syncRes?.resolvedDuels && Array.isArray(syncRes.resolvedDuels)) {
+          closedArr = Array.from(new Set([...closedArr, ...syncRes.resolvedDuels]));
+          localStorage.setItem("wtokens_closed_duels", JSON.stringify(closedArr));
+        }
+      } catch {}
+
+      const closedSet = new Set(closedArr);
+      const activeCases = cases.filter((d) => !closedSet.has(d.id));
+      setItems(activeCases);
       setError("");
     } catch (e) {
       setError(friendlyError(e));
@@ -259,34 +276,49 @@ export function ModerationPanel() {
       const winningPlayer = duel.players.find(
         (p) => p.side === (cancel ? null : winner),
       );
+      const prizeAmount = 1.8;
 
-      if (winningPlayer && !cancel) {
-        const prizeAmount = 1.8;
-        await fetch("/api/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "credit_user",
-            userId: winningPlayer.id,
-            userName: winningPlayer.name,
-            amount: prizeAmount,
-            reason: `Victoria en Duelo ${duel.mode} (ID ${duel.id.slice(0, 8)})`,
-          }),
-        }).catch(() => {});
-      }
+      // 1. Mark duel as permanently resolved in localStorage
+      try {
+        const closedRaw = localStorage.getItem("wtokens_closed_duels");
+        const closedArr: string[] = closedRaw ? JSON.parse(closedRaw) : [];
+        if (!closedArr.includes(duel.id)) {
+          closedArr.push(duel.id);
+          localStorage.setItem("wtokens_closed_duels", JSON.stringify(closedArr));
+        }
+      } catch {}
 
-      // Try server resolve in background
+      // 2. Call sync endpoint to credit winner and distribute affiliate commissions
+      await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "force_close_duel",
+          duelId: duel.id,
+          winnerId: winningPlayer?.id,
+          winnerName: winningPlayer?.name,
+          amount: cancel ? 0 : prizeAmount,
+          players: duel.players,
+          rounds,
+          reason,
+        }),
+      }).catch(() => {});
+
+      // 3. Try server resolve in background
       try {
         await arenaApi.resolve(duel.id, rounds, cancel, reason);
       } catch {}
 
-      // Remove from list
+      // 4. Dispatch event so other panels drop the duel immediately
+      window.dispatchEvent(new Event("wtokens-duel-resolved"));
+
+      // 5. Remove from moderation cases list
       setItems((prev) => prev.filter((d) => d.id !== duel.id));
       setSelected("");
       setRounds("");
       setReason("");
       setSuccessMsg(
-        `✅ Duelo ${duel.id.slice(0, 8)} resuelto exitosamente por el Administrador. Pozo acreditado.`,
+        `✅ Duelo ${duel.id.slice(0, 8)} cerrado definitivamente por el Administrador. Pozo acreditado.`,
       );
       setTimeout(() => setSuccessMsg(""), 7000);
     } catch (err: any) {
