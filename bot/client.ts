@@ -186,9 +186,13 @@ async function handleButtonInteraction(
 
   // 6. Botones: Selección de País y Onboarding
   if (customId.startsWith("select_country_")) {
+    await interaction.deferReply({ ephemeral: true });
     const countryKey = customId.replace("select_country_", "");
     const country = COUNTRY_ROLES[countryKey];
-    if (!country) return;
+    if (!country) {
+      await interaction.editReply({ content: "País no válido." });
+      return;
+    }
 
     // Assign country role and member role
     await assignGuildRole(client, interaction.user.id, country.roleId);
@@ -213,10 +217,9 @@ async function handleButtonInteraction(
         .setURL("https://wtokens.net"),
     );
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
       components: [linkButton],
-      ephemeral: true,
     });
     return;
   }
@@ -233,6 +236,7 @@ async function handleButtonInteraction(
   // 8. Botón: Verificación de Miembro Directa
   if (customId === "verify_member_btn") {
     try {
+      await interaction.deferReply({ ephemeral: true });
       await assignGuildRole(client, interaction.user.id, MEMBER_ROLE_ID);
       await removeGuildRole(client, interaction.user.id, UNVERIFIED_ROLE_ID);
 
@@ -255,17 +259,22 @@ async function handleButtonInteraction(
           .setURL("https://wtokens.net"),
       );
 
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [embed],
         components: [linkBtn],
-        ephemeral: true,
       });
     } catch (err) {
       console.error("Error en verify_member_btn:", err);
-      await interaction.reply({
-        content: "❌ Hubo un error al asignar el rol. Por favor contacta al Staff.",
-        ephemeral: true,
-      });
+      if (interaction.deferred) {
+        await interaction.editReply({
+          content: "❌ Hubo un error al asignar el rol. Por favor contacta al Staff.",
+        });
+      } else {
+        await interaction.reply({
+          content: "❌ Hubo un error al asignar el rol. Por favor contacta al Staff.",
+          ephemeral: true,
+        });
+      }
     }
     return;
   }

@@ -1054,9 +1054,13 @@ Has solicitado pagar la penalizaci\xF3n de **$3.00 USD** para retirar la suspens
     return;
   }
   if (customId.startsWith("select_country_")) {
+    await interaction.deferReply({ ephemeral: true });
     const countryKey = customId.replace("select_country_", "");
     const country = COUNTRY_ROLES[countryKey];
-    if (!country) return;
+    if (!country) {
+      await interaction.editReply({ content: "Pa\xEDs no v\xE1lido." });
+      return;
+    }
     await assignGuildRole(client, interaction.user.id, country.roleId);
     await assignGuildRole(client, interaction.user.id, MEMBER_ROLE_ID);
     await removeGuildRole(client, interaction.user.id, UNVERIFIED_ROLE_ID);
@@ -1070,10 +1074,9 @@ Ingresa ahora a la plataforma web oficial para vincular tu cuenta de **Epic Game
     const linkButton = new ActionRowBuilder4().addComponents(
       new ButtonBuilder4().setLabel("\u{1F310} Entrar a WTOKENS (wtokens.net)").setStyle(ButtonStyle4.Link).setURL("https://wtokens.net")
     );
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      components: [linkButton],
-      ephemeral: true
+      components: [linkButton]
     });
     return;
   }
@@ -1086,6 +1089,7 @@ Ingresa ahora a la plataforma web oficial para vincular tu cuenta de **Epic Game
   }
   if (customId === "verify_member_btn") {
     try {
+      await interaction.deferReply({ ephemeral: true });
       await assignGuildRole(client, interaction.user.id, MEMBER_ROLE_ID);
       await removeGuildRole(client, interaction.user.id, UNVERIFIED_ROLE_ID);
       const embed = new EmbedBuilder4().setTitle("\u2705 \xA1Verificaci\xF3n Exitosa!").setDescription(
@@ -1100,17 +1104,22 @@ Para participar en salas y partidas por tokens, ingresa a la plataforma y regist
       const linkBtn = new ActionRowBuilder4().addComponents(
         new ButtonBuilder4().setLabel("\u{1F310} Abrir WTOKENS.NET").setStyle(ButtonStyle4.Link).setURL("https://wtokens.net")
       );
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [embed],
-        components: [linkBtn],
-        ephemeral: true
+        components: [linkBtn]
       });
     } catch (err) {
       console.error("Error en verify_member_btn:", err);
-      await interaction.reply({
-        content: "\u274C Hubo un error al asignar el rol. Por favor contacta al Staff.",
-        ephemeral: true
-      });
+      if (interaction.deferred) {
+        await interaction.editReply({
+          content: "\u274C Hubo un error al asignar el rol. Por favor contacta al Staff."
+        });
+      } else {
+        await interaction.reply({
+          content: "\u274C Hubo un error al asignar el rol. Por favor contacta al Staff.",
+          ephemeral: true
+        });
+      }
     }
     return;
   }
