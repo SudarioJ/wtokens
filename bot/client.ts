@@ -5,24 +5,13 @@ import {
   Interaction,
   ButtonInteraction,
   TextChannel,
-} from "discord.js";
-import { botConfig } from "./config";
-import { registerCommands, handleSlashCommand } from "./commands";
-import { convertRoomToDispute } from "./rooms";
-import { isStaffMember } from "./roles";
-
-import {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Interaction,
-  ButtonInteraction,
-  TextChannel,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
   GuildMember,
+  ChannelType,
+  PermissionFlagsBits,
 } from "discord.js";
 import { botConfig } from "./config";
 import { registerCommands, handleSlashCommand } from "./commands";
@@ -54,8 +43,13 @@ export function createBotClient(): Client {
     await handleSecurityMessage(message);
   });
 
-  // Security: Anti-Raid Join Tracker
+  // Security: Anti-Raid Join Tracker & Auto-Role
   client.on("guildMemberAdd", async (member) => {
+    try {
+      await assignGuildRole(client, member.id, UNVERIFIED_ROLE_ID);
+    } catch (err) {
+      console.error("Error auto-asignando rol unverified:", err);
+    }
     await handleSecurityJoin(client, member as GuildMember);
   });
 
@@ -233,6 +227,167 @@ async function handleButtonInteraction(
       content: `❌ El desafío ha sido **rechazado** por <@${interaction.user.id}>.`,
       components: [],
     });
+    return;
+  }
+
+  // 8. Botón: Verificación de Miembro Directa
+  if (customId === "verify_member_btn") {
+    try {
+      await assignGuildRole(client, interaction.user.id, MEMBER_ROLE_ID);
+      await removeGuildRole(client, interaction.user.id, UNVERIFIED_ROLE_ID);
+
+      const embed = new EmbedBuilder()
+        .setTitle("✅ ¡Verificación Exitosa!")
+        .setDescription(
+          `¡Hola, <@${interaction.user.id}>!\n\n` +
+            `Se te ha otorgado el rol de **<@&${MEMBER_ROLE_ID}>** y ahora tienes acceso completo a todos los canales de **WTOKENS**.\n\n` +
+            `🎮 **Vincular tu Fortnite:**\n` +
+            `Para participar en salas y partidas por tokens, ingresa a la plataforma y registra tu Epic Nickname:\n` +
+            `👉 **[https://wtokens.net](https://wtokens.net)**`,
+        )
+        .setColor(0x10b981)
+        .setFooter({ text: "WTokens Competitivo • Fortnite Wagers" });
+
+      const linkBtn = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setLabel("🌐 Abrir WTOKENS.NET")
+          .setStyle(ButtonStyle.Link)
+          .setURL("https://wtokens.net"),
+      );
+
+      await interaction.reply({
+        embeds: [embed],
+        components: [linkBtn],
+        ephemeral: true,
+      });
+    } catch (err) {
+      console.error("Error en verify_member_btn:", err);
+      await interaction.reply({
+        content: "❌ Hubo un error al asignar el rol. Por favor contacta al Staff.",
+        ephemeral: true,
+      });
+    }
+    return;
+  }
+
+  // 9. Botón: Abrir Ticket de Soporte
+  if (customId.startsWith("ticket_open_")) {
+    const categoryType = customId.replace("ticket_open_", "");
+    const guild = interaction.guild;
+    if (!guild) return;
+
+    const safeUsername = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 15);
+    const channelName = `ticket-${safeUsername}`;
+
+    // Check if user already has an active ticket channel
+    const existing = guild.channels.cache.find(
+      (c) => c.name === channelName && c.parentId === "1562188843745022105",
+    );
+    if (existing) {
+      await interaction.reply({
+        content: `⚠️ Ya tienes un ticket abierto en <#${existing.id}>. Por favor continúa tu consulta allí.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const titles: Record<string, string> = {
+      general: "❓ Soporte General",
+      billing: "💳 Recargas, Retiros y Pagos",
+      dispute: "🚨 Reportar Partida o Disputa",
+      creator: "🤝 Postulación a Creador de Contenido",
+    };
+
+    const typeTitle = titles[categoryType] || "🎫 Ticket de Soporte";
+
+    try {
+      const ticketChannel = await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+        parent: "1562188843745022105",
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            deny: [PermissionFlagsBits.ViewChannel],
+          },
+          {
+            id: interaction.user.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.AttachFiles,
+              PermissionFlagsBits.ReadMessageHistory,
+            ],
+          },
+          {
+            id: botConfig.staffRoleId || "1562188681383776461",
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.AttachFiles,
+              PermissionFlagsBits.ReadMessageHistory,
+            ],
+          },
+        ],
+      });
+
+      const ticketEmbed = new EmbedBuilder()
+        .setTitle(`${typeTitle} • WTOKENS`)
+        .setDescription(
+          `¡Hola <@${interaction.user.id}>! Bienvenido a tu canal privado de atención.\n\n` +
+            `📌 **Instrucciones:**\n` +
+            `• Describe detalladamente tu consulta, reporte o solicitud.\n` +
+            `• Si es sobre una partida o retiro, adjunta capturas de pantalla, ID de partida o comprobante.\n` +
+            `• Un miembro del equipo de <@&1562188681383776461> te responderá en breve.\n\n` +
+            `Para finalizar y cerrar este ticket cuando termine la atención, pulsa el botón abajo.`,
+        )
+        .setColor(0x0284c7)
+        .setFooter({ text: "WTokens Support System" })
+        .setTimestamp();
+
+      const closeRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("ticket_close")
+          .setLabel("🔒 Cerrar Ticket")
+          .setStyle(ButtonStyle.Danger),
+      );
+
+      await ticketChannel.send({
+        content: `<@${interaction.user.id}> | <@&1562188681383776461>`,
+        embeds: [ticketEmbed],
+        components: [closeRow],
+      });
+
+      await interaction.reply({
+        content: `✅ Tu ticket ha sido creado exitosamente: <#${ticketChannel.id}>. Dirígete allí para recibir ayuda.`,
+        ephemeral: true,
+      });
+    } catch (err) {
+      console.error("Error creando ticket:", err);
+      await interaction.reply({
+        content: "❌ Error creando el canal de ticket. Verifica los permisos del bot.",
+        ephemeral: true,
+      });
+    }
+    return;
+  }
+
+  // 10. Botón: Cerrar Ticket
+  if (customId === "ticket_close") {
+    if (!interaction.channel?.isTextBased()) return;
+    await interaction.reply({
+      content: "🔒 **Cerrando ticket...** Este canal se eliminará en 5 segundos.",
+    });
+
+    setTimeout(async () => {
+      try {
+        if ("delete" in interaction.channel!) {
+          await (interaction.channel as TextChannel).delete("Ticket cerrado por el usuario o staff");
+        }
+      } catch (err) {
+        console.error("Error eliminando canal de ticket:", err);
+      }
+    }, 5000);
     return;
   }
 }

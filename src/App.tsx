@@ -17,6 +17,7 @@ import {
   CreditCard,
   Crosshair,
   Crown,
+  ExternalLink,
   Gamepad2,
   Headphones,
   History,
@@ -108,7 +109,7 @@ const viewDescriptions: Record<View, string> = {
 };
 const EPIC_CLIENT_ID = "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
 const EPIC_AUTH_URL = `https://www.epicgames.com/id/authorize?client_id=${EPIC_CLIENT_ID}&response_type=code&scope=basic_profile&redirect_uri=https%3A%2F%2Fwtokens.net%2F`;
-type Modal = "login" | "create" | "payments" | "rules" | "dispute" | null;
+type Modal = "login" | "create" | "payments" | "rules" | "dispute" | "epic" | null;
 const visualModes = [
   {
     code: "BOX_FIGHT",
@@ -221,6 +222,8 @@ export function App() {
     }
   });
   const [disputeReason, setDisputeReason] = useState("");
+  const [epicInputNick, setEpicInputNick] = useState("");
+  const [epicSaving, setEpicSaving] = useState(false);
   const [affiliateCode, setAffiliateCode] = useState(() => {
     try {
       const urlCode = new URLSearchParams(window.location.search).get("ref");
@@ -526,6 +529,43 @@ export function App() {
   function closeModal() {
     setModal(null);
     window.setTimeout(() => modalFocus.current?.focus(), 0);
+  }
+
+  async function handleSaveEpicNick(e: React.FormEvent) {
+    e.preventDefault();
+    const clean = epicInputNick.trim().replace(/[<>"'`]/g, "").substring(0, 32);
+    if (!clean) return;
+    setEpicSaving(true);
+    try {
+      localStorage.setItem("wtokens_epic_nick", clean);
+      localStorage.setItem("wtokens_epic_verified", "true");
+      setUser((prev) => (prev ? { ...prev, epic_nickname: clean, epic_verified: true } : null));
+
+      if (user?.id) {
+        await fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "update_epic",
+            userId: user.id,
+            epic_nickname: clean,
+          }),
+        }).catch(() => {});
+
+        await fetch("/api/epic-verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nickname: clean }),
+        }).catch(() => {});
+      }
+
+      notify(`✅ ¡Cuenta de Epic Games vinculada con éxito: ${clean}!`);
+      closeModal();
+    } catch (err: any) {
+      notify(err?.message || "Error al guardar Nickname de Epic Games", true);
+    } finally {
+      setEpicSaving(false);
+    }
   }
   function navigate(next: View) {
     setView(next);
@@ -1327,20 +1367,24 @@ export function App() {
                             )}
                           </div>
                         </div>
-                        <a
-                          href={EPIC_AUTH_URL}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEpicInputNick(user.epic_nickname || "");
+                            openModal("epic");
+                          }}
                           className={user.epic_nickname ? "button secondary small" : "button primary small"}
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
                             gap: "8px",
-                            textDecoration: "none",
+                            cursor: "pointer",
                           }}
                         >
                           <Gamepad2 size={16} />
                           {user.epic_nickname ? "Cambiar cuenta de Epic" : "Vincular con Epic Games"}
                           <ArrowUpRight size={14} />
-                        </a>
+                        </button>
                       </div>
 
                       <div className="section-heading">
@@ -1754,9 +1798,11 @@ export function App() {
                 ? "Crea tu próximo desafío."
                 : modal === "payments"
                   ? "Billetera WTokens: Recargas y Retiros"
-                  : modal === "dispute"
-                    ? "Solicitar mediación"
-                    : "Compite con reglas claras."
+                  : modal === "epic"
+                    ? "Identidad Fortnite / Epic Games"
+                    : modal === "dispute"
+                      ? "Solicitar mediación"
+                      : "Compite con reglas claras."
           }
           onClose={busy ? () => undefined : closeModal}
         >
@@ -2019,6 +2065,53 @@ export function App() {
                 }
               }}
             />
+          )}
+          {modal === "epic" && (
+            <form className="form" onSubmit={handleSaveEpicNick}>
+              <p className="dialog-copy">
+                Ingresa tu <strong>Nickname exacto de Epic Games</strong> (el nombre que usas en Fortnite). Esto permite que tus rivales te agreguen a la sala privada y que el sistema valide tus duelos oficiales.
+              </p>
+
+              <label>
+                Nickname de Epic Games / Fortnite
+                <input
+                  type="text"
+                  placeholder="Ej: K1ng_Fortnite"
+                  value={epicInputNick}
+                  onChange={(e) => setEpicInputNick(e.target.value)}
+                  minLength={2}
+                  maxLength={32}
+                  required
+                  autoFocus
+                />
+              </label>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                <button
+                  type="submit"
+                  className="button primary full"
+                  disabled={epicSaving || !epicInputNick.trim()}
+                >
+                  {epicSaving ? "Guardando..." : "Guardar y Verificar Cuenta"}
+                  <Check size={16} />
+                </button>
+              </div>
+
+              <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px dashed rgba(255, 255, 255, 0.1)", textAlign: "center" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "8px" }}>
+                  ¿Deseas probar la conexión automática oficial?
+                </span>
+                <a
+                  href={EPIC_AUTH_URL}
+                  className="button secondary small"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
+                >
+                  <Gamepad2 size={14} />
+                  Conectar vía Epic Games OAuth
+                  <ExternalLink size={12} />
+                </a>
+              </div>
+            </form>
           )}
           {modal === "rules" && (
             <>
