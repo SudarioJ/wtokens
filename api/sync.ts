@@ -9,7 +9,7 @@ interface SyncedUser {
   epic_nickname: string;
   discord_tag: string;
   avatar_url?: string;
-  role: "admin" | "user";
+  role: "owner" | "admin" | "user";
   country: string;
   country_name: string;
   balance_wt: number;

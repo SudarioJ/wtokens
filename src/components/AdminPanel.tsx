@@ -32,6 +32,7 @@ import {
   rejectWithdrawal,
   registerNewUser,
   syncWithServerRegistry,
+  isOwnerUser,
 } from "../lib/admin";
 import "./admin.css";
 
@@ -39,7 +40,7 @@ interface AdminPanelProps {
   currentAdmin: {
     id: string;
     display_name: string;
-    role?: "admin" | "user" | undefined;
+    role?: "owner" | "admin" | "user" | undefined;
   };
   onBalanceUpdated?: () => void;
 }
@@ -63,6 +64,7 @@ export function AdminPanel({
   currentAdmin,
   onBalanceUpdated,
 }: AdminPanelProps) {
+  const isViewerOwner = isOwnerUser(currentAdmin);
   const [tab, setTab] = useState<AdminTab>("tokens");
   const [users, setUsers] = useState<ManagedUser[]>(() => getManagedUsers());
   const [audit, setAudit] = useState<TokenCreditRecord[]>(() => getAuditLog());
@@ -90,7 +92,7 @@ export function AdminPanel({
 
   // User Directory Filter State
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "owner" | "admin" | "user">("all");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "suspended"
   >("all");
@@ -386,7 +388,7 @@ export function AdminPanel({
     [withdrawals],
   );
   const totalAdminsCount = useMemo(
-    () => users.filter((u) => u.role === "admin").length,
+    () => users.filter((u) => u.role === "admin" || u.role === "owner").length,
     [users],
   );
 
@@ -400,7 +402,9 @@ export function AdminPanel({
         u.epic_nickname.toLowerCase().includes(q) ||
         u.discord_tag.toLowerCase().includes(q) ||
         u.id.toLowerCase().includes(q);
-      const matchesRole = roleFilter === "all" || u.role === roleFilter;
+      const matchesRole =
+        roleFilter === "all" ||
+        (roleFilter === "owner" ? u.role === "owner" || isOwnerUser(u) : u.role === roleFilter);
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "active" && !u.suspended) ||
@@ -454,6 +458,11 @@ export function AdminPanel({
         text: `Rol de usuario actualizado a: ${res.newRole.toUpperCase()}`,
         error: false,
       });
+    } else {
+      setFeedback({
+        text: res.message || "No tienes permisos para modificar este rol.",
+        error: true,
+      });
     }
   }
 
@@ -466,6 +475,11 @@ export function AdminPanel({
           ? "La cuenta ha sido suspendida exitosamente."
           : "La cuenta ha sido reactivada.",
         error: false,
+      });
+    } else {
+      setFeedback({
+        text: res.message || "No tienes permisos para suspender esta cuenta.",
+        error: true,
       });
     }
   }
@@ -879,7 +893,11 @@ export function AdminPanel({
                               <div className="user-search-name">
                                 <strong>{u.display_name}</strong>
                                 <span className="user-search-tag">{u.discord_tag}</span>
-                                {u.role === "admin" && <span className="badge-admin-tag">ADMIN</span>}
+                                {u.role === "owner" ? (
+                                  <span className="badge-owner-tag">👑 OWNER</span>
+                                ) : u.role === "admin" ? (
+                                  <span className="badge-admin-tag">ADMIN</span>
+                                ) : null}
                                 {u.suspended && <span className="badge-suspended-tag">SUSPENDIDO</span>}
                               </div>
                               <div className="user-search-meta">
@@ -905,7 +923,11 @@ export function AdminPanel({
                       <div className="selected-player-title">
                         <h4>{targetUser.display_name}</h4>
                         <span className="player-tag">{targetUser.discord_tag}</span>
-                        {targetUser.role === "admin" && <span className="badge-admin-tag">ADMIN</span>}
+                        {targetUser.role === "owner" ? (
+                          <span className="badge-owner-tag">👑 OWNER</span>
+                        ) : targetUser.role === "admin" ? (
+                          <span className="badge-admin-tag">ADMIN</span>
+                        ) : null}
                         {targetUser.suspended && <span className="badge-suspended-tag">SUSPENDIDO</span>}
                       </div>
                       <div className="selected-player-stats">
@@ -1066,7 +1088,7 @@ export function AdminPanel({
                     <div className="target-name-line">
                       <strong>{targetUser.display_name}</strong>
                       <span className={`role-tag ${targetUser.role}`}>
-                        {targetUser.role === "admin" ? "ADMIN" : "JUGADOR"}
+                        {targetUser.role === "owner" ? "👑 OWNER" : targetUser.role === "admin" ? "ADMIN" : "JUGADOR"}
                       </span>
                       {targetUser.suspended && (
                         <span className="status-tag suspended">SUSPENDIDO</span>
@@ -1184,10 +1206,11 @@ export function AdminPanel({
               <select
                 value={roleFilter}
                 onChange={(e) =>
-                  setRoleFilter(e.target.value as "all" | "admin" | "user")
+                  setRoleFilter(e.target.value as "all" | "owner" | "admin" | "user")
                 }
               >
                 <option value="all">Todos los roles</option>
+                <option value="owner">Solo Owners 👑</option>
                 <option value="admin">Solo Administradores</option>
                 <option value="user">Solo Jugadores</option>
               </select>
@@ -1374,9 +1397,14 @@ export function AdminPanel({
                     </td>
                     <td>
                       <span className={`role-badge ${u.role}`}>
-                        {u.role === "admin" ? (
+                        {u.role === "owner" || isOwnerUser(u) ? (
                           <>
-                            <Crown size={12} />
+                            <Crown size={12} style={{ color: "#ffd700" }} />
+                            OWNER
+                          </>
+                        ) : u.role === "admin" ? (
+                          <>
+                            <ShieldCheck size={12} />
                             ADMIN
                           </>
                         ) : (
@@ -1427,35 +1455,68 @@ export function AdminPanel({
                           <Coins size={14} />
                           <span>Acreditar WT</span>
                         </button>
-                        <button
-                          className="action-btn role"
-                          title={
-                            u.role === "admin"
-                              ? "Degradar a Jugador"
-                              : "Promover a Administrador"
-                          }
-                          onClick={() => handleToggleRole(u.id)}
-                        >
-                          <ShieldCheck size={14} />
-                          <span>
-                            {u.role === "admin" ? "Hacer User" : "Hacer Admin"}
+                        {u.role === "owner" || isOwnerUser(u) ? (
+                          <span
+                            className="owner-locked-pill"
+                            title="El Owner es la máxima autoridad del sistema y es inmune a degradaciones o sanciones"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              background: "rgba(234, 179, 8, 0.15)",
+                              border: "1px solid rgba(234, 179, 8, 0.4)",
+                              color: "#fde047",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              cursor: "default",
+                            }}
+                          >
+                            <Crown size={13} style={{ color: "#fde047" }} />
+                            👑 Inmune
                           </span>
-                        </button>
-                        <button
-                          className={`action-btn ${u.suspended ? "unban" : "ban"}`}
-                          title={
-                            u.suspended
-                              ? "Reactivar cuenta"
-                              : "Suspender cuenta"
-                          }
-                          onClick={() => handleToggleSuspension(u.id)}
-                        >
-                          {u.suspended ? (
-                            <UserCheck size={14} />
-                          ) : (
-                            <UserX size={14} />
-                          )}
-                        </button>
+                        ) : (
+                          <>
+                            <button
+                              className="action-btn role"
+                              title={
+                                !isViewerOwner && u.role === "admin"
+                                  ? "Solo el Owner puede degradar a otro Administrador"
+                                  : u.role === "admin"
+                                    ? "Degradar a Jugador"
+                                    : "Promover a Administrador"
+                              }
+                              disabled={!isViewerOwner && u.role === "admin"}
+                              onClick={() => handleToggleRole(u.id)}
+                              style={
+                                !isViewerOwner && u.role === "admin"
+                                  ? { opacity: 0.5, cursor: "not-allowed" }
+                                  : undefined
+                              }
+                            >
+                              <ShieldCheck size={14} />
+                              <span>
+                                {u.role === "admin" ? "Hacer User" : "Hacer Admin"}
+                              </span>
+                            </button>
+                            <button
+                              className={`action-btn ${u.suspended ? "unban" : "ban"}`}
+                              title={
+                                u.suspended
+                                  ? "Reactivar cuenta"
+                                  : "Suspender cuenta"
+                              }
+                              onClick={() => handleToggleSuspension(u.id)}
+                            >
+                              {u.suspended ? (
+                                <UserCheck size={14} />
+                              ) : (
+                                <UserX size={14} />
+                              )}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

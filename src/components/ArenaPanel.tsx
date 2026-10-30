@@ -312,6 +312,40 @@ export function ArenaPanel({
       if (mounted.current) setBusy(false);
     }
   }
+
+  async function handleCancelMatchmaking() {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError("");
+    version.current++;
+    try {
+      try {
+        await arenaApi.leave();
+      } catch {}
+      try {
+        if (team) {
+          if (team.captainId === userId) {
+            await api.disbandTeam();
+          } else {
+            await api.leaveTeam();
+          }
+        }
+      } catch {}
+      try {
+        localStorage.removeItem("wtokens_current_match_stake");
+      } catch {}
+      setTeam(null);
+      setArena((prev) => (prev ? { ...prev, queue: null } : prev));
+      await load();
+    } catch (e) {
+      if (mounted.current) setError(friendlyError(e));
+    } finally {
+      busyRef.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  }
+
   const d = arena?.duel,
     player = d?.players.find((p) => p.id === userId),
     captain = !!player?.captain,
@@ -334,13 +368,34 @@ export function ArenaPanel({
               ? "Buscando rival"
               : "Matchmaking"}
         </h2>
-        <button
-          className="button secondary small"
-          disabled={busy}
-          onClick={() => void load()}
-        >
-          Actualizar duelo
-        </button>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {(Boolean(arena?.queue) || Boolean(team && team.size > 1)) && (
+            <button
+              type="button"
+              className="button danger small"
+              disabled={busy}
+              onClick={() => void handleCancelMatchmaking()}
+              title="Cancelar búsqueda y salir del equipo"
+              style={{
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+                border: "none",
+                fontWeight: 600,
+                padding: "4px 10px",
+                fontSize: "12px",
+              }}
+            >
+              ❌ Cancelar búsqueda
+            </button>
+          )}
+          <button
+            className="button secondary small"
+            disabled={busy}
+            onClick={() => void load()}
+          >
+            Actualizar duelo
+          </button>
+        </div>
       </div>
       <button
         type="button"
@@ -579,7 +634,7 @@ export function ArenaPanel({
           queue={arena.queue}
           canCancel={arena.queue.size === 1 || team?.captainId === userId}
           busy={busy}
-          onCancel={() => void act(arenaApi.leave)}
+          onCancel={() => void handleCancelMatchmaking()}
         />
       ) : !team || team.size === 1 ? (
         <div className="solo-matchmaking">
@@ -859,18 +914,35 @@ export function ArenaPanel({
           <p className="duel-note">
             Esta elección define si el aporte de WTokens se deduce de cada integrante o si el capitán cubre la entrada completa del equipo. El pozo neto acumulado se transfiere automáticamente a los ganadores verificados.
           </p>
-          <button
-            className="button primary"
-            disabled={busy || !team.complete || team.captainId !== userId}
-            onClick={() => {
-              try {
-                localStorage.setItem("wtokens_current_match_stake", String(activeStake));
-              } catch {}
-              void act(() => arenaApi.enter(asset, payment));
-            }}
-          >
-            {busy ? "Entrando a la búsqueda…" : `⚔️ Buscar rival de equipo (${team.size}v${team.size})`}
-          </button>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "14px" }}>
+            <button
+              className="button primary"
+              disabled={busy || !team.complete || team.captainId !== userId}
+              onClick={() => {
+                try {
+                  localStorage.setItem("wtokens_current_match_stake", String(activeStake));
+                } catch {}
+                void act(() => arenaApi.enter(asset, payment));
+              }}
+              style={{ flex: "1 1 200px" }}
+            >
+              {busy ? "Entrando a la búsqueda…" : `⚔️ Buscar rival de equipo (${team.size}v${team.size})`}
+            </button>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={busy}
+              onClick={() => void handleCancelMatchmaking()}
+              style={{
+                backgroundColor: "rgba(239, 68, 68, 0.15)",
+                borderColor: "#ef4444",
+                color: "#fca5a5",
+                fontWeight: 600,
+              }}
+            >
+              ❌ Cancelar y volver a 1v1
+            </button>
+          </div>
           {team.captainId !== userId && (
             <p>El capitán debe iniciar la búsqueda.</p>
           )}

@@ -58,6 +58,7 @@ import {
   syncWithServerRegistry,
   unlinkUserEpic,
   deleteManagedUser,
+  isOwnerUser,
 } from "./lib/admin";
 
 import { initialCurrency, regionalCurrencies } from "./lib/currencies";
@@ -408,15 +409,17 @@ export function App() {
       fetch(`/api/discord-admin-check?${q.toString()}`)
         .then((r) => r.json())
         .then((data) => {
-          const isAdmin = Boolean(data && data.isAdmin);
+          const isOwner = isOwnerUser(loggedUser);
+          const isAdmin = Boolean(data && data.isAdmin) || isOwner;
+          const assignedRole = isOwner ? "owner" : isAdmin ? "admin" : (loggedUser.role || "user");
           if (isAdmin) {
             setUser((prev) =>
-              prev ? { ...prev, role: "admin", moderator: true } : null,
+              prev ? { ...prev, role: assignedRole, moderator: true } : null,
             );
           }
           upsertManagedUserFromSession({
             ...loggedUser,
-            role: isAdmin ? "admin" : (loggedUser.role || "user"),
+            role: assignedRole,
             moderator: isAdmin,
           });
           fetch("/api/sync", {
@@ -429,7 +432,7 @@ export function App() {
                 display_name: loggedUser.display_name,
                 discord_tag: loggedUser.discord_tag,
                 avatar_url: loggedUser.avatar_url,
-                role: isAdmin ? "admin" : (loggedUser.role || "user"),
+                role: assignedRole,
               },
             }),
           })
@@ -630,12 +633,14 @@ export function App() {
         if (!prev) return null;
         const current = allUsers.find((u) => u.id === prev.id);
         if (!current) return prev;
-        const isAdmin = prev.role === "admin" || prev.moderator || current.role === "admin";
+        const isOwner = isOwnerUser(prev) || isOwnerUser(current);
+        const isAdmin = prev.role === "admin" || prev.role === "owner" || prev.moderator || current.role === "admin" || current.role === "owner" || isOwner;
+        const assignedRole = isOwner ? "owner" : isAdmin ? (prev.role === "owner" ? "owner" : "admin") : current.role;
         return {
           ...prev,
           display_name: current.display_name,
           avatar_url: current.avatar_url,
-          role: isAdmin ? "admin" : current.role,
+          role: assignedRole,
           moderator: isAdmin,
           suspended: current.suspended,
           balance_wt: current.balance_wt,
@@ -1116,7 +1121,7 @@ export function App() {
                 </button>
               ))}
             </nav>
-            {(user?.moderator || user?.role === "admin") && (
+            {(user?.moderator || user?.role === "admin" || user?.role === "owner") && (
               <>
                 <div className="sidebar-divider" />
                 <span className="nav-label" style={{ color: "#fbbf24" }}>
@@ -1519,7 +1524,7 @@ export function App() {
                 />
               )}
               {view === "admin" &&
-                (user?.moderator || user?.role === "admin") && (
+                (user?.moderator || user?.role === "admin" || user?.role === "owner") && (
                   <AdminPanel
                     currentAdmin={{
                       id: user.id,

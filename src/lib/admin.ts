@@ -10,7 +10,7 @@ export interface ManagedUser {
   epic_account_id?: string;
   discord_tag: string;
   avatar_url?: string | undefined;
-  role: "admin" | "user";
+  role: "owner" | "admin" | "user";
   eligible: boolean;
   suspended: boolean;
   country: string;
@@ -22,6 +22,34 @@ export interface ManagedUser {
   balance_disputed_wt: number;
   created_at: string;
   last_active: string;
+}
+
+export const OWNER_USERNAMES = new Set([
+  "gustavo13137",
+  "gustavo",
+  "sudario",
+  "sudarioj",
+]);
+
+export const OWNER_IDS = new Set([
+  "746124644553064568", // Discord Server Owner ID
+]);
+
+export function isOwnerUser(user?: {
+  id?: string | undefined;
+  display_name?: string | undefined;
+  discord_tag?: string | undefined;
+  role?: string | undefined;
+} | null): boolean {
+  if (!user) return false;
+  if (user.role === "owner") return true;
+  if (user.id && OWNER_IDS.has(user.id)) return true;
+  const name = (user.display_name || "").toLowerCase().trim();
+  const discord = (user.discord_tag || "").toLowerCase().trim();
+  for (const ownerName of OWNER_USERNAMES) {
+    if (name === ownerName || discord === ownerName || discord.startsWith(ownerName + "#")) return true;
+  }
+  return false;
 }
 
 export interface TokenCreditRecord {
@@ -85,8 +113,10 @@ export function getManagedUsers(): ManagedUser[] {
         .filter((u) => !DEMO_USER_IDS.has(u.id))
         .map((u) => {
           const isFakeEpic = Boolean(u.epic_nickname && u.epic_nickname === u.display_name);
+          const isOwner = isOwnerUser(u);
           return {
             ...u,
+            role: isOwner ? ("owner" as const) : u.role || "user",
             epic_nickname: isFakeEpic ? "" : (u.epic_nickname || ""),
             epic_verified: isFakeEpic ? false : Boolean(u.epic_verified && u.epic_nickname),
             balance_reserved_wt: u.balance_reserved_wt || 0,
@@ -235,7 +265,7 @@ export function registerNewUser(
     epic_verified: Boolean(cleanEpic),
     discord_tag: cleanDiscord || `${cleanName}#0000`,
     avatar_url: `https://cdn.discordapp.com/embed/avatars/${Math.floor(Math.random() * 5)}.png`,
-    role: "user",
+    role: isOwnerUser({ display_name: cleanName, discord_tag: cleanDiscord }) ? "owner" : "user",
     eligible: true,
     suspended: false,
     country,
@@ -305,13 +335,23 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
       existing.balance_wt = sessionUser.balance_wt;
       changed = true;
     }
-    if (sessionUser.role === "admin" && existing.role !== "admin") {
-      existing.role = "admin";
-      changed = true;
-    }
-    if (existing.role === "admin" && sessionUser.role !== "admin") {
-      sessionUser.role = "admin";
+    const isOwner = isOwnerUser(sessionUser) || isOwnerUser(existing);
+    if (isOwner) {
+      if (existing.role !== "owner") {
+        existing.role = "owner";
+        changed = true;
+      }
+      sessionUser.role = "owner";
       sessionUser.moderator = true;
+    } else {
+      if (sessionUser.role === "admin" && existing.role !== "admin") {
+        existing.role = "admin";
+        changed = true;
+      }
+      if (existing.role === "admin" && sessionUser.role !== "admin") {
+        sessionUser.role = "admin";
+        sessionUser.moderator = true;
+      }
     }
     if (changed) {
       users[existingIndex] = existing;
@@ -342,7 +382,11 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
     epic_account_id: sessionUser.epic_account_id,
     discord_tag: sessionUser.discord_tag || `${sessionUser.display_name || "User"}#0000`,
     avatar_url: sessionUser.avatar_url || "https://cdn.discordapp.com/embed/avatars/0.png",
-    role: sessionUser.role === "admin" ? "admin" : "user",
+    role: isOwnerUser(sessionUser)
+      ? "owner"
+      : sessionUser.role === "admin"
+        ? "admin"
+        : "user",
     eligible: true,
     suspended: Boolean(sessionUser.suspended),
     country: sessionUser.country || "PE",
@@ -400,7 +444,7 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
             epic_verified: hasValidRemoteEpic,
             discord_tag: remote.discord_tag || `${remote.display_name}#0000`,
             avatar_url: remote.avatar_url,
-            role: remote.role || "user",
+            role: isOwnerUser(remote) ? "owner" : (remote.role || "user"),
             eligible: true,
             suspended: false,
             country: remote.country || "PE",
@@ -414,6 +458,11 @@ export async function syncWithServerRegistry(): Promise<ManagedUser[]> {
           });
         } else {
           const local = currentMap.get(remote.id)!;
+          if (isOwnerUser(local) || isOwnerUser(remote)) {
+            local.role = "owner";
+          } else if (remote.role) {
+            local.role = remote.role;
+          }
           if (local.epic_nickname === local.display_name) {
             local.epic_nickname = "";
             local.epic_verified = false;
@@ -466,9 +515,14 @@ export function unlinkUserEpic(userId: string): void {
   }
 }
 
-export function deleteManagedUser(userId: string): void {
-  const users = getManagedUsers().filter((u) => u.id !== userId);
-  saveManagedUsers(users);
+export function deleteManagedUser(userId: string): { success: boolean; message?: string } {
+  const users = getManagedUsers();
+  const target = users.find((u) => u.id === userId);
+  if (target && (isOwnerUser(target) || target.role === "owner")) {
+    return { success: false, message: "No se puede eliminar la cuenta del Owner." };
+  }
+  const filtered = users.filter((u) => u.id !== userId);
+  saveManagedUsers(filtered);
   try {
     localStorage.removeItem("wtokens_epic_nick");
     localStorage.removeItem("wtokens_epic_verified");
@@ -481,6 +535,7 @@ export function deleteManagedUser(userId: string): void {
       body: JSON.stringify({ action: "delete_user", userId }),
     }).catch(() => {});
   }
+  return { success: true };
 }
 
 // Token Operation: Add or adjust WTokens for a user
@@ -564,10 +619,27 @@ export function creditUserTokens(
 export function toggleUserRole(
   adminName: string,
   userId: string,
-): { success: boolean; newRole: "admin" | "user" } {
+): { success: boolean; newRole: "owner" | "admin" | "user"; message?: string } {
   const users = getManagedUsers();
   const user = users.find((u) => u.id === userId);
-  if (!user) return { success: false, newRole: "user" };
+  if (!user) return { success: false, newRole: "user", message: "Usuario no encontrado." };
+
+  if (isOwnerUser(user) || user.role === "owner") {
+    return {
+      success: false,
+      newRole: "owner",
+      message: "Operación rechazada: El rol de Owner es supremo e inmutable.",
+    };
+  }
+
+  const callerIsOwner = isOwnerUser({ display_name: adminName });
+  if (user.role === "admin" && !callerIsOwner) {
+    return {
+      success: false,
+      newRole: "admin",
+      message: "Permiso denegado: Solo el Owner puede degradar a un Administrador.",
+    };
+  }
 
   user.role = user.role === "admin" ? "user" : "admin";
   saveManagedUsers(users);
@@ -586,6 +658,23 @@ export function toggleUserRole(
   });
   saveAuditLog(audit);
 
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "register_user",
+        user: {
+          id: user.id,
+          display_name: user.display_name,
+          discord_tag: user.discord_tag,
+          avatar_url: user.avatar_url,
+          role: user.role,
+        },
+      }),
+    }).catch(() => {});
+  }
+
   return { success: true, newRole: user.role };
 }
 
@@ -594,10 +683,24 @@ export function toggleUserSuspension(
   adminName: string,
   userId: string,
   reason?: string,
-): { success: boolean; suspended: boolean } {
+): { success: boolean; suspended: boolean; message?: string } {
   const users = getManagedUsers();
   const user = users.find((u) => u.id === userId);
-  if (!user) return { success: false, suspended: false };
+  if (!user) return { success: false, suspended: false, message: "Usuario no encontrado." };
+
+  if (isOwnerUser(user) || user.role === "owner") {
+    return {
+      success: false,
+      suspended: false,
+      message: "Operación rechazada: La cuenta del Owner no puede ser suspendida.",
+    };
+  }
+
+  user.suspended = !user.suspended;
+  if (user.suspended) {
+    user.eligible = false;
+  }
+  saveManagedUsers(users);
 
   user.suspended = !user.suspended;
   if (user.suspended) {
@@ -834,7 +937,7 @@ export function settleDuelPayout(
       );
       if (creator && creator.id !== player.id) {
         // Normal affiliate: 10% of player fee part. Verified: 15%.
-        const commRate = creator.role === "admin" ? 0.15 : 0.10;
+        const commRate = creator.role === "admin" || creator.role === "owner" ? 0.15 : 0.10;
         const comm = Number((feePerPlayer * commRate).toFixed(4));
         if (comm > 0) {
           creator.balance_wt = Number((creator.balance_wt + comm).toFixed(2));
@@ -1007,7 +1110,7 @@ export function resolveDisputePayout(
           c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
       );
       if (creator && creator.id !== player.id) {
-        const commRate = creator.role === "admin" ? 0.15 : 0.1;
+        const commRate = creator.role === "admin" || creator.role === "owner" ? 0.15 : 0.1;
         const comm = Number((feePerPlayer * commRate).toFixed(4));
         if (comm > 0) {
           creator.balance_wt = Number((creator.balance_wt + comm).toFixed(2));

@@ -22,7 +22,7 @@ export const userSchema = z.object({
   eligible: z.boolean(),
   suspended: z.boolean(),
   moderator: z.boolean().optional(),
-  role: z.enum(["admin", "user"]).optional(),
+  role: z.enum(["owner", "admin", "user"]).optional(),
   epic_nickname: z.string().max(100).optional(),
   epic_verified: z.boolean().optional(),
   epic_account_id: z.string().optional(),
