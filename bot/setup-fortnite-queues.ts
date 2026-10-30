@@ -9,13 +9,17 @@ const DESIRED_MODES = [
     title: "🥊 Box Fight (Fortnite 1v1 / 2v2 / 3v3 / 4v4)",
     code: "7620-0771-9529",
     desc: "Combate cerrado a corta distancia en cajas 1x1. Gana quien domine el control de piezas, escopetazos y reseteos.",
+    only1v1: false,
+    hasSquad: true,
   },
   {
     name: "⚔️・build-fight",
     modeKey: "BUILD_FIGHT",
-    title: "⚔️ Build Fight (Fortnite 1v1 / 2v2 / 3v3 / 4v4)",
+    title: "⚔️ Build Fight (Fortnite 1v1)",
     code: "8064-7152-2934",
     desc: "Batalla clásica por la altura con reseteos continuos. Ideal para jugadores mecánicos y veloces.",
+    only1v1: true,
+    hasSquad: false,
   },
   {
     name: "🌋・zone-wars",
@@ -23,6 +27,8 @@ const DESIRED_MODES = [
     title: "🌋 Zone Wars (Endgame 1v1 / 2v2 / 3v3 / 4v4)",
     code: "4059-2791-0171",
     desc: "Simulación de tormenta en movimiento constante. Prueba tu rotación, tarping y puntería bajo presión.",
+    only1v1: false,
+    hasSquad: true,
   },
   {
     name: "🎯・realistic",
@@ -30,6 +36,8 @@ const DESIRED_MODES = [
     title: "🎯 Realistics / Mid Game (1v1 / 2v2 / 3v3 / 4v4)",
     code: "7950-6300-4857",
     desc: "Escenarios idénticos a partidas competitivas reales con loot y vida aleatorios.",
+    only1v1: false,
+    hasSquad: true,
   },
   {
     name: "🛡️・cero-construccion",
@@ -37,6 +45,8 @@ const DESIRED_MODES = [
     title: "🛡️ Cero Construcción (Fortnite 1v1 / 2v2)",
     code: "9914-1234-5678",
     desc: "Puntería pura, uso de coberturas y posicionamiento estratégico sin edificaciones.",
+    only1v1: false,
+    hasSquad: false,
   },
   {
     name: "🧩・piece-control",
@@ -44,6 +54,8 @@ const DESIRED_MODES = [
     title: "🧩 Piece Control (1v1 / 2v2)",
     code: "3120-9845-1102",
     desc: "Dominio absoluto de paredes, conos y escaleras para encerrar al rival y castigar.",
+    only1v1: false,
+    hasSquad: false,
   },
 ];
 
@@ -98,7 +110,24 @@ async function setupFortniteQueues() {
       console.log(`Canal #${mode.name} ya existe: ${chan.id}`);
     }
 
-    // 3. Post interactive format panel in this mode channel
+    // 3. Clear old bot messages in this channel
+    try {
+      const msgsRes = await fetch(`https://discord.com/api/v10/channels/${chan.id}/messages?limit=10`, { headers });
+      const msgs = await msgsRes.json();
+      if (Array.isArray(msgs)) {
+        for (const m of msgs) {
+          if (m.author?.bot) {
+            await fetch(`https://discord.com/api/v10/channels/${chan.id}/messages/${m.id}`, {
+              method: "DELETE",
+              headers,
+            });
+            await new Promise((r) => setTimeout(r, 250));
+          }
+        }
+      }
+    } catch {}
+
+    // 4. Post interactive panel in this mode channel
     const embed = {
       title: mode.title,
       description:
@@ -115,34 +144,42 @@ async function setupFortniteQueues() {
       },
     };
 
-    const buttons = {
-      type: 1,
-      components: [
-        {
-          type: 2,
-          style: 1, // Primary
-          label: "⚔️ 1v1 (Tokens)",
-          custom_id: `queue_${mode.modeKey}_1v1`,
-        },
-        {
-          type: 2,
-          style: 2, // Secondary
-          label: "👥 2v2",
-          custom_id: `queue_${mode.modeKey}_2v2`,
-        },
-        {
+    const componentsList: any[] = [
+      {
+        type: 2,
+        style: 1, // Primary
+        label: "⚔️ 1v1 (Tokens)",
+        custom_id: `queue_${mode.modeKey}_1v1`,
+      },
+    ];
+
+    if (!mode.only1v1) {
+      componentsList.push({
+        type: 2,
+        style: 2, // Secondary
+        label: "👥 2v2",
+        custom_id: `queue_${mode.modeKey}_2v2`,
+      });
+      if (mode.hasSquad) {
+        componentsList.push({
           type: 2,
           style: 2, // Secondary
           label: "🔥 3v3 / 4v4",
           custom_id: `queue_${mode.modeKey}_squad`,
-        },
-        {
-          type: 2,
-          style: 5, // Link button
-          label: "🌐 Buscar en la Web",
-          url: `https://wtokens.net/?mode=${mode.modeKey}`,
-        },
-      ],
+        });
+      }
+    }
+
+    componentsList.push({
+      type: 2,
+      style: 5, // Link button
+      label: mode.only1v1 ? "🌐 Abrir en WTOKENS.NET" : "🌐 Buscar en la Web",
+      url: `https://wtokens.net/?mode=${mode.modeKey}`,
+    });
+
+    const buttons = {
+      type: 1,
+      components: componentsList,
     };
 
     await fetch(`https://discord.com/api/v10/channels/${chan.id}/messages`, {

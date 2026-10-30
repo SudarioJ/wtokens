@@ -1305,21 +1305,20 @@ Para finalizar y cerrar este ticket cuando termine la atenci\xF3n, pulsa el bot\
   if (customId.startsWith("queue_")) {
     await interaction.deferReply({ ephemeral: true });
     const parts = customId.split("_");
-    const format = parts.pop() || "1v1";
+    parts.pop();
     const modeKey = parts.slice(1).join("_");
     const map = FORTNITE_MAPS[modeKey] || {
       name: modeKey || "Fortnite Competitivo",
       code: "7620-0771-9529"
     };
-    const formatLabel = format === "squad" ? "3v3 / 4v4" : format.toUpperCase();
-    const embed = new EmbedBuilder4().setTitle(`\u2694\uFE0F Cola de Duelo: ${formatLabel} \xB7 ${map.name}`).setDescription(
-      `\xA1Has seleccionado la modalidad **${formatLabel}** en **${map.name}**!
+    const embed = new EmbedBuilder4().setTitle(`\u2694\uFE0F Duelo 1v1 \xB7 ${map.name}`).setDescription(
+      `\xA1Has seleccionado la modalidad **1v1** en **${map.name}**!
 
 \u{1F4CD} **C\xF3digo Oficial de Isla:** \`${map.code}\`
 
-\u{1F3AE} **\xBFC\xF3mo jugar ahora?**
-\u2022 **Desafiar directamente en Discord:** Escribe \`/duelo @usuario\` indicando el monto en WT.
-\u2022 **Jugar en la Web Oficial:** Entra a la Arena para crear tu sala p\xFAblica o aceptar los retos de otros jugadores.`
+\u{1F3AE} **\xBFC\xF3mo desafiar ahora?**
+\u2022 **Desafiar en Discord:** Escribe \`/duelo @usuario [apuesta] [modo]\` indicando el monto en WT.
+\u2022 **Jugar en la Web:** Entra a la Arena para crear tu sala p\xFAblica o aceptar los retos de otros jugadores.`
     ).setColor(3718648).setFooter({ text: "WTokens \xB7 Duelos Automatizados con B\xF3veda Escrow" });
     const linkRow = new ActionRowBuilder4().addComponents(
       new ButtonBuilder4().setLabel("\u{1F310} Abrir Sala en WTOKENS.NET").setStyle(ButtonStyle4.Link).setURL(`https://wtokens.net/?mode=${modeKey}`)

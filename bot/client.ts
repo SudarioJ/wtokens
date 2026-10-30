@@ -479,29 +479,27 @@ async function handleButtonInteraction(
     return;
   }
 
-  // 11. Botones de Cola de Duelos (1v1, 2v2, 3v3/4v4)
+  // 11. Botón de Cola de Duelos (1v1)
   if (customId.startsWith("queue_")) {
     await interaction.deferReply({ ephemeral: true });
 
     // Format: queue_MODE_FORMAT (ej: queue_REALISTICS_1v1)
     const parts = customId.split("_");
-    const format = parts.pop() || "1v1";
+    parts.pop(); // pop format
     const modeKey = parts.slice(1).join("_");
     const map = FORTNITE_MAPS[modeKey] || {
       name: modeKey || "Fortnite Competitivo",
       code: "7620-0771-9529",
     };
 
-    const formatLabel = format === "squad" ? "3v3 / 4v4" : format.toUpperCase();
-
     const embed = new EmbedBuilder()
-      .setTitle(`⚔️ Cola de Duelo: ${formatLabel} · ${map.name}`)
+      .setTitle(`⚔️ Duelo 1v1 · ${map.name}`)
       .setDescription(
-        `¡Has seleccionado la modalidad **${formatLabel}** en **${map.name}**!\n\n` +
+        `¡Has seleccionado la modalidad **1v1** en **${map.name}**!\n\n` +
           `📍 **Código Oficial de Isla:** \`${map.code}\`\n\n` +
-          `🎮 **¿Cómo jugar ahora?**\n` +
-          `• **Desafiar directamente en Discord:** Escribe \`/duelo @usuario\` indicando el monto en WT.\n` +
-          `• **Jugar en la Web Oficial:** Entra a la Arena para crear tu sala pública o aceptar los retos de otros jugadores.`,
+          `🎮 **¿Cómo desafiar ahora?**\n` +
+          `• **Desafiar en Discord:** Escribe \`/duelo @usuario [apuesta] [modo]\` indicando el monto en WT.\n` +
+          `• **Jugar en la Web:** Entra a la Arena para crear tu sala pública o aceptar los retos de otros jugadores.`,
       )
       .setColor(0x38bdf8)
       .setFooter({ text: "WTokens · Duelos Automatizados con Bóveda Escrow" });

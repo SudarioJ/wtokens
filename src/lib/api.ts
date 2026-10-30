@@ -86,11 +86,11 @@ export async function request<T>(
   schema: z.ZodType<T>,
   init?: RequestInit,
 ): Promise<T> {
-  // Paths are fixed by this module; neither browser input nor a query parameter selects a remote API.
+  // Timeout optimized to 8 seconds to ensure snappy UI loading
   const response = await fetch(path, {
     credentials: "same-origin",
     cache: "no-store",
-    signal: AbortSignal.timeout(35000),
+    signal: AbortSignal.timeout(8000),
     ...init,
     headers: { Accept: "application/json", ...init?.headers },
   });
