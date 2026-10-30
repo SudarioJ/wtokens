@@ -15,7 +15,7 @@ import {
 } from "discord.js";
 import { botConfig, FORTNITE_MAPS } from "./config";
 import { registerCommands, handleSlashCommand } from "./commands";
-import { convertRoomToDispute } from "./rooms";
+import { convertRoomToDispute, createDuelRoom, pendingChallenges } from "./rooms";
 import { isStaffMember, assignGuildRole, removeGuildRole } from "./roles";
 import { handleSecurityMessage, handleSecurityJoin } from "./protection";
 import {
@@ -224,10 +224,89 @@ async function handleButtonInteraction(
     return;
   }
 
-  // 7. Botón: Rechazar Duelo
+  // 7. Botón: Aceptar Duelo (Crea sala privada ⚔️-duelo-XXXX)
+  if (customId.startsWith("accept_duel_")) {
+    await interaction.deferReply({ ephemeral: true });
+    const challengeId = customId.replace("accept_duel_", "");
+    const challenge = pendingChallenges.get(challengeId);
+
+    if (!challenge) {
+      await interaction.editReply({
+        content: "❌ Este desafío ha expirado o ya no está disponible.",
+      });
+      return;
+    }
+
+    if (interaction.user.id !== challenge.opponentId) {
+      await interaction.editReply({
+        content: "⛔ Solo el jugador al que fue dirigido este desafío puede aceptarlo.",
+      });
+      return;
+    }
+
+    const epic1 = challenge.challengerName;
+    const epic2 = challenge.opponentName;
+
+    const room = await createDuelRoom(client, {
+      matchId: challenge.challengeId,
+      player1DiscordId: challenge.challengerId,
+      player2DiscordId: challenge.opponentId,
+      player1Name: challenge.challengerName,
+      player2Name: challenge.opponentName,
+      epic1,
+      epic2,
+      mode: challenge.mode,
+      stakeWt: challenge.stakeWt,
+    });
+
+    if (!room) {
+      await interaction.editReply({
+        content: "❌ Ocurrió un error al crear la sala privada de duelo en Discord. Verifica los permisos del bot.",
+      });
+      return;
+    }
+
+    pendingChallenges.delete(challengeId);
+
+    if (interaction.message && "edit" in interaction.message) {
+      await (interaction.message as any).edit({
+        content:
+          `⚔️ **¡DUELO CONFIRMADO Y EN MARCHA!**\n` +
+          `• **Retador:** <@${challenge.challengerId}>\n` +
+          `• **Rival:** <@${challenge.opponentId}>\n` +
+          `• **Modalidad:** \`${challenge.mode}\`\n` +
+          `• **Apuesta:** \`$${challenge.stakeWt.toFixed(2)} WT\` por lado\n\n` +
+          `📍 **Sala privada creada:** <#${room.id}>\n` +
+          `Ambos jugadores deben entrar a la sala privada para ver los códigos de isla y coordinar su partida.`,
+        components: [],
+      }).catch(() => {});
+    }
+
+    await interaction.editReply({
+      content: `✅ ¡Duelo aceptado! Tu sala privada ha sido creada con éxito: <#${room.id}>.`,
+    });
+    return;
+  }
+
+  // 8. Botón: Rechazar Duelo
   if (customId.startsWith("decline_duel_")) {
+    const challengeId = customId.replace("decline_duel_", "");
+    const challenge = pendingChallenges.get(challengeId);
+
+    if (challenge && interaction.user.id !== challenge.opponentId && interaction.user.id !== challenge.challengerId) {
+      await interaction.reply({
+        content: "⛔ Solo los participantes de este duelo pueden cancelarlo o rechazarlo.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (challenge) {
+      pendingChallenges.delete(challengeId);
+    }
+
     await interaction.update({
-      content: `❌ El desafío ha sido **rechazado** por <@${interaction.user.id}>.`,
+      content: `❌ El desafío ha sido **rechazado/cancelado** por <@${interaction.user.id}>.`,
       components: [],
     });
     return;

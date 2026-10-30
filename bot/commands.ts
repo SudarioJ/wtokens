@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import { botConfig, FORTNITE_MAPS } from "./config";
 import { getManagedUsers } from "../src/lib/admin";
+import { pendingChallenges } from "./rooms";
 
 export const slashCommands = [
   new SlashCommandBuilder()
@@ -274,6 +275,17 @@ export async function handleSlashCommand(
     const challengeId = `ch_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const map = FORTNITE_MAPS[modo] || FORTNITE_MAPS.BOX_FIGHT!;
 
+    pendingChallenges.set(challengeId, {
+      challengeId,
+      challengerId: interaction.user.id,
+      challengerName: interaction.user.username,
+      opponentId: oponente.id,
+      opponentName: oponente.username,
+      mode: modo,
+      stakeWt: apuesta,
+      createdAt: Date.now(),
+    });
+
     const embed = new EmbedBuilder()
       .setTitle("⚔️ ¡DESAFÍO DIRECTO 1v1 EN WTOKENS!")
       .setDescription(
@@ -282,7 +294,7 @@ export async function handleSlashCommand(
           `💰 **Entrada:** \`$${apuesta.toFixed(2)} WT\` por jugador (Bóveda Escrow)\n` +
           `🏆 **Premio al Ganador:** \`$${prize.toFixed(2)} WT\` (90% del Pozo)\n` +
           `📍 **Código Oficial de Isla:** \`${map.code}\`\n\n` +
-          `*Haz clic en el botón de abajo para entrar a la plataforma web y confirmar tu partida con tus WTokens:*`,
+          `*Haz clic en el botón verde para aceptar el duelo y crear su sala privada de partida inmediata:*`,
       )
       .setColor(0xf59e0b)
       .setFooter({ text: "WTokens Competitivo · Salas y Arbitraje en Vivo" })
@@ -290,15 +302,19 @@ export async function handleSlashCommand(
 
     const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setStyle(ButtonStyle.Link)
-        .setLabel("⚔️ Aceptar Desafío y Jugar en la Web")
-        .setURL(
-          `https://wtokens.net/?challenge=${challengeId}&mode=${modo}&stake=${apuesta}&opponent=${interaction.user.id}`,
-        ),
+        .setCustomId(`accept_duel_${challengeId}`)
+        .setStyle(ButtonStyle.Success)
+        .setLabel("⚔️ Aceptar Desafío (Crear Sala)"),
       new ButtonBuilder()
         .setCustomId(`decline_duel_${challengeId}`)
         .setStyle(ButtonStyle.Danger)
-        .setLabel("❌ Rechazar Desafío"),
+        .setLabel("❌ Rechazar"),
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setLabel("🌐 Ver en la Web")
+        .setURL(
+          `https://wtokens.net/?challenge=${challengeId}&mode=${modo}&stake=${apuesta}&opponent=${interaction.user.id}`,
+        ),
     );
 
     await interaction.reply({

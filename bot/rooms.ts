@@ -23,6 +23,19 @@ export interface DuelRoomDetails {
   stakeWt: number;
 }
 
+export interface PendingChallenge {
+  challengeId: string;
+  challengerId: string;
+  challengerName: string;
+  opponentId: string;
+  opponentName: string;
+  mode: string;
+  stakeWt: number;
+  createdAt: number;
+}
+
+export const pendingChallenges = new Map<string, PendingChallenge>();
+
 /**
  * Creates a private match room in Discord for the two players and the Staff.
  */

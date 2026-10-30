@@ -62,10 +62,10 @@ __export(announcements_exports, {
   notifyCreatorApplication: () => notifyCreatorApplication
 });
 import {
-  EmbedBuilder as EmbedBuilder2,
-  ActionRowBuilder as ActionRowBuilder2,
-  ButtonBuilder as ButtonBuilder2,
-  ButtonStyle as ButtonStyle2
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } from "discord.js";
 async function announceDuelResult(client, winnerOrParams, loserNameArg = "", modeArg = "Box Fight", prizeWtArg = 0) {
   if (!botConfig.duelResultsChannelId) return;
@@ -97,7 +97,7 @@ async function announceDuelResult(client, winnerOrParams, loserNameArg = "", mod
       entry = prizeWtArg > 0 ? `${(prizeWtArg / 1.8).toFixed(2)} WTokens` : "5.00 WTokens";
       matchId = `m_${Date.now().toString(36).slice(-6)}`;
     }
-    const embed = new EmbedBuilder2().setTitle("\u{1F3C6} DUELO FINALIZADO").setDescription(
+    const embed = new EmbedBuilder().setTitle("\u{1F3C6} DUELO FINALIZADO").setDescription(
       `**Jugador A:** \`${playerA}\`
 **Jugador B:** \`${playerB}\`
 
@@ -120,7 +120,7 @@ async function notifyCreatorApplication(client, creatorName, discordTag, platfor
       botConfig.affiliatesChannelId
     );
     if (!channel?.isTextBased()) return;
-    const embed = new EmbedBuilder2().setTitle("\u{1F31F} Nueva Solicitud de Creador de Contenido").setDescription(
+    const embed = new EmbedBuilder().setTitle("\u{1F31F} Nueva Solicitud de Creador de Contenido").setDescription(
       `Un usuario ha solicitado ser promovido a **Creador Verificado (15% Comisi\xF3n Recurrente)**.
 
 \u{1F464} **Usuario:** **${creatorName}** (${discordTag})
@@ -128,9 +128,9 @@ async function notifyCreatorApplication(client, creatorName, discordTag, platfor
 \u{1F465} **Audiencia / Seguidores:** ${communityFollowers}
 \u{1F3F7}\uFE0F **C\xF3digo Solicitado:** \`${codeRequested.toUpperCase()}\``
     ).setColor(16096779).setFooter({ text: "WTokens Programa de Afiliados" }).setTimestamp();
-    const buttons = new ActionRowBuilder2().addComponents(
-      new ButtonBuilder2().setCustomId(`approve_creator_${codeRequested}`).setLabel("\u2705 Aprobar Creador (15%)").setStyle(ButtonStyle2.Success),
-      new ButtonBuilder2().setCustomId(`reject_creator_${codeRequested}`).setLabel("\u274C Rechazar Solicitud").setStyle(ButtonStyle2.Secondary)
+    const buttons = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`approve_creator_${codeRequested}`).setLabel("\u2705 Aprobar Creador (15%)").setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`reject_creator_${codeRequested}`).setLabel("\u274C Rechazar Solicitud").setStyle(ButtonStyle.Secondary)
     );
     await channel.send({ embeds: [embed], components: [buttons] });
   } catch (err) {
@@ -164,10 +164,10 @@ import {
   REST,
   Routes,
   SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
+  EmbedBuilder as EmbedBuilder3,
+  ActionRowBuilder as ActionRowBuilder3,
+  ButtonBuilder as ButtonBuilder3,
+  ButtonStyle as ButtonStyle3
 } from "discord.js";
 
 // src/lib/admin.ts
@@ -215,6 +215,238 @@ function saveManagedUsers(users) {
     localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
     notifyStorageChange();
   } catch {
+  }
+}
+
+// bot/rooms.ts
+init_config();
+import {
+  ChannelType,
+  PermissionFlagsBits,
+  ActionRowBuilder as ActionRowBuilder2,
+  ButtonBuilder as ButtonBuilder2,
+  ButtonStyle as ButtonStyle2,
+  EmbedBuilder as EmbedBuilder2
+} from "discord.js";
+
+// bot/roles.ts
+init_config();
+async function getGuildMember(client, discordUserId) {
+  try {
+    if (!botConfig.guildId) return null;
+    const guild = await client.guilds.fetch(botConfig.guildId);
+    if (!guild) return null;
+    return await guild.members.fetch(discordUserId);
+  } catch {
+    return null;
+  }
+}
+async function isStaffMember(client, discordUserId) {
+  const member = await getGuildMember(client, discordUserId);
+  if (!member) return false;
+  if (member.permissions.has("Administrator")) return true;
+  if (botConfig.staffRoleId && member.roles.cache.has(botConfig.staffRoleId)) {
+    return true;
+  }
+  return false;
+}
+async function assignGuildRole(client, discordUserId, roleId) {
+  if (!roleId) return false;
+  const member = await getGuildMember(client, discordUserId);
+  if (!member) return false;
+  try {
+    await member.roles.add(roleId);
+    return true;
+  } catch (err) {
+    console.error(`[Bot Roles] Error assigning role ${roleId} to ${discordUserId}:`, err);
+    return false;
+  }
+}
+async function removeGuildRole(client, discordUserId, roleId) {
+  if (!roleId) return false;
+  const member = await getGuildMember(client, discordUserId);
+  if (!member) return false;
+  try {
+    await member.roles.remove(roleId);
+    return true;
+  } catch (err) {
+    console.error(`[Bot Roles] Error removing role ${roleId} from ${discordUserId}:`, err);
+    return false;
+  }
+}
+async function setPlayersInDuelRole(client, player1DiscordId, player2DiscordId, inDuel) {
+  if (!botConfig.inDuelRoleId) return;
+  const action = inDuel ? assignGuildRole : removeGuildRole;
+  await Promise.allSettled([
+    action(client, player1DiscordId, botConfig.inDuelRoleId),
+    action(client, player2DiscordId, botConfig.inDuelRoleId)
+  ]);
+}
+
+// bot/rooms.ts
+var pendingChallenges = /* @__PURE__ */ new Map();
+async function createDuelRoom(client, details) {
+  try {
+    if (!botConfig.guildId) return null;
+    const guild = await client.guilds.fetch(botConfig.guildId);
+    if (!guild) return null;
+    const shortId = details.matchId.slice(0, 8);
+    const channelName = `\u2694\uFE0F-duelo-${shortId}`;
+    const permissionOverwrites = [
+      {
+        id: guild.roles.everyone.id,
+        deny: [PermissionFlagsBits.ViewChannel]
+      },
+      {
+        id: details.player1DiscordId,
+        allow: [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.AttachFiles,
+          PermissionFlagsBits.ReadMessageHistory
+        ]
+      },
+      {
+        id: details.player2DiscordId,
+        allow: [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.AttachFiles,
+          PermissionFlagsBits.ReadMessageHistory
+        ]
+      }
+    ];
+    if (botConfig.staffRoleId) {
+      permissionOverwrites.push({
+        id: botConfig.staffRoleId,
+        allow: [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.AttachFiles,
+          PermissionFlagsBits.ManageMessages,
+          PermissionFlagsBits.ReadMessageHistory
+        ]
+      });
+    }
+    const channel = await guild.channels.create({
+      name: channelName,
+      type: ChannelType.GuildText,
+      parent: botConfig.duelCategoryId || void 0,
+      permissionOverwrites,
+      topic: `Duelo Oficial WTokens [${details.matchId}] \xB7 ${details.player1Name} vs ${details.player2Name}`
+    });
+    await setPlayersInDuelRole(client, details.player1DiscordId, details.player2DiscordId, true);
+    const mapInfo = FORTNITE_MAPS[details.mode] || FORTNITE_MAPS.BOX_FIGHT;
+    const pot = details.stakeWt * 2;
+    const prize = pot * 0.9;
+    const embed = new EmbedBuilder2().setTitle(`\u2694\uFE0F DUELO CONFIRMADO \xB7 WTokens 1v1 [${shortId}]`).setDescription(
+      `\xA1Bienvenidos a su sala privada de duelo! Ambos aportes han sido retenidos en **B\xF3veda Escrow**.
+
+**Modalidad:** ${mapInfo.name}
+**C\xF3digo de Isla Fortnite:** \`${mapInfo.code}\`
+
+**Jugador 1:** <@${details.player1DiscordId}> (Epic: **${details.epic1}**)
+**Jugador 2:** <@${details.player2DiscordId}> (Epic: **${details.epic2}**)
+
+\u{1F4B0} **Pozo Total:** \`${pot.toFixed(2)} WT\`
+\u{1F3C6} **Premio al Ganador:** \`${prize.toFixed(2)} WT\` (Neto tras fee 10%)
+
+\u26A0\uFE0F **Reglas de Partida:**
+\u2022 Tienen **5 minutos** para agregarse en Epic Games e ingresar a la isla.
+\u2022 Se juega a **3 rondas** (o seg\xFAn el acuerdo de la modalidad).
+\u2022 **Obligatorio:** Tener activo NVIDIA ShadowPlay / OBS / Replay de Fortnite para reclamos.`
+    ).setColor(3718648).setFooter({ text: "WTokens Match Engine \xB7 Sistema de Arbitraje en Vivo" }).setTimestamp();
+    const buttons = new ActionRowBuilder2().addComponents(
+      new ButtonBuilder2().setCustomId(`claim_win_${details.matchId}`).setLabel("\u{1F3C6} Reclamar Victoria").setStyle(ButtonStyle2.Success),
+      new ButtonBuilder2().setCustomId(`call_staff_${details.matchId}`).setLabel("\u{1F6A8} Llamar \xC1rbitro / Disputa").setStyle(ButtonStyle2.Danger)
+    );
+    await channel.send({
+      content: `<@${details.player1DiscordId}> <@${details.player2DiscordId}> \xA1Su duelo ha comenzado!`,
+      embeds: [embed],
+      components: [buttons]
+    });
+    console.log(`[Bot Rooms] Sala creada: ${channel.name} (${channel.id})`);
+    return channel;
+  } catch (err) {
+    console.error("[Bot Rooms] Error creando sala de duelo:", err);
+    return null;
+  }
+}
+async function convertRoomToDispute(client, channel, matchId, summonerDiscordId, reason = "Reporte de conflicto o llamado de \xE1rbitro por los jugadores") {
+  try {
+    const shortId = matchId.slice(0, 8);
+    await channel.setName(`\u{1F6A8}-disputa-${shortId}`);
+    const disputeEmbed = new EmbedBuilder2().setTitle(`\u{1F6A8} DISPUTA EN CURSO \xB7 Duelo #${shortId}`).setDescription(
+      `**Atenci\xF3n:** ${summonerDiscordId ? `<@${summonerDiscordId}> ha solicitado la intervenci\xF3n de un moderador.` : "Se ha reportado una discrepancia en los resultados."}
+
+**Motivo:** ${reason}
+
+**Instrucciones para los jugadores:**
+1. No borren ning\xFAn mensaje de este canal.
+2. Suban capturas de pantalla de la victoria o el enlace del clip de video aqu\xED.
+3. El staff revisar\xE1 las pruebas y determinar\xE1 al ganador de forma inapelable.`
+    ).setColor(15680580).setTimestamp();
+    const staffPing = botConfig.staffRoleId ? `<@&${botConfig.staffRoleId}>` : "@Staff";
+    await channel.send({
+      content: `\u{1F6A8} **ALERTA DE ARBITRAJE** ${staffPing}`,
+      embeds: [disputeEmbed]
+    });
+    if (botConfig.staffAlertsChannelId) {
+      const alertChannel = await client.channels.fetch(
+        botConfig.staffAlertsChannelId
+      );
+      if (alertChannel?.isTextBased()) {
+        const staffEmbed = new EmbedBuilder2().setTitle("\u{1F6A8} Nueva Disputa Requiere \xC1rbitro").setDescription(
+          `**Canal:** <#${channel.id}>
+**Duelo:** \`${matchId}\`
+**Solicitado por:** ${summonerDiscordId ? `<@${summonerDiscordId}>` : "Sistema"}
+**Motivo:** ${reason}`
+        ).setColor(16096779).setTimestamp();
+        await alertChannel.send({ embeds: [staffEmbed] });
+      }
+    }
+  } catch (err) {
+    console.error("[Bot Rooms] Error convirtiendo sala a disputa:", err);
+  }
+}
+async function closeDuelRoom(client, channel, player1DiscordId, player2DiscordId, winnerName, prizeWt, deleteDelayMinutes = 5) {
+  try {
+    await setPlayersInDuelRole(client, player1DiscordId, player2DiscordId, false);
+    const closeEmbed = new EmbedBuilder2().setTitle("\u{1F3C1} Duelo Finalizado").setDescription(
+      `El duelo ha concluido.
+
+\u{1F3C6} **Ganador:** **${winnerName}**
+\u{1F4B0} **Premio Acreditado:** **${prizeWt.toFixed(2)} WT**
+
+\u2139\uFE0F Esta sala se cerrar\xE1 y eliminar\xE1 autom\xE1ticamente en **${deleteDelayMinutes} minutos**. \xA1Gracias por jugar en WTokens!`
+    ).setColor(1096065).setTimestamp();
+    await channel.send({ embeds: [closeEmbed] });
+    try {
+      const { announceDuelResult: announceDuelResult2 } = await Promise.resolve().then(() => (init_announcements(), announcements_exports));
+      const matchIdMatch = channel.name.match(/[a-f0-9]{8}/i);
+      await announceDuelResult2(client, {
+        playerA: winnerName,
+        playerB: "Rival",
+        winnerName,
+        loserName: "Rival",
+        mode: "Box Fight 1v1",
+        prizeWt,
+        matchId: matchIdMatch ? matchIdMatch[0] : channel.id.slice(0, 8)
+      });
+    } catch (err) {
+      console.error("[Bot Rooms] Error enviando anuncio p\xFAblico de resultado:", err);
+    }
+    setTimeout(
+      async () => {
+        try {
+          await channel.delete("Duelo completado y archivado.");
+        } catch {
+        }
+      },
+      deleteDelayMinutes * 60 * 1e3
+    );
+  } catch (err) {
+    console.error("[Bot Rooms] Error cerrando sala de duelo:", err);
   }
 }
 
@@ -290,7 +522,7 @@ Inicia sesi\xF3n en **[wtokens.net](https://wtokens.net)** con tu cuenta de Disc
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-    const embed = new EmbedBuilder().setTitle(`\u{1F4B3} Saldo de ${user.display_name}`).setDescription(
+    const embed = new EmbedBuilder3().setTitle(`\u{1F4B3} Saldo de ${user.display_name}`).setDescription(
       `**WTokens Disponibles:** \`${user.balance_wt.toFixed(2)} WT\`
 **Equivalente Local:** \`${currencyData.symbol} ${localEstimated}\`
 ` + (user.balance_reserved_wt > 0 ? `**En Duelo Activo (Retenido):** \`${user.balance_reserved_wt.toFixed(2)} WT\`
@@ -318,7 +550,7 @@ Inicia sesi\xF3n en **[wtokens.net](https://wtokens.net)** con tu cuenta de Disc
     return;
   }
   if (commandName === "stats") {
-    const embed = new EmbedBuilder().setTitle("\u{1F4CA} Estad\xEDsticas Competitivas").setDescription(
+    const embed = new EmbedBuilder3().setTitle("\u{1F4CA} Estad\xEDsticas Competitivas").setDescription(
       `**Jugador:** ${user ? user.display_name : interaction.user.username}
 **Epic Games:** ${user?.epic_nickname || "No vinculado"}
 **Rango:** ${user?.role === "admin" ? "Administrador" : "Competidor"}
@@ -331,7 +563,7 @@ Para ver el historial detallado de partidas, visita **[wtokens.net](https://wtok
   }
   if (commandName === "reglas") {
     const mapsList = Object.values(FORTNITE_MAPS).map((m) => `\u2022 **${m.name}:** C\xF3digo \`${m.code}\``).join("\n");
-    const embed = new EmbedBuilder().setTitle("\u{1F4DC} Reglas Oficiales de Duelos WTokens").setDescription(
+    const embed = new EmbedBuilder3().setTitle("\u{1F4DC} Reglas Oficiales de Duelos WTokens").setDescription(
       `**Reglas de Conducta y Juego:**
 1. **Sin trampas ni exploits:** Prohibido macros, scripts o bugs de textura.
 2. **Tiempo de espera:** M\xE1ximo 5 minutos para entrar a la sala tras confirmarse el duelo.
@@ -356,7 +588,7 @@ Un \xE1rbitro o moderador revisar\xE1 tu caso a la brevedad.`,
           botConfig.staffAlertsChannelId
         );
         if (alertChannel?.isTextBased()) {
-          const embed = new EmbedBuilder().setTitle("\u{1F514} Llamado de Jugador a Staff").setDescription(
+          const embed = new EmbedBuilder3().setTitle("\u{1F514} Llamado de Jugador a Staff").setDescription(
             `**Usuario:** <@${interaction.user.id}> (${interaction.user.username})
 **Canal:** <#${interaction.channelId}>
 **Mensaje:** ${motivo}`
@@ -394,7 +626,17 @@ Un \xE1rbitro o moderador revisar\xE1 tu caso a la brevedad.`,
     const prize = Number((pot * 0.9).toFixed(2));
     const challengeId = `ch_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const map = FORTNITE_MAPS[modo] || FORTNITE_MAPS.BOX_FIGHT;
-    const embed = new EmbedBuilder().setTitle("\u2694\uFE0F \xA1DESAF\xCDO DIRECTO 1v1 EN WTOKENS!").setDescription(
+    pendingChallenges.set(challengeId, {
+      challengeId,
+      challengerId: interaction.user.id,
+      challengerName: interaction.user.username,
+      opponentId: oponente.id,
+      opponentName: oponente.username,
+      mode: modo,
+      stakeWt: apuesta,
+      createdAt: Date.now()
+    });
+    const embed = new EmbedBuilder3().setTitle("\u2694\uFE0F \xA1DESAF\xCDO DIRECTO 1v1 EN WTOKENS!").setDescription(
       `\xA1Atenci\xF3n <@${oponente.id}>! Has recibido un desaf\xEDo directo de parte de <@${interaction.user.id}>.
 
 \u{1F3AE} **Modalidad:** ${map.name}
@@ -402,13 +644,14 @@ Un \xE1rbitro o moderador revisar\xE1 tu caso a la brevedad.`,
 \u{1F3C6} **Premio al Ganador:** \`$${prize.toFixed(2)} WT\` (90% del Pozo)
 \u{1F4CD} **C\xF3digo Oficial de Isla:** \`${map.code}\`
 
-*Haz clic en el bot\xF3n de abajo para entrar a la plataforma web y confirmar tu partida con tus WTokens:*`
+*Haz clic en el bot\xF3n verde para aceptar el duelo y crear su sala privada de partida inmediata:*`
     ).setColor(16096779).setFooter({ text: "WTokens Competitivo \xB7 Salas y Arbitraje en Vivo" }).setTimestamp();
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("\u2694\uFE0F Aceptar Desaf\xEDo y Jugar en la Web").setURL(
+    const buttons = new ActionRowBuilder3().addComponents(
+      new ButtonBuilder3().setCustomId(`accept_duel_${challengeId}`).setStyle(ButtonStyle3.Success).setLabel("\u2694\uFE0F Aceptar Desaf\xEDo (Crear Sala)"),
+      new ButtonBuilder3().setCustomId(`decline_duel_${challengeId}`).setStyle(ButtonStyle3.Danger).setLabel("\u274C Rechazar"),
+      new ButtonBuilder3().setStyle(ButtonStyle3.Link).setLabel("\u{1F310} Ver en la Web").setURL(
         `https://wtokens.net/?challenge=${challengeId}&mode=${modo}&stake=${apuesta}&opponent=${interaction.user.id}`
-      ),
-      new ButtonBuilder().setCustomId(`decline_duel_${challengeId}`).setStyle(ButtonStyle.Danger).setLabel("\u274C Rechazar Desaf\xEDo")
+      )
     );
     await interaction.reply({
       content: `<@${oponente.id}> \xA1Te han desafiado a un duelo!`,
@@ -416,237 +659,6 @@ Un \xE1rbitro o moderador revisar\xE1 tu caso a la brevedad.`,
       components: [buttons]
     });
     return;
-  }
-}
-
-// bot/rooms.ts
-init_config();
-import {
-  ChannelType,
-  PermissionFlagsBits,
-  ActionRowBuilder as ActionRowBuilder3,
-  ButtonBuilder as ButtonBuilder3,
-  ButtonStyle as ButtonStyle3,
-  EmbedBuilder as EmbedBuilder3
-} from "discord.js";
-
-// bot/roles.ts
-init_config();
-async function getGuildMember(client, discordUserId) {
-  try {
-    if (!botConfig.guildId) return null;
-    const guild = await client.guilds.fetch(botConfig.guildId);
-    if (!guild) return null;
-    return await guild.members.fetch(discordUserId);
-  } catch {
-    return null;
-  }
-}
-async function isStaffMember(client, discordUserId) {
-  const member = await getGuildMember(client, discordUserId);
-  if (!member) return false;
-  if (member.permissions.has("Administrator")) return true;
-  if (botConfig.staffRoleId && member.roles.cache.has(botConfig.staffRoleId)) {
-    return true;
-  }
-  return false;
-}
-async function assignGuildRole(client, discordUserId, roleId) {
-  if (!roleId) return false;
-  const member = await getGuildMember(client, discordUserId);
-  if (!member) return false;
-  try {
-    await member.roles.add(roleId);
-    return true;
-  } catch (err) {
-    console.error(`[Bot Roles] Error assigning role ${roleId} to ${discordUserId}:`, err);
-    return false;
-  }
-}
-async function removeGuildRole(client, discordUserId, roleId) {
-  if (!roleId) return false;
-  const member = await getGuildMember(client, discordUserId);
-  if (!member) return false;
-  try {
-    await member.roles.remove(roleId);
-    return true;
-  } catch (err) {
-    console.error(`[Bot Roles] Error removing role ${roleId} from ${discordUserId}:`, err);
-    return false;
-  }
-}
-async function setPlayersInDuelRole(client, player1DiscordId, player2DiscordId, inDuel) {
-  if (!botConfig.inDuelRoleId) return;
-  const action = inDuel ? assignGuildRole : removeGuildRole;
-  await Promise.allSettled([
-    action(client, player1DiscordId, botConfig.inDuelRoleId),
-    action(client, player2DiscordId, botConfig.inDuelRoleId)
-  ]);
-}
-
-// bot/rooms.ts
-async function createDuelRoom(client, details) {
-  try {
-    if (!botConfig.guildId) return null;
-    const guild = await client.guilds.fetch(botConfig.guildId);
-    if (!guild) return null;
-    const shortId = details.matchId.slice(0, 8);
-    const channelName = `\u2694\uFE0F-duelo-${shortId}`;
-    const permissionOverwrites = [
-      {
-        id: guild.roles.everyone.id,
-        deny: [PermissionFlagsBits.ViewChannel]
-      },
-      {
-        id: details.player1DiscordId,
-        allow: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-          PermissionFlagsBits.AttachFiles,
-          PermissionFlagsBits.ReadMessageHistory
-        ]
-      },
-      {
-        id: details.player2DiscordId,
-        allow: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-          PermissionFlagsBits.AttachFiles,
-          PermissionFlagsBits.ReadMessageHistory
-        ]
-      }
-    ];
-    if (botConfig.staffRoleId) {
-      permissionOverwrites.push({
-        id: botConfig.staffRoleId,
-        allow: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-          PermissionFlagsBits.AttachFiles,
-          PermissionFlagsBits.ManageMessages,
-          PermissionFlagsBits.ReadMessageHistory
-        ]
-      });
-    }
-    const channel = await guild.channels.create({
-      name: channelName,
-      type: ChannelType.GuildText,
-      parent: botConfig.duelCategoryId || void 0,
-      permissionOverwrites,
-      topic: `Duelo Oficial WTokens [${details.matchId}] \xB7 ${details.player1Name} vs ${details.player2Name}`
-    });
-    await setPlayersInDuelRole(client, details.player1DiscordId, details.player2DiscordId, true);
-    const mapInfo = FORTNITE_MAPS[details.mode] || FORTNITE_MAPS.BOX_FIGHT;
-    const pot = details.stakeWt * 2;
-    const prize = pot * 0.9;
-    const embed = new EmbedBuilder3().setTitle(`\u2694\uFE0F DUELO CONFIRMADO \xB7 WTokens 1v1 [${shortId}]`).setDescription(
-      `\xA1Bienvenidos a su sala privada de duelo! Ambos aportes han sido retenidos en **B\xF3veda Escrow**.
-
-**Modalidad:** ${mapInfo.name}
-**C\xF3digo de Isla Fortnite:** \`${mapInfo.code}\`
-
-**Jugador 1:** <@${details.player1DiscordId}> (Epic: **${details.epic1}**)
-**Jugador 2:** <@${details.player2DiscordId}> (Epic: **${details.epic2}**)
-
-\u{1F4B0} **Pozo Total:** \`${pot.toFixed(2)} WT\`
-\u{1F3C6} **Premio al Ganador:** \`${prize.toFixed(2)} WT\` (Neto tras fee 10%)
-
-\u26A0\uFE0F **Reglas de Partida:**
-\u2022 Tienen **5 minutos** para agregarse en Epic Games e ingresar a la isla.
-\u2022 Se juega a **3 rondas** (o seg\xFAn el acuerdo de la modalidad).
-\u2022 **Obligatorio:** Tener activo NVIDIA ShadowPlay / OBS / Replay de Fortnite para reclamos.`
-    ).setColor(3718648).setFooter({ text: "WTokens Match Engine \xB7 Sistema de Arbitraje en Vivo" }).setTimestamp();
-    const buttons = new ActionRowBuilder3().addComponents(
-      new ButtonBuilder3().setCustomId(`claim_win_${details.matchId}`).setLabel("\u{1F3C6} Reclamar Victoria").setStyle(ButtonStyle3.Success),
-      new ButtonBuilder3().setCustomId(`call_staff_${details.matchId}`).setLabel("\u{1F6A8} Llamar \xC1rbitro / Disputa").setStyle(ButtonStyle3.Danger)
-    );
-    await channel.send({
-      content: `<@${details.player1DiscordId}> <@${details.player2DiscordId}> \xA1Su duelo ha comenzado!`,
-      embeds: [embed],
-      components: [buttons]
-    });
-    console.log(`[Bot Rooms] Sala creada: ${channel.name} (${channel.id})`);
-    return channel;
-  } catch (err) {
-    console.error("[Bot Rooms] Error creando sala de duelo:", err);
-    return null;
-  }
-}
-async function convertRoomToDispute(client, channel, matchId, summonerDiscordId, reason = "Reporte de conflicto o llamado de \xE1rbitro por los jugadores") {
-  try {
-    const shortId = matchId.slice(0, 8);
-    await channel.setName(`\u{1F6A8}-disputa-${shortId}`);
-    const disputeEmbed = new EmbedBuilder3().setTitle(`\u{1F6A8} DISPUTA EN CURSO \xB7 Duelo #${shortId}`).setDescription(
-      `**Atenci\xF3n:** ${summonerDiscordId ? `<@${summonerDiscordId}> ha solicitado la intervenci\xF3n de un moderador.` : "Se ha reportado una discrepancia en los resultados."}
-
-**Motivo:** ${reason}
-
-**Instrucciones para los jugadores:**
-1. No borren ning\xFAn mensaje de este canal.
-2. Suban capturas de pantalla de la victoria o el enlace del clip de video aqu\xED.
-3. El staff revisar\xE1 las pruebas y determinar\xE1 al ganador de forma inapelable.`
-    ).setColor(15680580).setTimestamp();
-    const staffPing = botConfig.staffRoleId ? `<@&${botConfig.staffRoleId}>` : "@Staff";
-    await channel.send({
-      content: `\u{1F6A8} **ALERTA DE ARBITRAJE** ${staffPing}`,
-      embeds: [disputeEmbed]
-    });
-    if (botConfig.staffAlertsChannelId) {
-      const alertChannel = await client.channels.fetch(
-        botConfig.staffAlertsChannelId
-      );
-      if (alertChannel?.isTextBased()) {
-        const staffEmbed = new EmbedBuilder3().setTitle("\u{1F6A8} Nueva Disputa Requiere \xC1rbitro").setDescription(
-          `**Canal:** <#${channel.id}>
-**Duelo:** \`${matchId}\`
-**Solicitado por:** ${summonerDiscordId ? `<@${summonerDiscordId}>` : "Sistema"}
-**Motivo:** ${reason}`
-        ).setColor(16096779).setTimestamp();
-        await alertChannel.send({ embeds: [staffEmbed] });
-      }
-    }
-  } catch (err) {
-    console.error("[Bot Rooms] Error convirtiendo sala a disputa:", err);
-  }
-}
-async function closeDuelRoom(client, channel, player1DiscordId, player2DiscordId, winnerName, prizeWt, deleteDelayMinutes = 5) {
-  try {
-    await setPlayersInDuelRole(client, player1DiscordId, player2DiscordId, false);
-    const closeEmbed = new EmbedBuilder3().setTitle("\u{1F3C1} Duelo Finalizado").setDescription(
-      `El duelo ha concluido.
-
-\u{1F3C6} **Ganador:** **${winnerName}**
-\u{1F4B0} **Premio Acreditado:** **${prizeWt.toFixed(2)} WT**
-
-\u2139\uFE0F Esta sala se cerrar\xE1 y eliminar\xE1 autom\xE1ticamente en **${deleteDelayMinutes} minutos**. \xA1Gracias por jugar en WTokens!`
-    ).setColor(1096065).setTimestamp();
-    await channel.send({ embeds: [closeEmbed] });
-    try {
-      const { announceDuelResult: announceDuelResult2 } = await Promise.resolve().then(() => (init_announcements(), announcements_exports));
-      const matchIdMatch = channel.name.match(/[a-f0-9]{8}/i);
-      await announceDuelResult2(client, {
-        playerA: winnerName,
-        playerB: "Rival",
-        winnerName,
-        loserName: "Rival",
-        mode: "Box Fight 1v1",
-        prizeWt,
-        matchId: matchIdMatch ? matchIdMatch[0] : channel.id.slice(0, 8)
-      });
-    } catch (err) {
-      console.error("[Bot Rooms] Error enviando anuncio p\xFAblico de resultado:", err);
-    }
-    setTimeout(
-      async () => {
-        try {
-          await channel.delete("Duelo completado y archivado.");
-        } catch {
-        }
-      },
-      deleteDelayMinutes * 60 * 1e3
-    );
-  } catch (err) {
-    console.error("[Bot Rooms] Error cerrando sala de duelo:", err);
   }
 }
 
@@ -1080,9 +1092,76 @@ Ingresa ahora a la plataforma web oficial para vincular tu cuenta de **Epic Game
     });
     return;
   }
+  if (customId.startsWith("accept_duel_")) {
+    await interaction.deferReply({ ephemeral: true });
+    const challengeId = customId.replace("accept_duel_", "");
+    const challenge = pendingChallenges.get(challengeId);
+    if (!challenge) {
+      await interaction.editReply({
+        content: "\u274C Este desaf\xEDo ha expirado o ya no est\xE1 disponible."
+      });
+      return;
+    }
+    if (interaction.user.id !== challenge.opponentId) {
+      await interaction.editReply({
+        content: "\u26D4 Solo el jugador al que fue dirigido este desaf\xEDo puede aceptarlo."
+      });
+      return;
+    }
+    const epic1 = challenge.challengerName;
+    const epic2 = challenge.opponentName;
+    const room = await createDuelRoom(client, {
+      matchId: challenge.challengeId,
+      player1DiscordId: challenge.challengerId,
+      player2DiscordId: challenge.opponentId,
+      player1Name: challenge.challengerName,
+      player2Name: challenge.opponentName,
+      epic1,
+      epic2,
+      mode: challenge.mode,
+      stakeWt: challenge.stakeWt
+    });
+    if (!room) {
+      await interaction.editReply({
+        content: "\u274C Ocurri\xF3 un error al crear la sala privada de duelo en Discord. Verifica los permisos del bot."
+      });
+      return;
+    }
+    pendingChallenges.delete(challengeId);
+    if (interaction.message && "edit" in interaction.message) {
+      await interaction.message.edit({
+        content: `\u2694\uFE0F **\xA1DUELO CONFIRMADO Y EN MARCHA!**
+\u2022 **Retador:** <@${challenge.challengerId}>
+\u2022 **Rival:** <@${challenge.opponentId}>
+\u2022 **Modalidad:** \`${challenge.mode}\`
+\u2022 **Apuesta:** \`$${challenge.stakeWt.toFixed(2)} WT\` por lado
+
+\u{1F4CD} **Sala privada creada:** <#${room.id}>
+Ambos jugadores deben entrar a la sala privada para ver los c\xF3digos de isla y coordinar su partida.`,
+        components: []
+      }).catch(() => {
+      });
+    }
+    await interaction.editReply({
+      content: `\u2705 \xA1Duelo aceptado! Tu sala privada ha sido creada con \xE9xito: <#${room.id}>.`
+    });
+    return;
+  }
   if (customId.startsWith("decline_duel_")) {
+    const challengeId = customId.replace("decline_duel_", "");
+    const challenge = pendingChallenges.get(challengeId);
+    if (challenge && interaction.user.id !== challenge.opponentId && interaction.user.id !== challenge.challengerId) {
+      await interaction.reply({
+        content: "\u26D4 Solo los participantes de este duelo pueden cancelarlo o rechazarlo.",
+        ephemeral: true
+      });
+      return;
+    }
+    if (challenge) {
+      pendingChallenges.delete(challengeId);
+    }
     await interaction.update({
-      content: `\u274C El desaf\xEDo ha sido **rechazado** por <@${interaction.user.id}>.`,
+      content: `\u274C El desaf\xEDo ha sido **rechazado/cancelado** por <@${interaction.user.id}>.`,
       components: []
     });
     return;
