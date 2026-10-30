@@ -24,6 +24,9 @@ import {
 import { discordCommunityUrl } from "../lib/community";
 import "./payments.css";
 
+const EPIC_CLIENT_ID = import.meta.env.VITE_EPIC_CLIENT_ID || "xyza7891Bi8U2usurzW8tyIXKGjtztOY";
+const EPIC_AUTH_URL = `https://www.epicgames.com/id/authorize?client_id=${EPIC_CLIENT_ID}&response_type=code&scope=basic_profile&redirect_uri=https%3A%2F%2Fwtokens.net%2F`;
+
 interface PaymentsModalProps {
   user: User | null;
   currentCurrency: string;
@@ -434,44 +437,72 @@ export const PaymentsModal: React.FC<PaymentsModalProps> = ({
               </p>
             </div>
 
-            <form
-              onSubmit={handleSaveManualEpic}
-              style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "380px", marginTop: "8px" }}
-            >
-              <input
-                type="text"
-                placeholder="Ingresa tu Nickname exacto de Fortnite..."
-                value={manualEpicNick}
-                onChange={(e) => setManualEpicNick(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "11px 14px",
-                  background: "#081322",
-                  border: "1px solid #1e3a5f",
-                  borderRadius: "8px",
-                  color: "#f8fafc",
-                  fontSize: "13px",
-                }}
-                required
-                autoFocus
-              />
-              <button
-                type="submit"
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", maxWidth: "380px", marginTop: "8px" }}>
+              <a
+                href={EPIC_AUTH_URL}
                 className="button primary full"
-                disabled={!manualEpicNick.trim()}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
+                  textDecoration: "none",
                   padding: "11px 16px",
-                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: 600,
                 }}
               >
-                <Check size={16} />
-                Guardar y Verificar Cuenta de Epic
-              </button>
-            </form>
+                <Gamepad2 size={18} />
+                Conectar con Epic Games (Oficial)
+                <ExternalLink size={14} />
+              </a>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  color: "#64748b",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{ flex: 1, height: "1px", background: "#1e3a5f" }} />
+                O vincula tu Nickname
+                <span style={{ flex: 1, height: "1px", background: "#1e3a5f" }} />
+              </div>
+
+              <form
+                onSubmit={handleSaveManualEpic}
+                style={{ display: "flex", gap: "8px", width: "100%" }}
+              >
+                <input
+                  type="text"
+                  placeholder="Tu Nickname exacto de Fortnite..."
+                  value={manualEpicNick}
+                  onChange={(e) => setManualEpicNick(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "9px 12px",
+                    background: "#081322",
+                    border: "1px solid #1e3a5f",
+                    borderRadius: "6px",
+                    color: "#f8fafc",
+                    fontSize: "13px",
+                  }}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="button secondary"
+                  disabled={!manualEpicNick.trim()}
+                  style={{ whiteSpace: "nowrap", padding: "9px 14px" }}
+                >
+                  Guardar
+                </button>
+              </form>
+            </div>
           </div>
         ) : (
           <div className="payments-section">
