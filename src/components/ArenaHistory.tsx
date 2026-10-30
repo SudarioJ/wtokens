@@ -175,9 +175,21 @@ export function ArenaHistory({ currentUser }: { currentUser?: User | null }) {
               </div>
               <time
                 dateTime={d.createdAt}
-                style={{ color: "#64748b", fontSize: "12px" }}
+                style={{
+                  color: "#94a3b8",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-mono, monospace)",
+                  fontWeight: "500",
+                }}
               >
-                {new Date(d.createdAt).toLocaleDateString("es-PE")}
+                {new Date(d.createdAt).toLocaleString("es-PE", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
               </time>
             </summary>
             <DuelDetails duel={d} />
