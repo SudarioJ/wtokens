@@ -31,6 +31,8 @@ export const userSchema = z.object({
   balance_reserved_wt: z.number().optional(),
   balance_disputed_wt: z.number().optional(),
   referrer_code: z.string().max(40).optional(),
+  affiliate_tier: z.enum(["standard", "verified", "partner"]).optional(),
+  affiliate_rate: z.number().min(0).max(1).optional(),
   ranking: z
     .object({
       tiers: z

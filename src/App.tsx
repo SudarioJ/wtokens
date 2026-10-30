@@ -649,6 +649,8 @@ export function App() {
           epic_verified: current.epic_verified,
           epic_account_id: current.epic_account_id,
           referrer_code: current.referrer_code,
+          affiliate_tier: current.affiliate_tier,
+          affiliate_rate: current.affiliate_rate,
         };
       });
       setUser((prev) => {

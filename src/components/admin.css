@@ -1080,6 +1080,17 @@
   color: #fff;
 }
 
+.action-btn.affiliate {
+  background: rgba(94, 234, 255, 0.1);
+  border-color: rgba(94, 234, 255, 0.3);
+  color: #5eeaff;
+}
+
+.action-btn.affiliate:hover {
+  background: rgba(94, 234, 255, 0.25);
+  border-color: #5eeaff;
+}
+
 .action-btn.ban {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.3);

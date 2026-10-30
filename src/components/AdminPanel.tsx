@@ -33,6 +33,7 @@ import {
   registerNewUser,
   syncWithServerRegistry,
   isOwnerUser,
+  setUserAffiliateTier,
 } from "../lib/admin";
 import "./admin.css";
 
@@ -128,6 +129,43 @@ export function AdminPanel({
   const [newUserEpic, setNewUserEpic] = useState("");
   const [newUserCountry, setNewUserCountry] = useState("PE");
   const [newUserInitialBalance, setNewUserInitialBalance] = useState("10");
+
+  // Affiliate tier modal state
+  const [affiliateModalUser, setAffiliateModalUser] = useState<ManagedUser | null>(null);
+  const [selectedTier, setSelectedTier] = useState<"standard" | "verified" | "partner">("partner");
+  const [customTierRate, setCustomTierRate] = useState<string>("20");
+
+  function handleOpenAffiliateModal(u: ManagedUser) {
+    setAffiliateModalUser(u);
+    const tier = u.affiliate_tier || "partner";
+    setSelectedTier(tier);
+    const rate = u.affiliate_rate
+      ? Math.round(u.affiliate_rate * 100)
+      : tier === "partner"
+        ? 20
+        : tier === "verified"
+          ? 15
+          : 10;
+    setCustomTierRate(String(rate));
+  }
+
+  function handleSaveAffiliateTier() {
+    if (!affiliateModalUser) return;
+    const numRate = parseFloat(customTierRate) / 100;
+    const res = setUserAffiliateTier(
+      currentAdmin.display_name,
+      affiliateModalUser.id,
+      selectedTier,
+      numRate,
+    );
+    if (res.success) {
+      reloadAll();
+      setFeedback({ text: res.message, error: false });
+      setAffiliateModalUser(null);
+    } else {
+      setFeedback({ text: res.message, error: true });
+    }
+  }
 
   function handleCreateNewUser(e: FormEvent) {
     e.preventDefault();
@@ -1367,6 +1405,7 @@ export function AdminPanel({
                   <th>Usuario / Identidad</th>
                   <th>Epic Games</th>
                   <th>Rol</th>
+                  <th>Rango Afiliado</th>
                   <th>País</th>
                   <th>Saldo WTokens</th>
                   <th>Estado</th>
@@ -1413,6 +1452,49 @@ export function AdminPanel({
                       </span>
                     </td>
                     <td>
+                      <span
+                        className={`tier-pill ${u.affiliate_tier || "standard"}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "3px 8px",
+                          borderRadius: "6px",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          background:
+                            u.affiliate_tier === "partner"
+                              ? "rgba(94, 234, 255, 0.15)"
+                              : u.affiliate_tier === "verified"
+                                ? "rgba(16, 185, 129, 0.15)"
+                                : "rgba(100, 116, 139, 0.15)",
+                          border:
+                            u.affiliate_tier === "partner"
+                              ? "1px solid rgba(94, 234, 255, 0.4)"
+                              : u.affiliate_tier === "verified"
+                                ? "1px solid rgba(16, 185, 129, 0.4)"
+                                : "1px solid rgba(100, 116, 139, 0.3)",
+                          color:
+                            u.affiliate_tier === "partner"
+                              ? "#5eeaff"
+                              : u.affiliate_tier === "verified"
+                                ? "#34d399"
+                                : "#94a3b8",
+                        }}
+                        onClick={() => handleOpenAffiliateModal(u)}
+                        title="Haz clic para cambiar el nivel de afiliado de este usuario"
+                      >
+                        {u.affiliate_tier === "partner" ? (
+                          <>👑 Partner ({Math.round((u.affiliate_rate || 0.2) * 100)}%)</>
+                        ) : u.affiliate_tier === "verified" ? (
+                          <>🥈 Verificado (15%)</>
+                        ) : (
+                          <>🥉 Estándar (10%)</>
+                        )}
+                      </span>
+                    </td>
+                    <td>
                       <span className="country-cell">
                         {u.country_name} ({u.preferred_currency})
                       </span>
@@ -1443,6 +1525,25 @@ export function AdminPanel({
                     </td>
                     <td>
                       <div className="actions-cell">
+                        <button
+                          className="action-btn affiliate"
+                          title="Gestionar Rango de Afiliado (Partner Grande 20% / Verificado 15% / Estándar 10%)"
+                          onClick={() => handleOpenAffiliateModal(u)}
+                          style={{
+                            background: u.affiliate_tier === "partner" ? "rgba(94, 234, 255, 0.15)" : undefined,
+                            borderColor: u.affiliate_tier === "partner" ? "#5eeaff" : undefined,
+                            color: u.affiliate_tier === "partner" ? "#5eeaff" : undefined,
+                          }}
+                        >
+                          <Sparkles size={14} />
+                          <span>
+                            {u.affiliate_tier === "partner"
+                              ? "Partner (20%)"
+                              : u.affiliate_tier === "verified"
+                                ? "Verificado"
+                                : "Rango Afiliado"}
+                          </span>
+                        </button>
                         <button
                           className="action-btn credit"
                           title="Acreditar WTokens a este usuario"
@@ -1745,6 +1846,312 @@ export function AdminPanel({
                 onClick={handleRejectWithdrawalConfirm}
               >
                 Rechazar y Reembolsar WT
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Asignar Tier de Afiliado (Partner Grande / Verificado / Estándar) */}
+      {affiliateModalUser && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setAffiliateModalUser(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+        >
+          <div
+            className="admin-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#0f172a",
+              border: "1px solid #1e293b",
+              borderRadius: "16px",
+              padding: "24px",
+              maxWidth: "480px",
+              width: "100%",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.6)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "16px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Sparkles size={20} color="#5eeaff" />
+                <h3 style={{ margin: 0, fontSize: "18px", color: "#f8fafc" }}>
+                  Asignar Rango de Afiliado
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => setAffiliateModalUser(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: "#1e293b",
+                padding: "12px",
+                borderRadius: "10px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <img
+                src={
+                  affiliateModalUser.avatar_url ||
+                  "https://cdn.discordapp.com/embed/avatars/0.png"
+                }
+                alt=""
+                style={{ width: "40px", height: "40px", borderRadius: "50%" }}
+              />
+              <div>
+                <strong style={{ color: "#fff", display: "block" }}>
+                  {affiliateModalUser.display_name}
+                </strong>
+                <small style={{ color: "#94a3b8" }}>
+                  {affiliateModalUser.discord_tag}
+                </small>
+              </div>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#cbd5e1", marginBottom: "14px" }}>
+              Selecciona el nivel de comisiones que recibirá este usuario cuando
+              sus referidos jueguen en WTokens:
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                marginBottom: "18px",
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  border:
+                    selectedTier === "partner"
+                      ? "2px solid #5eeaff"
+                      : "1px solid #334155",
+                  background:
+                    selectedTier === "partner"
+                      ? "rgba(94, 234, 255, 0.12)"
+                      : "#131d2e",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setSelectedTier("partner");
+                  setCustomTierRate("20");
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      color: "#5eeaff",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span>👑</span> 3. Partner Grande
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#94a3b8",
+                      marginTop: "2px",
+                    }}
+                  >
+                    Para organizaciones (como 7rx), clanes y creadores top
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span
+                    style={{ fontSize: "16px", fontWeight: 800, color: "#5eeaff" }}
+                  >
+                    20%
+                  </span>
+                </div>
+              </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  border:
+                    selectedTier === "verified"
+                      ? "2px solid #10b981"
+                      : "1px solid #334155",
+                  background:
+                    selectedTier === "verified"
+                      ? "rgba(16, 185, 129, 0.12)"
+                      : "#131d2e",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setSelectedTier("verified");
+                  setCustomTierRate("15");
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, color: "#34d399" }}>
+                    🥈 2. Creador Verificado
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#94a3b8",
+                      marginTop: "2px",
+                    }}
+                  >
+                    Para streamers y creadores de contenido
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span
+                    style={{ fontSize: "16px", fontWeight: 800, color: "#34d399" }}
+                  >
+                    15%
+                  </span>
+                </div>
+              </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  border:
+                    selectedTier === "standard"
+                      ? "2px solid #94a3b8"
+                      : "1px solid #334155",
+                  background:
+                    selectedTier === "standard"
+                      ? "rgba(148, 163, 184, 0.12)"
+                      : "#131d2e",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setSelectedTier("standard");
+                  setCustomTierRate("10");
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, color: "#cbd5e1" }}>
+                    🥉 1. Afiliado Normal
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#94a3b8",
+                      marginTop: "2px",
+                    }}
+                  >
+                    Nivel base para cualquier jugador
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span
+                    style={{ fontSize: "16px", fontWeight: 800, color: "#cbd5e1" }}
+                  >
+                    10%
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  fontSize: "12px",
+                  color: "#94a3b8",
+                  display: "block",
+                  marginBottom: "6px",
+                }}
+              >
+                Porcentaje de comisión personalizado (%):
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                step="1"
+                value={customTierRate}
+                onChange={(e) => setCustomTierRate(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  background: "#1e293b",
+                  border: "1px solid #334155",
+                  color: "#fff",
+                  fontWeight: 700,
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setAffiliateModalUser(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="button primary"
+                onClick={handleSaveAffiliateTier}
+                style={{
+                  background: "linear-gradient(135deg, #0284c7, #06b6d4)",
+                  fontWeight: 700,
+                }}
+              >
+                ✅ Guardar Rango ({customTierRate}%)
               </button>
             </div>
           </div>

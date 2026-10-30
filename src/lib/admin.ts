@@ -17,6 +17,8 @@ export interface ManagedUser {
   country_name: string;
   preferred_currency: string;
   referrer_code?: string | undefined;
+  affiliate_tier?: "standard" | "verified" | "partner" | undefined;
+  affiliate_rate?: number | undefined;
   balance_wt: number;
   balance_reserved_wt: number;
   balance_disputed_wt: number;
@@ -121,6 +123,8 @@ export function getManagedUsers(): ManagedUser[] {
             epic_verified: isFakeEpic ? false : Boolean(u.epic_verified && u.epic_nickname),
             balance_reserved_wt: u.balance_reserved_wt || 0,
             balance_disputed_wt: u.balance_disputed_wt || 0,
+            affiliate_tier: u.affiliate_tier || "standard",
+            affiliate_rate: u.affiliate_rate || (u.affiliate_tier === "partner" ? 0.20 : u.affiliate_tier === "verified" ? 0.15 : 0.10),
           };
         });
       if (cleaned.length !== parsed.length) {
@@ -729,6 +733,67 @@ export function toggleUserSuspension(
   return { success: true, suspended: user.suspended };
 }
 
+// User Management: Set Affiliate Tier (Standard / Verified / Partner Grande)
+export function setUserAffiliateTier(
+  adminName: string,
+  userId: string,
+  tier: "standard" | "verified" | "partner",
+  customRate?: number,
+): { success: boolean; tier: "standard" | "verified" | "partner"; rate: number; message: string } {
+  const users = getManagedUsers();
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return { success: false, tier: "standard", rate: 0.1, message: "Usuario no encontrado." };
+  }
+
+  const rate =
+    customRate !== undefined && !isNaN(customRate) && customRate > 0
+      ? customRate
+      : tier === "partner"
+        ? 0.20
+        : tier === "verified"
+          ? 0.15
+          : 0.10;
+
+  user.affiliate_tier = tier;
+  user.affiliate_rate = rate;
+  saveManagedUsers(users);
+
+  if (typeof fetch !== "undefined") {
+    fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "set_affiliate_tier",
+        userId,
+        tier,
+        rate,
+      }),
+    }).catch(() => {});
+  }
+
+  const audit = getAuditLog();
+  audit.unshift({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    admin_id: "system",
+    admin_name: adminName,
+    target_user_id: user.id,
+    target_user_name: user.display_name,
+    amount: 0,
+    reason: `Nivel de Afiliado asignado: ${tier.toUpperCase()} (${Math.round(rate * 100)}%)`,
+    note: `Nivel: ${tier === "partner" ? "Partner Grande (20%)" : tier === "verified" ? "Creador Verificado (15%)" : "Estándar (10%)"}`,
+    created_at: new Date().toISOString(),
+  });
+  saveAuditLog(audit);
+
+  return {
+    success: true,
+    tier,
+    rate,
+    message: `Nivel de afiliado de ${user.display_name} actualizado a ${tier === "partner" ? "Partner Grande" : tier === "verified" ? "Creador Verificado" : "Estándar"} (${Math.round(rate * 100)}%).`,
+  };
+}
+
 // Treasury: Approve withdrawal request
 export function approveWithdrawal(
   adminName: string,
@@ -936,8 +1001,14 @@ export function settleDuelPayout(
         (c) => c.referrer_code === player.referrer_code || c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
       );
       if (creator && creator.id !== player.id) {
-        // Normal affiliate: 10% of player fee part. Verified: 15%.
-        const commRate = creator.role === "admin" || creator.role === "owner" ? 0.15 : 0.10;
+        // Normal affiliate: 10% of player fee part. Verified: 15%. Partner Grande: 20%.
+        const commRate =
+          creator.affiliate_rate ||
+          (creator.affiliate_tier === "partner"
+            ? 0.20
+            : creator.affiliate_tier === "verified" || creator.role === "admin" || creator.role === "owner"
+              ? 0.15
+              : 0.10);
         const comm = Number((feePerPlayer * commRate).toFixed(4));
         if (comm > 0) {
           creator.balance_wt = Number((creator.balance_wt + comm).toFixed(2));
@@ -1110,7 +1181,13 @@ export function resolveDisputePayout(
           c.display_name.toUpperCase() === player.referrer_code?.toUpperCase(),
       );
       if (creator && creator.id !== player.id) {
-        const commRate = creator.role === "admin" || creator.role === "owner" ? 0.15 : 0.1;
+        const commRate =
+          creator.affiliate_rate ||
+          (creator.affiliate_tier === "partner"
+            ? 0.20
+            : creator.affiliate_tier === "verified" || creator.role === "admin" || creator.role === "owner"
+              ? 0.15
+              : 0.10);
         const comm = Number((feePerPlayer * commRate).toFixed(4));
         if (comm > 0) {
           creator.balance_wt = Number((creator.balance_wt + comm).toFixed(2));

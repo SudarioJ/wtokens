@@ -14,6 +14,8 @@ interface SyncedUser {
   country_name: string;
   balance_wt: number;
   referrer_code?: string;
+  affiliate_tier?: "standard" | "verified" | "partner";
+  affiliate_rate?: number;
   last_active: string;
   created_at: string;
 }
@@ -321,8 +323,15 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
                     c.id.toUpperCase() === refCode,
                 );
                 if (creator && creator.id !== playerUser?.id) {
-                  // Creator earns direct recurring commission per completed match
-                  const commission = Math.max(0.05, Number((amount * 0.08).toFixed(2)));
+                  // Creator earns direct recurring commission per completed match (Standard: 10%, Verified: 15%, Partner: 20%)
+                  const commRate =
+                    creator.affiliate_rate ||
+                    (creator.affiliate_tier === "partner"
+                      ? 0.20
+                      : creator.affiliate_tier === "verified" || creator.role === "admin" || creator.role === "owner"
+                        ? 0.15
+                        : 0.10);
+                  const commission = Math.max(0.05, Number((amount * commRate).toFixed(2)));
                   creator.balance_wt = Number((creator.balance_wt + commission).toFixed(2));
                   creator.last_active = "Ahora";
                 }
@@ -335,6 +344,30 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
             JSON.stringify({
               success: true,
               resolvedDuels: Array.from(globalState.resolvedDuels),
+            }),
+          );
+          return;
+        }
+
+        // 5.2 Set Affiliate Tier
+        if (action === "set_affiliate_tier" && payload.userId) {
+          const u = globalState.users.get(payload.userId);
+          if (u) {
+            u.affiliate_tier = payload.tier || "standard";
+            u.affiliate_rate =
+              Number(payload.rate) ||
+              (u.affiliate_tier === "partner"
+                ? 0.20
+                : u.affiliate_tier === "verified"
+                  ? 0.15
+                  : 0.10);
+          }
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              success: true,
+              tier: u?.affiliate_tier || "standard",
+              rate: u?.affiliate_rate || 0.10,
             }),
           );
           return;

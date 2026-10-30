@@ -19,6 +19,23 @@ type Props = {
 export function AffiliatesPanel({ user, onNotify }: Props) {
   const [copied, setCopied] = useState(false);
 
+  const currentTier =
+    user?.affiliate_tier ||
+    (user?.role === "admin" || user?.role === "owner" ? "verified" : "standard");
+  const currentRatePercent = user?.affiliate_rate
+    ? Math.round(user.affiliate_rate * 100)
+    : currentTier === "partner"
+      ? 20
+      : currentTier === "verified"
+        ? 15
+        : 10;
+  const tierName =
+    currentTier === "partner"
+      ? `Partner Grande (${currentRatePercent}%)`
+      : currentTier === "verified"
+        ? `Creador Verificado (${currentRatePercent}%)`
+        : `Afiliado Normal (${currentRatePercent}%)`;
+
   // Default affiliate code is user display_name or fallback
   const userCode = user?.display_name
     ? user.display_name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
@@ -68,7 +85,7 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
           <h3>
             <Gift size={18} color="#5eeaff" /> Tu Código y Enlace de Referido
           </h3>
-          <span className="tier-pill standard">Rango: Afiliado Normal (10%)</span>
+          <span className={`tier-pill ${currentTier}`}>Rango: {tierName}</span>
         </div>
         <div className="affiliate-link-box">
           <input
@@ -102,8 +119,14 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
         </div>
         <div className="affiliate-stat-card">
           <div className="stat-label">Tu Comisión Actual</div>
-          <div className="stat-val accent">10%</div>
-          <div className="stat-hint">De la comisión WTokens</div>
+          <div className="stat-val accent">{currentRatePercent}%</div>
+          <div className="stat-hint">
+            {currentTier === "partner"
+              ? "🥇 Partner Grande Activo"
+              : currentTier === "verified"
+                ? "🥈 Creador Verificado"
+                : "🥉 Afiliado Estándar"}
+          </div>
         </div>
         <div className="affiliate-stat-card">
           <div className="stat-label">Total Ganado</div>
@@ -146,7 +169,7 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
               </li>
             </ul>
             <button className="button secondary full" disabled>
-              Activo por defecto
+              {currentTier === "standard" ? "✅ Nivel Actual (10%)" : "Nivel Estándar"}
             </button>
           </div>
 
@@ -176,31 +199,61 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
                 <Check size={14} /> Activación enviando mensaje al staff
               </li>
             </ul>
-            <a
-              href={discordCommunityUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="button primary full"
-            >
-              Solicitar al Staff <ExternalLink size={14} />
-            </a>
+            {currentTier === "verified" ? (
+              <button
+                className="button primary full"
+                disabled
+                style={{ background: "#10b981", borderColor: "#10b981", color: "#fff", fontWeight: 700 }}
+              >
+                ✅ Nivel Actual Activo ({currentRatePercent}%)
+              </button>
+            ) : (
+              <a
+                href={discordCommunityUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button primary full"
+              >
+                Solicitar al Staff <ExternalLink size={14} />
+              </a>
+            )}
           </div>
 
           {/* Tier 3 */}
-          <div className="tier-card">
+          <div
+            className={`tier-card ${currentTier === "partner" ? "featured" : ""}`}
+            style={
+              currentTier === "partner"
+                ? {
+                    border: "2px solid #5eeaff",
+                    background: "linear-gradient(180deg, rgba(94, 234, 255, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%)",
+                    boxShadow: "0 0 25px rgba(94, 234, 255, 0.25)",
+                  }
+                : undefined
+            }
+          >
             <div className="tier-header">
-              <div className="tier-name">3. Partner Grande</div>
+              <div
+                className="tier-name"
+                style={currentTier === "partner" ? { color: "#5eeaff", display: "flex", alignItems: "center", gap: "6px" } : undefined}
+              >
+                {currentTier === "partner" && <span>👑</span>} 3. Partner Grande
+              </div>
               <div className="tier-desc">
                 Para organizaciones, comunidades masivas o creadores top.
               </div>
             </div>
             <div className="tier-rate-box">
-              <div className="tier-rate-val">Hasta 20%</div>
-              <div className="tier-rate-sub">porcentaje negociado</div>
+              <div className="tier-rate-val" style={currentTier === "partner" ? { color: "#5eeaff" } : undefined}>
+                {currentTier === "partner" ? `${currentRatePercent}%` : "Hasta 20%"}
+              </div>
+              <div className="tier-rate-sub">
+                {currentTier === "partner" ? "comisión asignada y activa" : "porcentaje negociado"}
+              </div>
             </div>
             <ul className="tier-features">
               <li>
-                <Check size={14} /> <strong>Hasta 20%</strong> de comisión
+                <Check size={14} /> <strong>{currentTier === "partner" ? `${currentRatePercent}%` : "Hasta 20%"}</strong> de comisión
               </li>
               <li>
                 <Check size={14} /> Eventos y torneos patrocinados para tu canal
@@ -212,14 +265,29 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
                 <Check size={14} /> Acuerdos personalizados con administración
               </li>
             </ul>
-            <a
-              href={discordCommunityUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="button secondary full"
-            >
-              Negociar Partner <ExternalLink size={14} />
-            </a>
+            {currentTier === "partner" ? (
+              <button
+                className="button primary full"
+                disabled
+                style={{
+                  background: "linear-gradient(135deg, #0284c7, #06b6d4)",
+                  borderColor: "#06b6d4",
+                  color: "#fff",
+                  fontWeight: 800,
+                }}
+              >
+                👑 Nivel Actual (Partner Oficial {currentRatePercent}%)
+              </button>
+            ) : (
+              <a
+                href={discordCommunityUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button secondary full"
+              >
+                Negociar Partner <ExternalLink size={14} />
+              </a>
+            )}
           </div>
         </div>
       </div>
