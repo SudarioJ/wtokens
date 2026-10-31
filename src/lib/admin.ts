@@ -402,6 +402,14 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
       existing.balance_wt = sessionUser.balance_wt;
       changed = true;
     }
+    if (sessionUser.referrer_code && !existing.referrer_code) {
+      existing.referrer_code = sessionUser.referrer_code;
+      changed = true;
+    }
+    if (sessionUser.custom_affiliate_code && !existing.custom_affiliate_code) {
+      existing.custom_affiliate_code = sessionUser.custom_affiliate_code;
+      changed = true;
+    }
     const isOwner = isOwnerUser(sessionUser) || isOwnerUser(existing);
     if (isOwner) {
       if (existing.role !== "owner") {
@@ -467,6 +475,10 @@ export function upsertManagedUserFromSession(sessionUser: any): ManagedUser | nu
     balance_wt: sessionUser.balance_wt ?? 0,
     balance_reserved_wt: sessionUser.balance_reserved_wt ?? 0,
     balance_disputed_wt: sessionUser.balance_disputed_wt ?? 0,
+    referrer_code: sessionUser.referrer_code,
+    custom_affiliate_code: sessionUser.custom_affiliate_code,
+    affiliate_tier: sessionUser.affiliate_tier || "standard",
+    affiliate_rate: sessionUser.affiliate_rate || 0.10,
     created_at: new Date().toISOString(),
     last_active: "Ahora",
   };

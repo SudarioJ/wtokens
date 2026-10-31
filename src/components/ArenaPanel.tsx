@@ -242,6 +242,26 @@ export function ArenaPanel({
       } catch {}
       const closedSet = new Set(closedArr);
 
+      if (current.duel && current.duel.state === "COMPLETED") {
+        const completedDuel = current.duel;
+        let stakeVal = 1;
+        try {
+          stakeVal = parseFloat(localStorage.getItem("wtokens_current_match_stake") || "1") || 1;
+        } catch {}
+        fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "duel_completed",
+            duelId: completedDuel.id,
+            stake: stakeVal,
+            amount: stakeVal,
+            players: completedDuel.players,
+            winnerSide: completedDuel.winnerSide,
+          }),
+        }).catch(() => {});
+      }
+
       if (current.duel && closedSet.has(current.duel.id)) {
         current.duel = null;
         last.current = null;

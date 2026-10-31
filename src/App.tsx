@@ -392,7 +392,12 @@ export function App() {
       setSelectedMatch(null);
       return;
     }
-    const loggedUser = profile.value;
+    const storedRef = (localStorage.getItem("wtokens_ref_code") || "").trim().toUpperCase();
+    const effectiveRef = profile.value.referrer_code || storedRef || undefined;
+    const loggedUser = {
+      ...profile.value,
+      referrer_code: effectiveRef,
+    };
     setUser(loggedUser);
     try {
       localStorage.setItem("wtokens_user_session", JSON.stringify(loggedUser));
@@ -433,14 +438,27 @@ export function App() {
                 discord_tag: loggedUser.discord_tag,
                 avatar_url: loggedUser.avatar_url,
                 role: assignedRole,
+                referrer_code: loggedUser.referrer_code,
+                custom_affiliate_code: loggedUser.custom_affiliate_code,
+                affiliate_tier: loggedUser.affiliate_tier,
+                affiliate_rate: loggedUser.affiliate_rate,
               },
             }),
           })
             .then((r) => r.json())
             .then((syncData) => {
-              if (syncData?.user?.balance_wt !== undefined) {
+              if (syncData?.user) {
                 setUser((prev) =>
-                  prev ? { ...prev, balance_wt: syncData.user.balance_wt } : null,
+                  prev
+                    ? {
+                        ...prev,
+                        balance_wt: syncData.user.balance_wt ?? prev.balance_wt,
+                        referrer_code: syncData.user.referrer_code ?? prev.referrer_code,
+                        custom_affiliate_code: syncData.user.custom_affiliate_code ?? prev.custom_affiliate_code,
+                        affiliate_tier: syncData.user.affiliate_tier ?? prev.affiliate_tier,
+                        affiliate_rate: syncData.user.affiliate_rate ?? prev.affiliate_rate,
+                      }
+                    : null,
                 );
               }
             })
@@ -458,9 +476,18 @@ export function App() {
           })
             .then((r) => r.json())
             .then((syncData) => {
-              if (syncData?.user?.balance_wt !== undefined) {
+              if (syncData?.user) {
                 setUser((prev) =>
-                  prev ? { ...prev, balance_wt: syncData.user.balance_wt } : null,
+                  prev
+                    ? {
+                        ...prev,
+                        balance_wt: syncData.user.balance_wt ?? prev.balance_wt,
+                        referrer_code: syncData.user.referrer_code ?? prev.referrer_code,
+                        custom_affiliate_code: syncData.user.custom_affiliate_code ?? prev.custom_affiliate_code,
+                        affiliate_tier: syncData.user.affiliate_tier ?? prev.affiliate_tier,
+                        affiliate_rate: syncData.user.affiliate_rate ?? prev.affiliate_rate,
+                      }
+                    : null,
                 );
               }
             })

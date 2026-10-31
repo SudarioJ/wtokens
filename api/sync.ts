@@ -317,66 +317,72 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           return;
         }
 
-        // 5.1 Force Close Duel & Automatic Affiliate Commission
-        if (action === "force_close_duel" && payload.duelId) {
-          globalState.resolvedDuels.add(payload.duelId);
-          const winnerId = payload.winnerId;
-          const winnerName = payload.winnerName;
-          const amount = Number(payload.amount) || 0;
+        // 5.1 Force Close Duel or Duel Completion & Automatic Affiliate Commission
+        if ((action === "force_close_duel" || action === "duel_completed") && payload.duelId) {
+          if (!globalState.resolvedDuels.has(payload.duelId)) {
+            globalState.resolvedDuels.add(payload.duelId);
+            const winnerId = payload.winnerId;
+            const winnerName = payload.winnerName;
+            const amount = Number(payload.amount) || Number(payload.stake) || 1.0;
 
-          if ((winnerId || winnerName) && amount > 0) {
-            let u = winnerId ? globalState.users.get(winnerId) : undefined;
-            if (!u) {
-              const query = (winnerId || winnerName || "").toLowerCase();
-              u = Array.from(globalState.users.values()).find(
-                (usr) =>
-                  usr.id.toLowerCase() === query ||
-                  usr.display_name.toLowerCase() === query ||
-                  (usr.discord_tag && usr.discord_tag.toLowerCase().includes(query)) ||
-                  (usr.epic_nickname && usr.epic_nickname.toLowerCase() === query),
-              );
+            if ((winnerId || winnerName) && Number(payload.amount) > 0) {
+              let u = winnerId ? globalState.users.get(winnerId) : undefined;
+              if (!u) {
+                const query = (winnerId || winnerName || "").toLowerCase();
+                u = Array.from(globalState.users.values()).find(
+                  (usr) =>
+                    usr.id.toLowerCase() === query ||
+                    usr.display_name.toLowerCase() === query ||
+                    (usr.discord_tag && usr.discord_tag.toLowerCase().includes(query)) ||
+                    (usr.epic_nickname && usr.epic_nickname.toLowerCase() === query),
+                );
+              }
+              if (u) {
+                u.balance_wt = Number((u.balance_wt + Number(payload.amount)).toFixed(2));
+                u.last_active = "Ahora";
+              }
             }
-            if (u) {
-              u.balance_wt = Number((u.balance_wt + amount).toFixed(2));
-              u.last_active = "Ahora";
-            }
-          }
 
-          // 🎁 Automatic Affiliate Commission Distribution
-          if (payload.players && Array.isArray(payload.players)) {
-            for (const pl of payload.players) {
-              const playerUser =
-                globalState.users.get(pl.id) ||
-                Array.from(globalState.users.values()).find(
-                  (u) => u.display_name.toLowerCase() === (pl.name || "").toLowerCase(),
-                );
-              const refCode = (
-                playerUser?.referrer_code ||
-                pl.referrer_code ||
-                ""
-              )
-                .trim()
-                .toUpperCase();
-              if (refCode) {
-                const creator = Array.from(globalState.users.values()).find(
-                  (c) =>
-                    (c.custom_affiliate_code && c.custom_affiliate_code.toUpperCase() === refCode) ||
-                    c.display_name.toUpperCase() === refCode ||
-                    (c.discord_tag && c.discord_tag.toUpperCase().includes(refCode)) ||
-                    c.id.toUpperCase() === refCode,
-                );
-                if (creator && creator.id !== playerUser?.id) {
-                  // Creator earns direct recurring commission per completed match (Standard: 10%, Verified: 15%, Partner: 20%)
-                  const commRate =
-                    creator.affiliate_rate ||
-                    (creator.affiliate_tier === "partner"
-                      ? 0.20
-                      : creator.affiliate_tier === "verified" || creator.role === "admin" || creator.role === "owner"
-                        ? 0.15
-                        : 0.10);
-                  const commission = Math.max(0.05, Number((amount * commRate).toFixed(2)));
-                  creator.balance_wt = Number((creator.balance_wt + commission).toFixed(2));
-                  creator.last_active = "Ahora";
+            // 🎁 Automatic Affiliate Commission Distribution
+            if (payload.players && Array.isArray(payload.players)) {
+              for (const pl of payload.players) {
+                const playerUser =
+                  globalState.users.get(pl.id) ||
+                  Array.from(globalState.users.values()).find(
+                    (u) =>
+                      u.id === pl.id ||
+                      u.display_name.toLowerCase() === (pl.name || "").toLowerCase(),
+                  );
+                const refCode = (
+                  playerUser?.referrer_code ||
+                  pl.referrer_code ||
+                  ""
+                )
+                  .trim()
+                  .toUpperCase();
+                if (refCode) {
+                  const creator = Array.from(globalState.users.values()).find(
+                    (c) =>
+                      (c.custom_affiliate_code && c.custom_affiliate_code.toUpperCase() === refCode) ||
+                      c.display_name.toUpperCase() === refCode ||
+                      (c.discord_tag && c.discord_tag.toUpperCase().includes(refCode)) ||
+                      c.id.toUpperCase() === refCode,
+                  );
+                  if (creator && creator.id !== playerUser?.id) {
+                    // Creator earns direct recurring commission per completed match (Standard: 10%, Verified: 15%, Partner: 20%)
+                    const commRate =
+                      creator.affiliate_rate ||
+                      (creator.affiliate_tier === "partner"
+                        ? 0.20
+                        : creator.affiliate_tier === "verified" || creator.role === "admin" || creator.role === "owner"
+                          ? 0.15
+                          : 0.10);
+                    // Match fee is 10% of match pot (amount * 2 * 0.10) = amount * 0.20
+                    const baseFee = amount * 0.20;
+                    const commission = Math.max(0.05, Number((baseFee * commRate).toFixed(2)));
+                    creator.balance_wt = Number((creator.balance_wt + commission).toFixed(2));
+                    creator.last_active = "Ahora";
+                  }
                 }
               }
             }
