@@ -2,6 +2,19 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "wtokens.net"
+        }
+      ],
+      "destination": "https://www.wtokens.net/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/v1/:path*", "destination": "/api/gateway?route=/v1/:path*" },
     {

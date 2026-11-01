@@ -62,7 +62,7 @@ export function AffiliatesPanel({ user, onNotify }: Props) {
     }
   }, [user, userCode]);
 
-  const referralUrl = `https://wtokens.net/?ref=${userCode}`;
+  const referralUrl = `https://www.wtokens.net/?ref=${userCode}`;
 
   const copyToClipboard = () => {
     void navigator.clipboard.writeText(referralUrl);

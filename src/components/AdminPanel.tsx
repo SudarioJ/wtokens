@@ -1456,7 +1456,7 @@ export function AdminPanel({
                     .filter((u) => u.custom_affiliate_code || u.affiliate_tier === "partner")
                     .map((p) => {
                       const code = p.custom_affiliate_code || p.display_name.toUpperCase();
-                      const url = `https://wtokens.net/?ref=${code}`;
+                      const url = `https://www.wtokens.net/?ref=${code}`;
                       const countReferred = users.filter((u) => u.id !== p.id && u.referrer_code && u.referrer_code.toUpperCase() === code).length;
                       return (
                         <div

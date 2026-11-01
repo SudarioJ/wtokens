@@ -96,6 +96,10 @@ export function proxyRequest(
               let c = cookieStr;
               // Strip upstream domain attribute so cookie binds cleanly to wtokens.net
               c = c.replace(/;\s*Domain=[^;]+/gi, "");
+              const hostHeader = (req.headers.host || req.headers["x-forwarded-host"] || "").toString();
+              if (hostHeader.includes("wtokens.net")) {
+                c += "; Domain=.wtokens.net";
+              }
               // Add Max-Age (30 days) if not already set, preventing premature session loss
               if (!/Max-Age=/i.test(c) && !/Expires=/i.test(c)) {
                 c += "; Max-Age=2592000";
