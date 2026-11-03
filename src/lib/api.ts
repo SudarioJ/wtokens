@@ -86,11 +86,11 @@ export async function request<T>(
   schema: z.ZodType<T>,
   init?: RequestInit,
 ): Promise<T> {
-  // Timeout optimized to 8 seconds to ensure snappy UI loading
+  // Timeout set to 25s to allow cold container starts without premature aborts
   const response = await fetch(path, {
     credentials: "same-origin",
     cache: "no-store",
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(25000),
     ...init,
     headers: { Accept: "application/json", ...init?.headers },
   });

@@ -9,7 +9,7 @@ export function ArenaHistory({ currentUser }: { currentUser?: User | null }) {
   const [items, setItems] = useState<Duel[]>([]),
     [cursor, setCursor] = useState<string | null>(null),
     [error, setError] = useState("");
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(false);
   useEffect(() => {
     let active = true;
     void arenaApi

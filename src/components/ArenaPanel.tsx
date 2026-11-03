@@ -153,7 +153,11 @@ export function ArenaPanel({
   onTeam: (mode: string) => void;
   onOpenPayments?: (() => void) | undefined;
 }) {
-  const [arena, setArena] = useState<Arena>();
+  const [arena, setArena] = useState<Arena>({
+    queue: null,
+    duel: null,
+    roomsConfigured: true,
+  });
   const [sound, setSound] = useState(matchSoundEnabled);
   const searching = useRef(false);
   useEffect(() => {

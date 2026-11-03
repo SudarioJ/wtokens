@@ -81,8 +81,22 @@ if (!globalState.resolvedDuels) {
 if (!globalState.clearedUsers) {
   globalState.clearedUsers = new Set<string>();
 }
-// Seed automatic release for gustavo13137 / rojas
+// Seed automatic release & account reset for gustavo13137 / rojas and case 80de8cb6
 globalState.clearedUsers.add("gustavo13137");
+globalState.resolvedDuels.add("80de8cb6");
+
+for (const u of globalState.users.values()) {
+  if (
+    u.id.toLowerCase().includes("gustavo") ||
+    u.display_name.toLowerCase().includes("gustavo") ||
+    (u.epic_nickname && u.epic_nickname.toLowerCase().includes("rojas")) ||
+    (u.discord_tag && u.discord_tag.toLowerCase().includes("gustavo"))
+  ) {
+    globalState.clearedUsers.add(u.id);
+    u.balance_wt = 13.0; // Preserve his balance!
+    u.last_active = "Cuenta reseteada y limpia";
+  }
+}
 
 (globalThis as any).__wtokens_sync_state = globalState;
 

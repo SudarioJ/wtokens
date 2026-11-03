@@ -33,7 +33,7 @@ export function MatchHistory({
 }) {
   const [items, setItems] = useState<MatchHistoryItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const version = useRef(0);
   const mounted = useRef(false);
