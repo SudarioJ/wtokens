@@ -16,6 +16,7 @@ import {
   History,
   CreditCard,
   Crown,
+  Unlock,
 } from "lucide-react";
 import {
   type ManagedUser,
@@ -35,6 +36,7 @@ import {
   isOwnerUser,
   setUserAffiliateTier,
   createOrUpdateEsportsPartner,
+  resetUserMatchmaking,
 } from "../lib/admin";
 import "./admin.css";
 
@@ -571,6 +573,22 @@ export function AdminPanel({
       reloadAll();
       setRejectModalReq(null);
       setFeedback({ text: res.message, error: false });
+    }
+  }
+
+  async function handleResetUserMatch(target: ManagedUser) {
+    const ok = await resetUserMatchmaking(target.id, target.display_name);
+    if (ok) {
+      setFeedback({
+        text: `✅ Partida 1v1 y estado de ${target.display_name} liberados con éxito. Ya puede buscar rival libremente.`,
+        error: false,
+      });
+      void reloadAll();
+    } else {
+      setFeedback({
+        text: `Error al liberar la partida de ${target.display_name}.`,
+        error: true,
+      });
     }
   }
 
@@ -1253,6 +1271,75 @@ export function AdminPanel({
       {/* TAB 2: User Directory & Management */}
       {tab === "users" && (
         <div className="admin-tab-content users-tab">
+          {/* Quick Action: Reset / Unbug Stuck Users */}
+          <div
+            style={{
+              background: "rgba(16, 185, 129, 0.12)",
+              border: "1px solid rgba(16, 185, 129, 0.4)",
+              borderRadius: "10px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "10px",
+            }}
+          >
+            <div>
+              <strong
+                style={{
+                  color: "#34d399",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "14px",
+                }}
+              >
+                <Unlock size={16} /> Liberación Instantánea de Partidas 1v1 y Matchmaking
+              </strong>
+              <p
+                style={{
+                  margin: "2px 0 0",
+                  fontSize: "12px",
+                  color: "#cbd5e1",
+                }}
+              >
+                Si un jugador o tester figura en 1v1 trabado o no puede cancelar, usa este botón para liberarlo de inmediato:
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button primary small"
+                style={{
+                  background: "#059669",
+                  borderColor: "#059669",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+                onClick={() => {
+                  const rojas =
+                    users.find(
+                      (u) =>
+                        u.display_name.toLowerCase().includes("gustavo") ||
+                        u.epic_nickname.toLowerCase().includes("rojas") ||
+                        u.id.toLowerCase().includes("gustavo"),
+                    ) ||
+                    ({
+                      id: "gustavo13137",
+                      display_name: "gustavo13137 (Rojas)",
+                    } as ManagedUser);
+                  void handleResetUserMatch(rojas);
+                }}
+              >
+                ⚡ Liberar a Gustavo Rojas (1v1)
+              </button>
+            </div>
+          </div>
+
           {/* Filters Bar */}
           <div className="directory-filters">
             <div className="search-input-wrap">
@@ -1818,6 +1905,23 @@ export function AdminPanel({
                         >
                           <Coins size={14} />
                           <span>Acreditar WT</span>
+                        </button>
+                        <button
+                          className="action-btn"
+                          title="Liberar a este usuario de duelos trabados, arbitrajes o matchmaking 1v1"
+                          style={{
+                            background: "rgba(59, 130, 246, 0.15)",
+                            border: "1px solid rgba(59, 130, 246, 0.4)",
+                            color: "#60a5fa",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            fontWeight: 600,
+                          }}
+                          onClick={() => handleResetUserMatch(u)}
+                        >
+                          <Unlock size={14} />
+                          <span>Liberar 1v1</span>
                         </button>
                         {u.role === "owner" || isOwnerUser(u) ? (
                           <span

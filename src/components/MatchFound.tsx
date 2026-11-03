@@ -29,9 +29,7 @@ export function MatchFound({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const alerted = useRef(false);
-  const [expired, setExpired] = useState(
-    Date.parse(duel.confirmationDeadline) <= Date.now(),
-  );
+  const [expired, setExpired] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const player = duel.players.find((p) => p.id === userId);
   const accepted = !!player?.confirmed;
@@ -49,10 +47,11 @@ export function MatchFound({
   }, []);
   useEffect(() => {
     const remaining = Date.parse(duel.confirmationDeadline) - Date.now();
-    setExpired(remaining <= 0);
+    // Tolerate client-side clock skew; keep alive for at least 25s so user is never locked out
+    const safeRemaining = Math.max(25000, remaining);
     const timer = window.setTimeout(
       () => setExpired(true),
-      Math.max(0, remaining),
+      safeRemaining,
     );
     return () => window.clearTimeout(timer);
   }, [duel.confirmationDeadline]);
@@ -168,21 +167,19 @@ export function MatchFound({
           type="button"
           className="button primary match-found-accept"
           autoFocus
-          disabled={busy || accepted || expired}
+          disabled={busy || accepted}
           onClick={onAccept}
         >
-          {expired
-            ? "Tiempo agotado"
-            : accepted
-              ? "Ya confirmaste"
-              : busy
-                ? "Confirmando…"
-                : "Confirmar participación"}
+          {accepted
+            ? "Ya confirmaste"
+            : busy
+              ? "Confirmando…"
+              : "Confirmar participación"}
         </button>
         <button
           type="button"
           className="match-found-decline"
-          disabled={busy || expired}
+          disabled={busy}
           onClick={onDecline}
         >
           No participar

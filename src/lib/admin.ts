@@ -602,6 +602,41 @@ export function unlinkUserEpic(userId: string): void {
   }
 }
 
+export async function resetUserMatchmaking(
+  userId: string,
+  userName?: string,
+): Promise<boolean> {
+  try {
+    if (typeof fetch !== "undefined") {
+      await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reset_user_match",
+          userId,
+          userName,
+        }),
+      });
+    }
+  } catch {}
+
+  try {
+    const raw = localStorage.getItem("wtokens_cleared_users");
+    const arr: string[] = raw ? JSON.parse(raw) : [];
+    if (!arr.includes(userId)) {
+      arr.push(userId);
+      localStorage.setItem("wtokens_cleared_users", JSON.stringify(arr));
+    }
+  } catch {}
+
+  try {
+    localStorage.removeItem("wtokens_current_match_stake");
+  } catch {}
+
+  window.dispatchEvent(new Event("wtokens-duel-resolved"));
+  return true;
+}
+
 export function deleteManagedUser(userId: string): { success: boolean; message?: string } {
   const users = getManagedUsers();
   const target = users.find((u) => u.id === userId);

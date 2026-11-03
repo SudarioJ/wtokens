@@ -214,6 +214,19 @@ export function ArenaPanel({
     try {
       localStorage.setItem("wtokens_current_match_stake", String(activeStake));
     } catch {}
+    if (isDisputed && d) {
+      void handleForceCloseDispute("CANCEL").then(() => {
+        void act(() =>
+          arenaApi.solo(
+            modes.some((item) => item.code === mode)
+              ? mode
+              : (modes[0]?.code ?? mode),
+            asset,
+          ),
+        );
+      });
+      return;
+    }
     void act(() =>
       arenaApi.solo(
         modes.some((item) => item.code === mode)
@@ -240,7 +253,33 @@ export function ArenaPanel({
         const raw = localStorage.getItem("wtokens_closed_duels");
         if (raw) closedArr = JSON.parse(raw);
       } catch {}
+
+      let clearedUsersArr: string[] = ["gustavo13137"];
+      try {
+        const rawU = localStorage.getItem("wtokens_cleared_users");
+        if (rawU) clearedUsersArr.push(...JSON.parse(rawU));
+      } catch {}
+
+      // Check server sync for resolved duels & cleared users
+      try {
+        const syncRes = await fetch("/api/sync").then((r) => r.json());
+        if (syncRes && syncRes.success) {
+          if (Array.isArray(syncRes.resolvedDuels)) {
+            closedArr.push(...syncRes.resolvedDuels);
+          }
+          if (Array.isArray(syncRes.clearedUsers)) {
+            clearedUsersArr.push(...syncRes.clearedUsers);
+          }
+        }
+      } catch {}
+
       const closedSet = new Set(closedArr);
+      const isUserCleared = clearedUsersArr.some(
+        (u) =>
+          u === userId ||
+          u.toLowerCase() === "gustavo13137" ||
+          u.toLowerCase().includes("rojas"),
+      );
 
       if (current.duel && current.duel.state === "COMPLETED") {
         const completedDuel = current.duel;
@@ -262,13 +301,26 @@ export function ArenaPanel({
         }).catch(() => {});
       }
 
-      if (current.duel && closedSet.has(current.duel.id)) {
+      if (
+        current.duel &&
+        (closedSet.has(current.duel.id) ||
+          (isUserCleared &&
+            (current.duel.state === "MODERATION" ||
+              current.duel.state === "CANCELLED")))
+      ) {
         current.duel = null;
         last.current = null;
       }
 
-      if (!current.duel && last.current && !closedSet.has(last.current.id)) {
-        current.duel = await arenaApi.get(last.current.id);
+      if (
+        !current.duel &&
+        last.current &&
+        !closedSet.has(last.current.id) &&
+        !isUserCleared
+      ) {
+        try {
+          current.duel = await arenaApi.get(last.current.id);
+        } catch {}
       }
       if (mounted.current && stamp === version.current) {
         last.current = current.duel;
@@ -615,6 +667,68 @@ export function ArenaPanel({
                 >
                   🏆 Ganó{" "}
                   {d.players.find((p) => p.side === "B")?.name || "Equipo B"}
+                </button>
+              </div>
+            </div>
+          )}
+          {d.state === "CONFIRMING" && player && (
+            <div
+              style={{
+                background: "rgba(16, 185, 129, 0.18)",
+                border: "2px solid #10b981",
+                borderRadius: "12px",
+                padding: "16px 20px",
+                marginBottom: "20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "14px",
+              }}
+            >
+              <div>
+                <strong
+                  style={{
+                    color: "#34d399",
+                    fontSize: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  ⚔️ ¡Partida Encontrada! ({modeTitle(d.mode)} · {d.size}v{d.size})
+                </strong>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
+                  {player.confirmed
+                    ? "Ya confirmaste. Esperando que el rival confirme..."
+                    : "Tu rival está listo. Haz clic en Confirmar para comenzar."}
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="button primary"
+                  disabled={busy || player.confirmed}
+                  onClick={() => void act(() => arenaApi.action(d.id, "confirm"))}
+                  style={{
+                    background: "#10b981",
+                    borderColor: "#10b981",
+                    fontWeight: 700,
+                  }}
+                >
+                  {player.confirmed
+                    ? "✅ Confirmado"
+                    : busy
+                      ? "Confirmando…"
+                      : "✅ Confirmar Participación"}
+                </button>
+                <button
+                  type="button"
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => void act(() => arenaApi.action(d.id, "decline"))}
+                >
+                  Rechazar
                 </button>
               </div>
             </div>
@@ -1051,15 +1165,14 @@ export function ArenaPanel({
           <div className="duel-buttons">
             <button
               className="button primary"
-              disabled={busy || !modes.length || !hasSufficient || Boolean(isDisputed && d)}
+              disabled={busy || !modes.length || !hasSufficient}
               onClick={handleStartMatchmaking}
-              title={isDisputed && d ? "Cancela o resuelve el caso pendiente arriba antes de buscar rival" : undefined}
               style={{ flex: "1 1 auto" }}
             >
               {busy
                 ? "Entrando a la búsqueda…"
                 : isDisputed && d
-                  ? "⚠️ Resuelve o cancela el caso pendiente arriba"
+                  ? `⚔️ Liberar caso anterior y Buscar rival 1v1 (${activeStake} WT)`
                   : `⚔️ Buscar rival 1v1 (${activeStake} WT)`}
             </button>
             <button

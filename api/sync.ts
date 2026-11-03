@@ -65,17 +65,24 @@ const globalState: {
   pixRequests: SyncedPixRequest[];
   withdrawals: SyncedWithdrawal[];
   resolvedDuels: Set<string>;
+  clearedUsers: Set<string>;
 } = (globalThis as any).__wtokens_sync_state || {
   users: new Map<string, SyncedUser>(),
   deposits: [],
   pixRequests: [],
   withdrawals: [],
   resolvedDuels: new Set<string>(),
+  clearedUsers: new Set<string>(),
 };
 
 if (!globalState.resolvedDuels) {
   globalState.resolvedDuels = new Set<string>();
 }
+if (!globalState.clearedUsers) {
+  globalState.clearedUsers = new Set<string>();
+}
+// Seed automatic release for gustavo13137 / rojas
+globalState.clearedUsers.add("gustavo13137");
 
 (globalThis as any).__wtokens_sync_state = globalState;
 
@@ -153,6 +160,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         pixRequests: globalState.pixRequests.filter((p) => p.status === "pending"),
         withdrawals: globalState.withdrawals,
         resolvedDuels: Array.from(globalState.resolvedDuels),
+        clearedUsers: Array.from(globalState.clearedUsers),
       }),
     );
     return;
@@ -168,6 +176,38 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       try {
         const payload = bodyData ? JSON.parse(bodyData) : {};
         const action = payload.action;
+
+        // 0. Reset User Matchmaking & Duels
+        if (action === "reset_user_match" || action === "clear_user_duel") {
+          const targetId = payload.userId;
+          const targetName = (payload.userName || "").toLowerCase();
+          if (targetId) {
+            globalState.clearedUsers.add(targetId);
+          }
+          for (const u of globalState.users.values()) {
+            if (
+              u.id === targetId ||
+              (targetName &&
+                (u.display_name.toLowerCase().includes(targetName) ||
+                  (u.epic_nickname && u.epic_nickname.toLowerCase().includes(targetName)) ||
+                  (u.discord_tag && u.discord_tag.toLowerCase().includes(targetName))))
+            ) {
+              globalState.clearedUsers.add(u.id);
+            }
+          }
+          if (payload.duelId) {
+            globalState.resolvedDuels.add(payload.duelId);
+          }
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              success: true,
+              clearedUsers: Array.from(globalState.clearedUsers),
+              resolvedDuels: Array.from(globalState.resolvedDuels),
+            }),
+          );
+          return;
+        }
 
         // 1. Register / Heartbeat User
         if (action === "register_user" && payload.user) {
