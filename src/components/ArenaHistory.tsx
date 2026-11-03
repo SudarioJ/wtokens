@@ -254,7 +254,10 @@ export function ModerationPanel() {
     [cancel, setCancel] = useState(false);
   const load = useCallback(async () => {
     try {
-      const cases = await arenaApi.cases();
+      const [casesRes, currentRes] = await Promise.allSettled([
+        arenaApi.cases(),
+        arenaApi.current(),
+      ]);
       let closedArr: string[] = [];
       try {
         const raw = localStorage.getItem("wtokens_closed_duels");
@@ -270,7 +273,20 @@ export function ModerationPanel() {
       } catch {}
 
       const closedSet = new Set(closedArr);
-      const activeCases = cases.filter((d) => !closedSet.has(d.id));
+      let allCases: Duel[] = [];
+      if (casesRes.status === "fulfilled" && Array.isArray(casesRes.value)) {
+        allCases.push(...casesRes.value);
+      }
+      if (
+        currentRes.status === "fulfilled" &&
+        currentRes.value?.duel &&
+        currentRes.value.duel.state === "MODERATION"
+      ) {
+        if (!allCases.some((d) => d.id === currentRes.value.duel!.id)) {
+          allCases.unshift(currentRes.value.duel);
+        }
+      }
+      const activeCases = allCases.filter((d) => !closedSet.has(d.id));
       setItems(activeCases);
       setError("");
     } catch (e) {

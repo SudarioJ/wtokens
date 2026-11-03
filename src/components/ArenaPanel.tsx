@@ -366,6 +366,96 @@ export function ArenaPanel({
     }
   }
 
+  async function handleForceCloseDispute(decision: "CANCEL" | "A" | "B") {
+    if (!d || busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError("");
+    version.current++;
+
+    try {
+      const winnerPlayer =
+        decision === "CANCEL" ? null : d.players.find((p) => p.side === decision);
+      const isCancel = decision === "CANCEL";
+
+      // 1. Mark permanently resolved in localStorage
+      try {
+        const raw = localStorage.getItem("wtokens_closed_duels");
+        const closedArr: string[] = raw ? JSON.parse(raw) : [];
+        if (!closedArr.includes(d.id)) {
+          closedArr.push(d.id);
+          localStorage.setItem("wtokens_closed_duels", JSON.stringify(closedArr));
+        }
+      } catch {}
+
+      // 2. Call sync endpoint to liquidate or release duel
+      await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "force_close_duel",
+          duelId: d.id,
+          winnerId: winnerPlayer?.id,
+          winnerName: winnerPlayer?.name,
+          amount: isCancel ? 0 : 1.8,
+          players: d.players,
+          rounds: isCancel ? "0-0" : decision === "A" ? "5-0" : "0-5",
+          reason: isCancel
+            ? "Cancelado y liberado por jugadores"
+            : `Liquidado a favor de Equipo ${decision}`,
+        }),
+      }).catch(() => {});
+
+      // 3. Try server resolve / outcome correction to resolve in Spring Boot
+      try {
+        const myReport = d.reports.find((r) => r.captainId === userId);
+        if (myReport && decision !== "CANCEL") {
+          const desiredOutcome =
+            myReport.winnerSide === decision ? "WIN" : "LOSS";
+          await arenaApi.correctOutcome(
+            d.id,
+            desiredOutcome,
+            myReport.winnerSide || "A",
+          );
+        }
+      } catch {}
+
+      try {
+        await arenaApi.resolve(
+          d.id,
+          isCancel ? "0-0" : decision === "A" ? "5-0" : "0-5",
+          isCancel,
+          isCancel
+            ? "Cancelado por jugadores"
+            : `Liquidado a favor de Equipo ${decision}`,
+        );
+      } catch {}
+
+      try {
+        await arenaApi.action(d.id, "cancel-request");
+      } catch {}
+
+      try {
+        await arenaApi.action(d.id, "finish");
+      } catch {}
+
+      // 4. Reset local duel state so user can immediately search again
+      last.current = null;
+      setArena((prev) => (prev ? { ...prev, duel: null, queue: null } : prev));
+      setViewDisputeDetails(false);
+
+      // 5. Broadcast so other tabs and panels refresh
+      window.dispatchEvent(new Event("wtokens-duel-resolved"));
+
+      await load();
+    } catch (e) {
+      if (mounted.current) setError(friendlyError(e));
+    } finally {
+      busyRef.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  }
+
   const d = arena?.duel,
     player = d?.players.find((p) => p.id === userId),
     captain = !!player?.captain,
@@ -441,31 +531,92 @@ export function ArenaPanel({
           {isDisputed && (
             <div
               style={{
-                background: "rgba(245, 158, 11, 0.12)",
-                border: "1px solid rgba(245, 158, 11, 0.4)",
+                background: "linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%)",
+                border: "1px solid #f59e0b",
                 borderRadius: "12px",
-                padding: "14px 18px",
-                marginBottom: "16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "10px",
+                padding: "16px 20px",
+                marginBottom: "20px",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
               }}
             >
-              <div>
-                <strong style={{ color: "#fbbf24" }}>⚠️ Partida en Revisión / Disputa</strong>
-                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
-                  Los fondos de esta partida están asegurados en arbitraje. Puedes seguir jugando otros duelos con tu saldo restante.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="button primary small"
-                onClick={() => setViewDisputeDetails(false)}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                  marginBottom: "14px",
+                }}
               >
-                ⚔️ Ir a Matchmaking / Buscar Rival
-              </button>
+                <div>
+                  <strong
+                    style={{
+                      color: "#fbbf24",
+                      fontSize: "15px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    ⚠️ Partida en Revisión / Disputa #{d.id.slice(0, 8)}
+                  </strong>
+                  <p
+                    style={{
+                      margin: "6px 0 0",
+                      fontSize: "13px",
+                      color: "#cbd5e1",
+                    }}
+                  >
+                    Los reportes de ambos jugadores no coincidieron. Para
+                    desbloquear tu cuenta y poder buscar partida de inmediato,
+                    puedes cancelar este duelo o resolverlo ahora:
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                  borderTop: "1px solid rgba(245, 158, 11, 0.2)",
+                  paddingTop: "12px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="button danger"
+                  disabled={busy}
+                  onClick={() => void handleForceCloseDispute("CANCEL")}
+                  style={{
+                    background: "#dc2626",
+                    color: "#fff",
+                    border: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  🛑 Cancelar Duelo y Desbloquear Matchmaking
+                </button>
+                <button
+                  type="button"
+                  className="button primary small"
+                  disabled={busy}
+                  onClick={() => void handleForceCloseDispute("A")}
+                >
+                  🏆 Ganó{" "}
+                  {d.players.find((p) => p.side === "A")?.name || "Equipo A"}
+                </button>
+                <button
+                  type="button"
+                  className="button primary small"
+                  disabled={busy}
+                  onClick={() => void handleForceCloseDispute("B")}
+                >
+                  🏆 Ganó{" "}
+                  {d.players.find((p) => p.side === "B")?.name || "Equipo B"}
+                </button>
+              </div>
             </div>
           )}
           <DuelDetails duel={d} />
@@ -679,16 +830,27 @@ export function ArenaPanel({
                   ⚠️ Tienes una partida en arbitraje (Match #{d.id.slice(0, 8)})
                 </strong>
                 <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
-                  Tus fondos en disputa están protegidos. Tu saldo disponible para jugar nuevos duelos es de <strong>{effectiveBalance.toFixed(2)} WT</strong>.
+                  Para buscar un nuevo rival, debes primero cancelar o resolver este caso pendiente:
                 </p>
               </div>
-              <button
-                type="button"
-                className="button secondary small"
-                onClick={() => setViewDisputeDetails(true)}
-              >
-                📋 Ver Duelo en Disputa
-              </button>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="button danger small"
+                  disabled={busy}
+                  onClick={() => void handleForceCloseDispute("CANCEL")}
+                  style={{ background: "#dc2626", color: "#fff", border: "none", fontWeight: 700 }}
+                >
+                  🛑 Cancelar y Liberar Caso
+                </button>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  onClick={() => setViewDisputeDetails(true)}
+                >
+                  📋 Ver Detalles del Caso
+                </button>
+              </div>
             </div>
           )}
           <div className="solo-matchmaking-heading">
@@ -889,11 +1051,16 @@ export function ArenaPanel({
           <div className="duel-buttons">
             <button
               className="button primary"
-              disabled={busy || !modes.length || !hasSufficient}
+              disabled={busy || !modes.length || !hasSufficient || Boolean(isDisputed && d)}
               onClick={handleStartMatchmaking}
+              title={isDisputed && d ? "Cancela o resuelve el caso pendiente arriba antes de buscar rival" : undefined}
               style={{ flex: "1 1 auto" }}
             >
-              {busy ? "Entrando a la búsqueda…" : `⚔️ Buscar rival 1v1 (${activeStake} WT)`}
+              {busy
+                ? "Entrando a la búsqueda…"
+                : isDisputed && d
+                  ? "⚠️ Resuelve o cancela el caso pendiente arriba"
+                  : `⚔️ Buscar rival 1v1 (${activeStake} WT)`}
             </button>
             <button
               className="button secondary"
