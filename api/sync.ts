@@ -81,20 +81,24 @@ if (!globalState.resolvedDuels) {
 if (!globalState.clearedUsers) {
   globalState.clearedUsers = new Set<string>();
 }
-// Seed automatic release & account reset for gustavo13137 / rojas and case 80de8cb6
+// Seed automatic release & account reset for gustavo13137, jarsfud and case 80de8cb6
 globalState.clearedUsers.add("gustavo13137");
+globalState.clearedUsers.add("jarsfud");
 globalState.resolvedDuels.add("80de8cb6");
 
-for (const u of globalState.users.values()) {
+// Completely delete gustavo13137 and jarsfud from globalState.users so they can register completely fresh as requested by user
+for (const [id, u] of Array.from(globalState.users.entries())) {
   if (
-    u.id.toLowerCase().includes("gustavo") ||
+    id.toLowerCase().includes("gustavo") ||
+    id.toLowerCase().includes("jarsfud") ||
     u.display_name.toLowerCase().includes("gustavo") ||
+    u.display_name.toLowerCase().includes("jarsfud") ||
     (u.epic_nickname && u.epic_nickname.toLowerCase().includes("rojas")) ||
-    (u.discord_tag && u.discord_tag.toLowerCase().includes("gustavo"))
+    (u.discord_tag && u.discord_tag.toLowerCase().includes("gustavo")) ||
+    (u.discord_tag && u.discord_tag.toLowerCase().includes("jarsfud"))
   ) {
-    globalState.clearedUsers.add(u.id);
-    u.balance_wt = 13.0; // Preserve his balance!
-    u.last_active = "Cuenta reseteada y limpia";
+    globalState.users.delete(id);
+    globalState.clearedUsers.add(id);
   }
 }
 

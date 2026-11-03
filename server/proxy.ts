@@ -126,9 +126,10 @@ export function proxyRequest(
       const reqPath = (req.url || "").split("?")[0];
       const isArenaGet = (reqPath === "/v1/arena" || reqPath === "/v1/arena/") && req.method === "GET";
       const isModerationGet = reqPath?.startsWith("/v1/arena/moderation") && req.method === "GET";
+      const isHistoryGet = reqPath?.includes("/history") && req.method === "GET";
       const isSoloQueuePost = reqPath?.startsWith("/v1/arena/solo") && req.method === "POST";
 
-      if (isArenaGet || isModerationGet || isSoloQueuePost) {
+      if (isArenaGet || isModerationGet || isHistoryGet || isSoloQueuePost) {
         const chunks: Buffer[] = [];
         response.on("data", (chunk: Buffer) => chunks.push(chunk));
         response.on("end", () => {
@@ -140,7 +141,12 @@ export function proxyRequest(
                 data.duel &&
                 (data.duel.state === "MODERATION" ||
                   data.duel.state === "CANCELLED" ||
-                  (typeof data.duel.id === "string" && data.duel.id.toLowerCase().startsWith("80de")))
+                  (typeof data.duel.id === "string" && data.duel.id.toLowerCase().startsWith("80de")) ||
+                  data.duel.players?.some((p: any) =>
+                    p?.name?.toLowerCase().includes("gustavo") ||
+                    p?.name?.toLowerCase().includes("rojas") ||
+                    p?.name?.toLowerCase().includes("jarsfud")
+                  ))
               ) {
                 data.duel = null;
               }
@@ -157,9 +163,30 @@ export function proxyRequest(
                   d &&
                   typeof d.id === "string" &&
                   !d.id.toLowerCase().startsWith("80de") &&
-                  !d.players?.some((p: any) => p?.name?.toLowerCase().includes("gustavo") || p?.name?.toLowerCase().includes("rojas")),
+                  !d.players?.some((p: any) =>
+                    p?.name?.toLowerCase().includes("gustavo") ||
+                    p?.name?.toLowerCase().includes("rojas") ||
+                    p?.name?.toLowerCase().includes("jarsfud")
+                  ),
               );
               const clean = JSON.stringify(filtered);
+              res.setHeader("Content-Type", "application/json");
+              res.setHeader("Content-Length", Buffer.byteLength(clean));
+              res.statusCode = 200;
+              res.end(clean);
+              return;
+            }
+            if (isHistoryGet && data && typeof data === "object") {
+              if (Array.isArray(data.items)) {
+                data.items = data.items.filter(
+                  (d: any) =>
+                    d &&
+                    typeof d.id === "string" &&
+                    !d.id.toLowerCase().startsWith("80de") &&
+                    d.state !== "MODERATION",
+                );
+              }
+              const clean = JSON.stringify(data);
               res.setHeader("Content-Type", "application/json");
               res.setHeader("Content-Length", Buffer.byteLength(clean));
               res.statusCode = 200;

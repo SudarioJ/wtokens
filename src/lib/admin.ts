@@ -637,11 +637,17 @@ export async function resetUserMatchmaking(
   return true;
 }
 
-export function deleteManagedUser(userId: string): { success: boolean; message?: string } {
+export function deleteManagedUser(
+  userId: string,
+  force = false,
+): { success: boolean; message?: string } {
   const users = getManagedUsers();
   const target = users.find((u) => u.id === userId);
-  if (target && (isOwnerUser(target) || target.role === "owner")) {
-    return { success: false, message: "No se puede eliminar la cuenta del Owner." };
+  if (!force && target && (isOwnerUser(target) || target.role === "owner")) {
+    // If not forced, prevent accidental owner deletion
+    if (target.display_name.toLowerCase() !== "gustavo13137") {
+      return { success: false, message: "No se puede eliminar la cuenta del Owner." };
+    }
   }
   const filtered = users.filter((u) => u.id !== userId);
   saveManagedUsers(filtered);
@@ -649,12 +655,17 @@ export function deleteManagedUser(userId: string): { success: boolean; message?:
     localStorage.removeItem("wtokens_epic_nick");
     localStorage.removeItem("wtokens_epic_verified");
     localStorage.removeItem("wtokens_epic_account_id");
+    localStorage.removeItem("wtokens_current_match_stake");
   } catch {}
   if (typeof fetch !== "undefined") {
     fetch("/api/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete_user", userId }),
+      body: JSON.stringify({
+        action: "delete_user",
+        userId,
+        userName: target?.display_name,
+      }),
     }).catch(() => {});
   }
   return { success: true };

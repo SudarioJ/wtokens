@@ -17,6 +17,7 @@ import {
   CreditCard,
   Crown,
   Unlock,
+  Trash2,
 } from "lucide-react";
 import {
   type ManagedUser,
@@ -37,6 +38,7 @@ import {
   setUserAffiliateTier,
   createOrUpdateEsportsPartner,
   resetUserMatchmaking,
+  deleteManagedUser,
 } from "../lib/admin";
 import "./admin.css";
 
@@ -1336,6 +1338,50 @@ export function AdminPanel({
                 }}
               >
                 ⚡ Liberar a Gustavo Rojas (1v1)
+              </button>
+              <button
+                type="button"
+                className="button danger small"
+                style={{
+                  background: "#dc2626",
+                  borderColor: "#dc2626",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: "#fff",
+                }}
+                onClick={async () => {
+                  const toDelete = users.filter(
+                    (u) =>
+                      u.display_name.toLowerCase().includes("gustavo") ||
+                      u.display_name.toLowerCase().includes("jarsfud") ||
+                      (u.epic_nickname && u.epic_nickname.toLowerCase().includes("rojas")) ||
+                      u.id.toLowerCase().includes("gustavo") ||
+                      u.id.toLowerCase().includes("jarsfud"),
+                  );
+                  for (const u of toDelete) {
+                    deleteManagedUser(u.id, true);
+                  }
+                  await fetch("/api/sync", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "delete_user", userId: "gustavo13137", userName: "gustavo" }),
+                  }).catch(() => {});
+                  await fetch("/api/sync", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "delete_user", userId: "jarsfud", userName: "jarsfud" }),
+                  }).catch(() => {});
+                  setFeedback({
+                    text: "🗑️ Cuentas de Gustavo y Jarsfud eliminadas completamente de la base de datos. Ya pueden volver a registrarse limpiamente desde cero.",
+                    error: false,
+                  });
+                  void reloadAll();
+                }}
+              >
+                <Trash2 size={14} />
+                <span>Eliminar Cuentas Gustavo y Jarsfud (Reset Total)</span>
               </button>
             </div>
           </div>
