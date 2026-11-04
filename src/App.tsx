@@ -354,6 +354,23 @@ export function App() {
         }
       } catch {}
 
+      // Hard reset for gustavo & jarsfud to ensure they register 100% clean and fresh
+      if (
+        cachedUser &&
+        (cachedUser.display_name?.toLowerCase().includes("gustavo") ||
+          cachedUser.display_name?.toLowerCase().includes("jarsfud") ||
+          cachedUser.id?.toLowerCase().includes("gustavo") ||
+          cachedUser.id?.toLowerCase().includes("jarsfud"))
+      ) {
+        try {
+          localStorage.removeItem("wtokens_user_session");
+          localStorage.removeItem("wtokens_closed_duels");
+          localStorage.removeItem("wtokens_cleared_users");
+          localStorage.removeItem("wtokens_current_match_stake");
+        } catch {}
+        cachedUser = null;
+      }
+
       if (cachedUser) {
         setUser(cachedUser);
         // Sync live balance, role and epic nickname from server registry

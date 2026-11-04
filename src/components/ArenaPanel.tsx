@@ -277,7 +277,6 @@ export function ArenaPanel({
         }
       } catch {}
 
-      const closedSet = new Set(closedArr);
       const isUserCleared = clearedUsersArr.some(
         (u) =>
           u === userId ||
@@ -305,21 +304,31 @@ export function ArenaPanel({
         }).catch(() => {});
       }
 
-      if (
-        current.duel &&
-        (closedSet.has(current.duel.id) ||
-          (isUserCleared &&
-            (current.duel.state === "MODERATION" ||
-              current.duel.state === "CANCELLED")))
-      ) {
-        current.duel = null;
-        last.current = null;
+      if (current.duel) {
+        const isStuckOrDisputed =
+          current.duel.state === "MODERATION" ||
+          current.duel.state === "CANCELLED" ||
+          current.duel.state === "COMPLETED" ||
+          current.duel.id.toLowerCase().startsWith("80de") ||
+          closedArr.some((id) =>
+            current.duel?.id.toLowerCase().includes(id.toLowerCase()),
+          ) ||
+          isUserCleared;
+        if (isStuckOrDisputed) {
+          current.duel = null;
+          last.current = null;
+        }
       }
 
       if (
         !current.duel &&
         last.current &&
-        !closedSet.has(last.current.id) &&
+        last.current.state !== "MODERATION" &&
+        last.current.state !== "CANCELLED" &&
+        last.current.state !== "COMPLETED" &&
+        !closedArr.some((id) =>
+          last.current?.id.toLowerCase().includes(id.toLowerCase()),
+        ) &&
         !isUserCleared
       ) {
         try {
@@ -927,50 +936,6 @@ export function ArenaPanel({
         />
       ) : !team || team.size === 1 ? (
         <div className="solo-matchmaking">
-          {/* Aviso informativo si existe un duelo en disputa simultáneo */}
-          {isDisputed && d && (
-            <div
-              style={{
-                background: "rgba(245, 158, 11, 0.12)",
-                border: "1px solid rgba(245, 158, 11, 0.4)",
-                borderRadius: "12px",
-                padding: "14px 18px",
-                marginBottom: "20px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "12px",
-              }}
-            >
-              <div>
-                <strong style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "6px" }}>
-                  ⚠️ Tienes una partida en arbitraje (Match #{d.id.slice(0, 8)})
-                </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#cbd5e1" }}>
-                  Para buscar un nuevo rival, debes primero cancelar o resolver este caso pendiente:
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="button danger small"
-                  disabled={busy}
-                  onClick={() => void handleForceCloseDispute("CANCEL")}
-                  style={{ background: "#dc2626", color: "#fff", border: "none", fontWeight: 700 }}
-                >
-                  🛑 Cancelar y Liberar Caso
-                </button>
-                <button
-                  type="button"
-                  className="button secondary small"
-                  onClick={() => setViewDisputeDetails(true)}
-                >
-                  📋 Ver Detalles del Caso
-                </button>
-              </div>
-            </div>
-          )}
           <div className="solo-matchmaking-heading">
             <span className="solo-format">1v1</span>
             <div>
