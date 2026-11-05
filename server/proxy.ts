@@ -54,6 +54,75 @@ export function browserLocation(value: string, target: URL): string {
   return value;
 }
 
+function autoReleaseUpstreamDuel(target: URL, duelId: string, cookie: string) {
+  if (!duelId) return;
+  const reqFn = target.protocol === "https:" ? httpsRequest : httpRequest;
+  const commonHeaders = {
+    "content-type": "application/json",
+    cookie: cookie || "",
+    host: target.host,
+  };
+
+  try {
+    const body = JSON.stringify({
+      rounds: "0-0",
+      cancel: true,
+      reason: "Auto-cleared stuck duel",
+    });
+    const r = reqFn(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname.replace(/^\[|\]$/g, ""),
+        port: target.port || undefined,
+        path: `/v1/arena/duels/${duelId}/resolve`,
+        method: "POST",
+        headers: { ...commonHeaders, "content-length": Buffer.byteLength(body) },
+        timeout: 4000,
+      },
+      () => {},
+    );
+    r.on("error", () => {});
+    r.write(body);
+    r.end();
+  } catch {}
+
+  try {
+    const r = reqFn(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname.replace(/^\[|\]$/g, ""),
+        port: target.port || undefined,
+        path: `/v1/arena/duels/${duelId}/cancel-request`,
+        method: "POST",
+        headers: { ...commonHeaders, "content-length": 2 },
+        timeout: 4000,
+      },
+      () => {},
+    );
+    r.on("error", () => {});
+    r.write("{}");
+    r.end();
+  } catch {}
+
+  try {
+    const r = reqFn(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname.replace(/^\[|\]$/g, ""),
+        port: target.port || undefined,
+        path: `/v1/arena/duels/${duelId}/finish`,
+        method: "POST",
+        headers: { ...commonHeaders, "content-length": 2 },
+        timeout: 4000,
+      },
+      () => {},
+    );
+    r.on("error", () => {});
+    r.write("{}");
+    r.end();
+  } catch {}
+}
+
 // A single fixed destination, no dynamic path matching library and no automatic redirects.
 export function proxyRequest(
   origin: string,
@@ -68,6 +137,7 @@ export function proxyRequest(
     res.end('{"code":"BODY_TOO_LARGE"}');
     return;
   }
+  const reqChunks: Buffer[] = [];
   const upstream = (target.protocol === "https:" ? httpsRequest : httpRequest)(
     {
       protocol: target.protocol,
@@ -128,14 +198,129 @@ export function proxyRequest(
       const isModerationGet = reqPath?.startsWith("/v1/arena/moderation") && req.method === "GET";
       const isHistoryGet = reqPath?.includes("/history") && req.method === "GET";
       const isSoloQueuePost = reqPath?.startsWith("/v1/arena/solo") && req.method === "POST";
+      const isTeamJoinPost = reqPath?.startsWith("/v1/teams/join") && req.method === "POST";
+      const isTeamPost = (reqPath === "/v1/teams" || reqPath === "/v1/teams/") && req.method === "POST";
+      const isTeamDisbandPost = (reqPath?.startsWith("/v1/teams/disband") || reqPath?.startsWith("/v1/teams/leave")) && req.method === "POST";
 
-      if (isArenaGet || isModerationGet || isHistoryGet || isSoloQueuePost) {
+      const shouldIntercept =
+        isArenaGet ||
+        isModerationGet ||
+        isHistoryGet ||
+        isSoloQueuePost ||
+        isTeamJoinPost ||
+        isTeamPost ||
+        isTeamDisbandPost;
+
+      if (shouldIntercept) {
         const chunks: Buffer[] = [];
         response.on("data", (chunk: Buffer) => chunks.push(chunk));
         response.on("end", () => {
           try {
             const raw = Buffer.concat(chunks).toString("utf-8");
-            const data = JSON.parse(raw);
+            let data: any = null;
+            try {
+              data = JSON.parse(raw);
+            } catch {}
+
+            // 1. Manejo de disband/leave: si falla por ACTIVE_MATCH o conflicto, devolver equipo nulo con 200
+            if (isTeamDisbandPost && response.statusCode && response.statusCode >= 400) {
+              const safeDisband = JSON.stringify({ team: null });
+              res.setHeader("Content-Type", "application/json");
+              res.setHeader("Content-Length", Buffer.byteLength(safeDisband));
+              res.statusCode = 200;
+              res.end(safeDisband);
+              return;
+            }
+
+            // 2. Manejo de unirse a equipo o crear equipo bloqueado por ACTIVE_MATCH fantasma
+            if (
+              (isTeamJoinPost || isTeamPost) &&
+              response.statusCode &&
+              response.statusCode >= 400 &&
+              raw.includes("ACTIVE_MATCH")
+            ) {
+              const userCookie = String(req.headers.cookie || "");
+              // Liberar caso conocido en upstream
+              autoReleaseUpstreamDuel(target, "80de8cb6-993c-48c0-8459-a54823863412", userCookie);
+
+              // Consultar /v1/arena en upstream para capturar cualquier otro duelId activo
+              const arenaReqFn = target.protocol === "https:" ? httpsRequest : httpRequest;
+              const aReq = arenaReqFn(
+                {
+                  protocol: target.protocol,
+                  hostname: target.hostname.replace(/^\[|\]$/g, ""),
+                  port: target.port || undefined,
+                  path: "/v1/arena",
+                  method: "GET",
+                  headers: {
+                    cookie: userCookie,
+                    accept: "application/json",
+                    host: target.host,
+                  },
+                  timeout: 4000,
+                },
+                (aRes) => {
+                  const aChunks: Buffer[] = [];
+                  aRes.on("data", (c) => aChunks.push(c));
+                  aRes.on("end", () => {
+                    try {
+                      const aData = JSON.parse(Buffer.concat(aChunks).toString("utf-8"));
+                      if (aData?.duel?.id) {
+                        autoReleaseUpstreamDuel(target, aData.duel.id, userCookie);
+                      }
+                    } catch {}
+
+                    // Reintentar la solicitud original a upstream tras liberar el duelo
+                    setTimeout(() => {
+                      const reqBodyBuf = Buffer.concat(reqChunks);
+                      const retryReq = arenaReqFn(
+                        {
+                          protocol: target.protocol,
+                          hostname: target.hostname.replace(/^\[|\]$/g, ""),
+                          port: target.port || undefined,
+                          path: req.url ?? "/",
+                          method: "POST",
+                          headers: {
+                            ...headers(req.headers),
+                            "content-length": reqBodyBuf.length,
+                            host: target.host,
+                          },
+                          timeout: 10000,
+                        },
+                        (retryRes) => {
+                          const rChunks: Buffer[] = [];
+                          retryRes.on("data", (c) => rChunks.push(c));
+                          retryRes.on("end", () => {
+                            const rBuf = Buffer.concat(rChunks);
+                            res.statusCode = retryRes.statusCode ?? 200;
+                            res.setHeader("Content-Type", "application/json");
+                            res.setHeader("Content-Length", rBuf.length);
+                            res.end(rBuf);
+                          });
+                        },
+                      );
+                      retryReq.on("error", () => {
+                        const fallbackBuf = Buffer.concat(chunks);
+                        res.statusCode = response.statusCode ?? 409;
+                        res.setHeader("Content-Length", fallbackBuf.length);
+                        res.end(fallbackBuf);
+                      });
+                      retryReq.write(reqBodyBuf);
+                      retryReq.end();
+                    }, 400);
+                  });
+                },
+              );
+              aReq.on("error", () => {
+                const fallbackBuf = Buffer.concat(chunks);
+                res.statusCode = response.statusCode ?? 409;
+                res.setHeader("Content-Length", fallbackBuf.length);
+                res.end(fallbackBuf);
+              });
+              aReq.end();
+              return;
+            }
+
             if (isArenaGet) {
               if ((response.statusCode && response.statusCode >= 400) || !data || data.status >= 400 || data.error) {
                 const safeEmpty = JSON.stringify({
@@ -161,6 +346,8 @@ export function proxyRequest(
                       p?.name?.toLowerCase().includes("jarsfud")
                     ))
                 ) {
+                  const stuckId = data.duel.id;
+                  autoReleaseUpstreamDuel(target, stuckId, String(req.headers.cookie || ""));
                   data.duel = null;
                 }
                 if (!("queue" in data)) data.queue = null;
@@ -259,6 +446,7 @@ export function proxyRequest(
   let received = 0;
   req.on("data", (chunk: Buffer) => {
     received += chunk.length;
+    reqChunks.push(chunk);
     if (received > maxBody) {
       req.unpipe(upstream);
       if (!res.headersSent) {

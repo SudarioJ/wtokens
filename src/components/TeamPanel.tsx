@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, RefreshCw, Copy } from "lucide-react";
 import { api, friendlyError } from "../lib/api";
+import { arenaApi } from "../lib/arena";
 import type { Mode, Team } from "../lib/contracts";
 import "./teams.css";
 
@@ -89,6 +90,9 @@ export function TeamPanel({
           await api.leaveTeam();
         }
       } catch {}
+      try {
+        await arenaApi.leave();
+      } catch {}
       setTeam(null);
       setNotice("Equipo disuelto correctamente.");
       await load();
@@ -112,7 +116,34 @@ export function TeamPanel({
           }
         } catch {}
       }
-      return api.createTeam(mode, size);
+      try {
+        return await api.createTeam(mode, size);
+      } catch (err: any) {
+        if (err && (err.code === "ACTIVE_MATCH" || String(err?.message || "").includes("ACTIVE_MATCH"))) {
+          try {
+            await arenaApi.leave();
+          } catch {}
+          try {
+            const arenaData = await arenaApi.current();
+            if (arenaData?.duel?.id) {
+              await arenaApi.resolve(arenaData.duel.id, "0-0", true, "Auto-cancel for team create");
+              await arenaApi.action(arenaData.duel.id, "cancel-request");
+            }
+          } catch {}
+          await fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "force_close_duel",
+              duelId: "80de8cb6",
+              reason: "Auto-cleared for team create",
+            }),
+          }).catch(() => {});
+          await new Promise((r) => setTimeout(r, 400));
+          return await api.createTeam(mode, size);
+        }
+        throw err;
+      }
     });
   }
 
@@ -128,7 +159,34 @@ export function TeamPanel({
           }
         } catch {}
       }
-      return api.joinTeam(code.trim().toLowerCase());
+      try {
+        return await api.joinTeam(code.trim().toLowerCase());
+      } catch (err: any) {
+        if (err && (err.code === "ACTIVE_MATCH" || String(err?.message || "").includes("ACTIVE_MATCH"))) {
+          try {
+            await arenaApi.leave();
+          } catch {}
+          try {
+            const arenaData = await arenaApi.current();
+            if (arenaData?.duel?.id) {
+              await arenaApi.resolve(arenaData.duel.id, "0-0", true, "Auto-cancel for team join");
+              await arenaApi.action(arenaData.duel.id, "cancel-request");
+            }
+          } catch {}
+          await fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "force_close_duel",
+              duelId: "80de8cb6",
+              reason: "Auto-cleared for team join",
+            }),
+          }).catch(() => {});
+          await new Promise((r) => setTimeout(r, 400));
+          return await api.joinTeam(code.trim().toLowerCase());
+        }
+        throw err;
+      }
     });
   }
 
