@@ -210,12 +210,13 @@ export function App() {
   const revealRef = useScrollReveal<HTMLElement>(
     `${panelRequested}:${view}:${user?.id ?? ""}`,
   );
-  const [modes, setModes] = useState<Mode[]>(() => [
+  const FALLBACK_MODES: Mode[] = [
     { code: "BOX_FIGHT", name: "Box Fight" },
     { code: "BUILD_FIGHT", name: "Build Fight" },
     { code: "REALISTICS", name: "Realistics" },
     { code: "ZONE_WARS", name: "Zone Wars" },
-  ]);
+  ];
+  const [modes, setModes] = useState<Mode[]>(() => FALLBACK_MODES);
   const [assets, setAssets] = useState<Asset[]>(() =>
     regionalCurrencies.map((c) => ({
       code: c.code,
@@ -341,7 +342,11 @@ export function App() {
       ]);
     if (version !== refreshVersion.current) return;
     setConnection(health.status === "fulfilled" ? "online" : "offline");
-    setModes(catalog.status === "fulfilled" ? catalog.value : []);
+    setModes(
+      catalog.status === "fulfilled" && Array.isArray(catalog.value) && catalog.value.length > 0
+        ? catalog.value
+        : FALLBACK_MODES,
+    );
     setAssets(currencies.status === "fulfilled" ? currencies.value : []);
     setPlatform(settings.status === "fulfilled" ? settings.value : null);
     if (profile.status !== "fulfilled") {

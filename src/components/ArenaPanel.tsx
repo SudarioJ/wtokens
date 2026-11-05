@@ -218,27 +218,82 @@ export function ArenaPanel({
     try {
       localStorage.setItem("wtokens_current_match_stake", String(activeStake));
     } catch {}
+    const chosenMode = modes.some((item) => item.code === mode)
+      ? mode
+      : (modes[0]?.code ?? mode);
+    setArena({
+      queue: {
+        mode: chosenMode,
+        size: 1,
+        asset,
+        stakeMinor: "0",
+        paymentMode: "INDIVIDUAL",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 600000).toISOString(),
+      },
+      duel: null,
+      roomsConfigured: true,
+    });
     if (isDisputed && d) {
       void handleForceCloseDispute("CANCEL").then(() => {
-        void act(() =>
-          arenaApi.solo(
-            modes.some((item) => item.code === mode)
-              ? mode
-              : (modes[0]?.code ?? mode),
-            asset,
-          ),
-        );
+        void act(() => arenaApi.solo(chosenMode, asset));
       });
       return;
     }
-    void act(() =>
-      arenaApi.solo(
-        modes.some((item) => item.code === mode)
-          ? mode
-          : (modes[0]?.code ?? mode),
-        asset,
-      ),
-    );
+    void act(() => arenaApi.solo(chosenMode, asset));
+  }
+
+  function handleStartDemoDuel(modeCode?: string) {
+    const chosenMode = modeCode || mode || "BOX_FIGHT";
+    try {
+      localStorage.setItem("wtokens_current_match_stake", String(activeStake));
+    } catch {}
+    const demoDuel: Duel = {
+      id: "d0000000-0000-4000-8000-" + Date.now().toString(16).padStart(12, "0"),
+      mode: chosenMode,
+      size: 1,
+      asset: "WTOKENS",
+      stakeMinor: "0",
+      state: "CONFIRMING",
+      winnerSide: null,
+      rounds: null,
+      createdAt: new Date().toISOString(),
+      confirmationDeadline: new Date(Date.now() + 45000).toISOString(),
+      startedAt: null,
+      finishedAt: null,
+      reportDeadline: null,
+      absentUser: null,
+      absenceDeadline: null,
+      mapCode: chosenMode === "BUILD_FIGHT" ? "8064-7152-2934" : "7620-0771-9529",
+      roomStatus: "READY",
+      roomUrl: "https://discord.com/channels/1562177277821718539/1563263460643578018",
+      players: [
+        {
+          id: userId,
+          name: "Tú (Jugador)",
+          side: "A",
+          captain: true,
+          confirmed: false,
+          paymentMode: "INDIVIDUAL",
+        },
+        {
+          id: "b0000000-0000-4000-8000-000000000002",
+          name: "Rival_Tutorial_Bot",
+          side: "B",
+          captain: false,
+          confirmed: true,
+          paymentMode: "INDIVIDUAL",
+        },
+      ],
+      reports: [],
+      events: [],
+    };
+    last.current = demoDuel;
+    setArena({
+      queue: null,
+      duel: demoDuel,
+      roomsConfigured: true,
+    });
   }
   const mounted = useRef(false),
     busyRef = useRef(false),
@@ -335,6 +390,16 @@ export function ArenaPanel({
           current.duel = await arenaApi.get(last.current.id);
         } catch {}
       }
+      if (
+        current.duel?.id?.startsWith("d0000") ||
+        (last.current?.id?.startsWith("d0000") && !current.duel)
+      ) {
+        current.duel = last.current;
+      }
+      if (searching.current && !current.queue && !current.duel) {
+        current.queue = arena?.queue ?? null;
+      }
+
       if (mounted.current && stamp === version.current) {
         last.current = current.duel;
         setArena(current);
@@ -345,7 +410,7 @@ export function ArenaPanel({
       if (mounted.current && stamp === version.current)
         setError(friendlyError(e));
     }
-  }, []);
+  }, [arena?.queue]);
   useEffect(() => {
     mounted.current = true;
     void load();
@@ -374,6 +439,38 @@ export function ArenaPanel({
     setError("");
     version.current++;
     try {
+      if (d?.id?.startsWith("d0000")) {
+        await new Promise((r) => setTimeout(r, 200));
+        if (d.state === "CONFIRMING") {
+          const updated: Duel = {
+            ...d,
+            state: "IN_PROGRESS",
+            startedAt: new Date().toISOString(),
+            players: d.players.map((p) =>
+              p.id === userId ? { ...p, confirmed: true } : p,
+            ),
+          };
+          last.current = updated;
+          setArena((prev) => ({ ...prev, queue: null, roomsConfigured: true, duel: updated }));
+          return true;
+        }
+        if (d.state === "IN_PROGRESS" || d.state === "RESULT_PENDING") {
+          const updated: Duel = {
+            ...d,
+            state: "POST_GAME",
+            winnerSide: "A",
+            finishedAt: new Date().toISOString(),
+          };
+          last.current = updated;
+          setArena((prev) => ({ ...prev, queue: null, roomsConfigured: true, duel: updated }));
+          return true;
+        }
+        if (d.state === "POST_GAME") {
+          last.current = null;
+          setArena({ queue: null, duel: null, roomsConfigured: true });
+          return true;
+        }
+      }
       const result = await task();
       if (!mounted.current) return false;
       if ("players" in result) {
@@ -933,6 +1030,7 @@ export function ArenaPanel({
           canCancel={arena.queue.size === 1 || team?.captainId === userId}
           busy={busy}
           onCancel={() => void handleCancelMatchmaking()}
+          onDemoMatch={() => handleStartDemoDuel(arena.queue?.mode || mode)}
         />
       ) : !team || team.size === 1 ? (
         <div className="solo-matchmaking">
@@ -1131,18 +1229,34 @@ export function ArenaPanel({
           )}
 
           {/* 5. Botones de acción */}
-          <div className="duel-buttons">
+          <div className="duel-buttons" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               className="button primary"
               disabled={busy || !modes.length || !hasSufficient}
               onClick={handleStartMatchmaking}
-              style={{ flex: "1 1 auto" }}
+              style={{ flex: "1 1 200px" }}
             >
               {busy
                 ? "Entrando a la búsqueda…"
                 : isDisputed && d
                   ? `⚔️ Liberar caso anterior y Buscar rival 1v1 (${activeStake} WT)`
                   : `⚔️ Buscar rival 1v1 (${activeStake} WT)`}
+            </button>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={busy}
+              onClick={() => handleStartDemoDuel(mode)}
+              title="Inicia una partida de prueba para grabar el tutorial o verificar la sala"
+              style={{
+                borderColor: "#3b82f6",
+                color: "#60a5fa",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              🎥 Probar Demo / Tutorial
             </button>
             <button
               className="button secondary"

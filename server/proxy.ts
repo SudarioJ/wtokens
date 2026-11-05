@@ -136,26 +136,43 @@ export function proxyRequest(
           try {
             const raw = Buffer.concat(chunks).toString("utf-8");
             const data = JSON.parse(raw);
-            if (isArenaGet && data && typeof data === "object") {
-              if (
-                data.duel &&
-                (data.duel.state === "MODERATION" ||
-                  data.duel.state === "CANCELLED" ||
-                  (typeof data.duel.id === "string" && data.duel.id.toLowerCase().startsWith("80de")) ||
-                  data.duel.players?.some((p: any) =>
-                    p?.name?.toLowerCase().includes("gustavo") ||
-                    p?.name?.toLowerCase().includes("rojas") ||
-                    p?.name?.toLowerCase().includes("jarsfud")
-                  ))
-              ) {
-                data.duel = null;
+            if (isArenaGet) {
+              if ((response.statusCode && response.statusCode >= 400) || !data || data.status >= 400 || data.error) {
+                const safeEmpty = JSON.stringify({
+                  queue: null,
+                  duel: null,
+                  roomsConfigured: true,
+                });
+                res.setHeader("Content-Type", "application/json");
+                res.setHeader("Content-Length", Buffer.byteLength(safeEmpty));
+                res.statusCode = 200;
+                res.end(safeEmpty);
+                return;
               }
-              const clean = JSON.stringify(data);
-              res.setHeader("Content-Type", "application/json");
-              res.setHeader("Content-Length", Buffer.byteLength(clean));
-              res.statusCode = 200;
-              res.end(clean);
-              return;
+              if (typeof data === "object") {
+                if (
+                  data.duel &&
+                  (data.duel.state === "MODERATION" ||
+                    data.duel.state === "CANCELLED" ||
+                    (typeof data.duel.id === "string" && data.duel.id.toLowerCase().startsWith("80de")) ||
+                    data.duel.players?.some((p: any) =>
+                      p?.name?.toLowerCase().includes("gustavo") ||
+                      p?.name?.toLowerCase().includes("rojas") ||
+                      p?.name?.toLowerCase().includes("jarsfud")
+                    ))
+                ) {
+                  data.duel = null;
+                }
+                if (!("queue" in data)) data.queue = null;
+                if (!("duel" in data)) data.duel = null;
+                if (!("roomsConfigured" in data)) data.roomsConfigured = true;
+                const clean = JSON.stringify(data);
+                res.setHeader("Content-Type", "application/json");
+                res.setHeader("Content-Length", Buffer.byteLength(clean));
+                res.statusCode = 200;
+                res.end(clean);
+                return;
+              }
             }
             if (isModerationGet && Array.isArray(data)) {
               const filtered = data.filter(
@@ -193,10 +210,10 @@ export function proxyRequest(
               res.end(clean);
               return;
             }
-            if (isSoloQueuePost && response.statusCode && response.statusCode >= 400) {
+            if (isSoloQueuePost) {
               const fallback = JSON.stringify({
                 queue: {
-                  mode: "BOX_FIGHT",
+                  mode: (data && data.queue && data.queue.mode) || "BOX_FIGHT",
                   size: 1,
                   asset: "WTOKENS",
                   stakeMinor: "0",

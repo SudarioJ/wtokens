@@ -7,11 +7,13 @@ export function MatchSearch({
   canCancel,
   busy,
   onCancel,
+  onDemoMatch,
 }: {
   queue: NonNullable<Arena["queue"]>;
   canCancel: boolean;
   busy: boolean;
   onCancel: () => void;
+  onDemoMatch?: () => void;
 }) {
   const [now, setNow] = useState(Date.now()),
     [paused, setPaused] = useState(false);
@@ -114,6 +116,22 @@ export function MatchSearch({
         <Deadline date={queue.expiresAt} label="La búsqueda vence en" />
       </div>
       <div className="match-search-actions">
+        {onDemoMatch && (
+          <button
+            type="button"
+            className="button primary small"
+            onClick={onDemoMatch}
+            style={{
+              background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)",
+              border: "1px solid #60a5fa",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "12px",
+            }}
+          >
+            🎥 Simular Rival (Tutorial)
+          </button>
+        )}
         {canCancel ? (
           <button
             className="button secondary"
